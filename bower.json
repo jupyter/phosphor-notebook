@@ -1,0 +1,29 @@
+{
+  "name": "phosphor-notebook",
+  "main": "index.js",
+  "version": "0.0.1",
+  "authors": [
+    "Jason Grout <jgrout6@bloomberg.net>"
+  ],
+  "description": "Phosphor-based IPython notebook",
+  "moduleType": [
+    "amd"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "jupyter_notebook/static/components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "phosphor": "~0.3.0",
+    "codemirror": "~5.3.0",
+    "marked": "~0.3.3",
+    "MathJax": "~2.5.3",
+    "requirejs": "~2.1.18",
+    "jquery": "~2.1.4"
+  }
+}

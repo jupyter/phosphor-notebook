@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="components/codemirror/lib/codemirror.js"></script>
+    <script src="components/codemirror/mode/python/python.js"></script>
+    <link rel="stylesheet" href="components/codemirror/lib/codemirror.css">
+    <script src="components/marked/marked.min.js"></script>
+    <script src="components/requirejs/require.js"></script>
+    <script src="components/MathJax/MathJax.js?config=TeX-AMS_HTML-full,Safe&delayStartupUntil=configured"></script>
+    <link href="components/phosphor/dist/phosphor.css" rel="stylesheet" type="text/css">
+    <!--<link href="build/index.css" rel="stylesheet" type="text/css">-->
+    <script src="components/phosphor/dist/phosphor.js"></script>
+
+
+<script>
+require.config({
+    jquery: "components/jquery/dist/jquery.min"
+});
+
+</script>
+
+<!--<script>
+  require.config({
+      baseURL: '/static'
+      paths: {
+        session: 'services/sessions/session',
+        
+        kernelspecs : '/kernelspecs',
+        jquery: 'components/jquery/jquery.min',
+      },
+    }
+  });
+</script>
+-->
+    <script>
+      require(["./dist/index.js"], function(ind) {
+          console.log("finished initialization");
+          ind.main();
+      });
+    </script>
+    <style>
+    #test {border: 1px solid red;}
+    .ipy-input {border: 1px solid blue; margin: 5px;}
+    .ipy-input .CodeMirror {height: auto;}
+
+    </style>
+</head>
+<body>
+    <div id="test"></div>
+</body>
+</html>
