@@ -16,8 +16,18 @@ gulp
 Running
 -------
 
+Run a static webserver in the root directory of the repo and go to `http://localhost:8080`.
+
+### Python
+
 ```bash
-python -m SimpleHTTPServer 8000
+python -m SimpleHTTPServer 8080
 ```
 
-Go to `http://localhost:8000/index.html`
+### Node
+
+Install http-server (`npm install -g http-server`), and then do
+
+```bash
+http-server
+```
