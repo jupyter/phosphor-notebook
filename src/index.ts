@@ -6,7 +6,7 @@ import mathjaxutils = require("./mathjaxutils");
 export function main(): void {
     //    var notebook = new NotebookApp.NotebookApplication;
     // notebook.run();
-    var test = document.getElementById('test');
+    var test = document.getElementById('nb');
     mathjaxutils.init();
     render(NotebookComponent.Notebook(demo.notebook), test);
 };

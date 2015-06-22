@@ -10,14 +10,13 @@
     <link href="components/phosphor/dist/phosphor.css" rel="stylesheet" type="text/css">
     <link href="index.css" rel="stylesheet" type="text/css">
     <script src="components/phosphor/dist/phosphor.js"></script>
-    <script>
-      require(["./dist/index.js"], function(ind) {
-          console.log("finished initialization");
-          ind.main();
-      });
-    </script>
 </head>
 <body>
-    <div id="test"></div>
+    <div id="nb"></div>
+    <script>
+      require(["./dist/index.js"], function(index) {
+          index.main();
+      });
+    </script>
 </body>
 </html>
