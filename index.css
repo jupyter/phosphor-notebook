@@ -1,0 +1,4 @@
+#nb {border: 1px solid red;}
+.ipy-input {border: 1px solid blue; margin: 5px;}
+.ipy-input .CodeMirror {height: auto;}
+
