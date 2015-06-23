@@ -1,11 +1,13 @@
 Design notes
 ============
 
+A roughly MVC approach
+======================
+
 Here are some ideas for a design that emphasize:
 
 * State consolidated into one place.  This makes it easier in the future to move some of the state logic to the server side to support collaborative editing.  It also makes the application much easier to reason about.
 * Separation of the execution from the document.  We want to make it easy to reuse the js code for kernels without having a notebook object, and vice versa.
-
 
 Parts of the application
 ------------------------
@@ -56,3 +58,39 @@ Actions
 4. Either the session or the notebook state object interpret the messages into the notebook format, modifying the notebook
 5. As the notebook is changed, it triggers re-renders
 
+
+Presentation Model (MVVM) style design
+======================================
+
+Parts
+-----
+
+### Kernel management
+Separate kernel management object so that it can be used without having a notebook model
+
+* Starts/interrupts/restarts kernels
+* Sends kernel messages and calls callbacks with results
+
+### Model
+Receives messages from the server and holds a copy of the One True State of the notebook document
+
+* Holds a reference to a kernel management object
+* When viewmodel requests execution, sends an execution request to the kernel, and registers a callback that will interpret kernel messages to change the model
+* Model has both persistent state (e.g., cell inputs/outputs) and ephemeral state (e.g., widget model state, kernel state)
+* Is not aware of the viewmodels referencing it
+
+In the future, when implementing a server-centric model (e.g., for real-time collaboration), instead of receiving kernel messages and changing the model, this model will just sync with the server model.
+
+### ViewModel (Presentation Model)
+
+* Holds a reference to a model
+* Handles any transformation from model to the something the view needs (examples?)
+* is not aware of the views using it
+* (we need to justify this component's existence...it's not doing much now...)
+* Handles user interaction signals and, if appropriate, passes them up to the model for action (for example, code execution, kernel lifecycle), or takes action directly (examples?)
+
+### View
+
+* Holds a reference to the ViewModel
+* Has very little logic.  Renders exactly according to the ViewModel
+* Passes user interaction directly to the ViewModel (via signals?)
