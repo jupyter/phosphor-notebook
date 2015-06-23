@@ -43,12 +43,8 @@ export class Kernel {
         this._msg_queue = Promise.resolve();
         this.info_reply = {}; // kernel_info_reply stored here after starting
 
-        if (typeof(WebSocket) !== 'undefined') {
-            this.WebSocket = WebSocket;
-        } else if (typeof(MozWebSocket) !== 'undefined') {
-            this.WebSocket = MozWebSocket;
-        } else {
-            alert('Your browser does not have WebSocket support, please try Chrome, Safari or Firefox ≥ 6. Firefox 4 and 5 are also supported by you have to enable WebSockets in about:config.');
+        if (typeof(WebSocket) === 'undefined') {
+            alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
         }
         
         this.bind_events();
@@ -432,7 +428,7 @@ export class Kernel {
 
         console.log("Starting WebSockets:", ws_host_url);
         
-        this.ws = new this.WebSocket([
+        this.ws = new WebSocket([
                 that.ws_url,
                 utils.url_join_encode(that.kernel_url, 'channels'),
                 "?session_id=" + that.session_id
