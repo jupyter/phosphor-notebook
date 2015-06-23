@@ -17,6 +17,7 @@ var tsSources = [
     "nbformat",
     "demodata",
     "mathjaxutils",
+    "kernel"
 ].map(function(name) {return "./src/" + name + ".ts"; });
 
 
