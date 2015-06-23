@@ -61,7 +61,7 @@ export class Kernel {
         this._autorestart_attempt = 0;
         this._reconnect_attempt = 0;
         this.reconnect_limit = 7;
-    };
+    }
 
     /**
      * @function _get_msg
@@ -81,7 +81,7 @@ export class Kernel {
             parent_header : {}
         };
         return msg;
-    };
+    }
 
     /**
      * @function bind_events
@@ -117,7 +117,7 @@ export class Kernel {
         events.on('kernel_connected.Kernel', () => {
             this._reconnect_attempt = 0;
         });
-    };
+    }
 
     /**
      * Initialize the iopub handlers.
@@ -134,7 +134,7 @@ export class Kernel {
         for (var i=0; i < output_msg_types.length; i++) {
             this.register_iopub_handler(output_msg_types[i], $.proxy(this._handle_output_message, this));
         }
-    };
+    }
 
     /**
      * GET /api/kernels
@@ -154,7 +154,7 @@ export class Kernel {
             success: success,
             error: this._on_error(error)
         });
-    };
+    }
 
     /**
      * POST /api/kernels
@@ -199,7 +199,7 @@ export class Kernel {
         });
 
         return url;
-    };
+    }
 
     /**
      * GET /api/kernels/[:kernel_id]
@@ -219,7 +219,7 @@ export class Kernel {
             success: this._on_success(success),
             error: this._on_error(error)
         });
-    };
+    }
 
     /**
      * DELETE /api/kernels/[:kernel_id]
@@ -245,7 +245,7 @@ export class Kernel {
             success: this._on_success(success),
             error: this._on_error(error)
         });
-    };
+    }
 
     /**
      * POST /api/kernels/[:kernel_id]/interrupt
@@ -279,7 +279,7 @@ export class Kernel {
             success: this._on_success(on_success),
             error: this._on_error(error)
         });
-    };
+    }
 
     restart(success, error): void {
         /**
@@ -320,7 +320,7 @@ export class Kernel {
             success: this._on_success(on_success),
             error: this._on_error(on_error)
         });
-    };
+    }
 
     reconnect(): void {
         /**
@@ -339,7 +339,7 @@ export class Kernel {
             attempt: this._reconnect_attempt,
         });
         this.start_channels();
-    };
+    }
 
     _on_success(success): any {
         /**
@@ -360,7 +360,7 @@ export class Kernel {
                 success(data, status, xhr);
             }
         };
-    };
+    }
 
     _on_error(error) {
         /**
@@ -376,7 +376,7 @@ export class Kernel {
                 error(xhr, status, err);
             }
         };
-    };
+    }
 
     _kernel_created(data): void {
         /**
@@ -389,7 +389,7 @@ export class Kernel {
         this.id = data.id;
         this.kernel_url = utils.url_join_encode(this.kernel_service_url, this.id);
         this.start_channels();
-    };
+    }
 
     _kernel_connected(): void {
         /**
@@ -406,7 +406,7 @@ export class Kernel {
             this.info_reply = reply.content;
             events.trigger('kernel_ready.Kernel', {kernel: that});
         });
-    };
+    }
 
     _kernel_dead(): void {
         /**
@@ -417,7 +417,7 @@ export class Kernel {
          * @function _kernel_dead
          */
         this.stop_channels();
-    };
+    }
 
     start_channels(): void {
         /**
@@ -487,7 +487,7 @@ export class Kernel {
             }
         }, 1000);
         this.ws.onmessage = $.proxy(this._handle_ws_message, this);
-    };
+    }
 
     _ws_opened(evt): void {
         /**
@@ -500,7 +500,7 @@ export class Kernel {
             // all events ready, trigger started event.
             this._kernel_connected();
         }
-    };
+    }
 
     _ws_closed(ws_url: string, error): void {
         /**
@@ -519,7 +519,7 @@ export class Kernel {
             events.trigger('kernel_connection_failed.Kernel', {kernel: this, ws_url: ws_url, attempt: this._reconnect_attempt});
         }
         this._schedule_reconnect();
-    };
+    }
     
     _schedule_reconnect(): void {
         /**
@@ -537,7 +537,7 @@ export class Kernel {
             });
             console.log("Failed to reconnect, giving up.");
         }
-    };
+    }
     
     stop_channels(): void {
         /**
@@ -559,7 +559,7 @@ export class Kernel {
                 close();
             }
         }
-    };
+    }
 
     is_connected(): boolean {
         /**
@@ -578,7 +578,7 @@ export class Kernel {
             return false;
         }
         return true;
-    };
+    }
 
     is_fully_disconnected(): boolean {
         /**
@@ -590,7 +590,7 @@ export class Kernel {
          * @returns {bool} - whether the kernel is fully disconnected
          */
         return (this.ws === null);
-    };
+    }
     
     send_shell_message(msg_type: string, content, callbacks, metadata?, buffers?): string {
         /**
@@ -606,7 +606,7 @@ export class Kernel {
         this.ws.send(serialize.serialize(msg));
         this.set_callbacks_for_msg(msg.header.msg_id, callbacks);
         return msg.header.msg_id;
-    };
+    }
 
     kernel_info(callback?): string {
         /**
@@ -624,7 +624,7 @@ export class Kernel {
             callbacks = { shell : { reply : callback } };
         }
         return this.send_shell_message("kernel_info_request", {}, callbacks);
-    };
+    }
 
     inspect(code: string, cursor_pos: number, callback): string {
         /**
@@ -650,7 +650,7 @@ export class Kernel {
             detail_level : 0
         };
         return this.send_shell_message("inspect_request", content, callbacks);
-    };
+    }
 
     execute(code: string, callbacks, options) : string {
         /**
@@ -716,7 +716,7 @@ export class Kernel {
         $.extend(true, content, options);
         events.trigger('execution_request.Kernel', {kernel: this, content: content});
         return this.send_shell_message("execute_request", content, callbacks);
-    };
+    }
 
     /**
      * When calling this method, pass a function to be called with the
@@ -740,7 +740,7 @@ export class Kernel {
             cursor_pos : cursor_pos
         };
         return this.send_shell_message("complete_request", content, callbacks);
-    };
+    }
 
     /**
      * @function send_input_reply
@@ -757,14 +757,14 @@ export class Kernel {
         msg.channel = 'stdin';
         this.ws.send(serialize.serialize(msg));
         return msg.header.msg_id;
-    };
+    }
 
     /**
      * @function register_iopub_handler
      */
     register_iopub_handler(msg_type: string, callback): void {
         this._iopub_handlers[msg_type] = callback;
-    };
+    }
 
     /**
      * Get the iopub handler for a specific message type.
@@ -773,7 +773,7 @@ export class Kernel {
      */
     get_iopub_handler(msg_type: string): any {
         return this._iopub_handlers[msg_type];
-    };
+    }
 
     /**
      * Get callbacks for a specific message.
@@ -786,7 +786,7 @@ export class Kernel {
         } else {
             return this._msg_callbacks[msg_id];
         }
-    };
+    }
 
     /**
      * Clear callbacks for a specific message.
@@ -797,7 +797,7 @@ export class Kernel {
         if (this._msg_callbacks[msg_id] !== undefined ) {
             delete this._msg_callbacks[msg_id];
         }
-    };
+    }
     
     /**
      * @function _finish_shell
@@ -810,7 +810,7 @@ export class Kernel {
                 this.clear_callbacks_for_msg(msg_id);
             }
         }
-    };
+    }
 
     /**
      * @function _finish_iopub
@@ -823,7 +823,7 @@ export class Kernel {
                 this.clear_callbacks_for_msg(msg_id);
             }
         }
-    };
+    }
     
     /**
      * Set callbacks for a particular message.
@@ -847,14 +847,14 @@ export class Kernel {
         } else {
             this.last_msg_callbacks = {};
         }
-    };
+    }
     
     _handle_ws_message(e) {
         this._msg_queue = this._msg_queue.then(() => {
             return serialize.deserialize(e.data);
         }).then(function(msg) {return this._finish_ws_message(msg);})
         .catch(utils.reject("Couldn't process kernel message", true));
-    };
+    }
 
     _finish_ws_message(msg): any {
         switch (msg.channel) {
@@ -870,7 +870,7 @@ export class Kernel {
             default:
                 console.error("unrecognized message channel", msg.channel, msg);
         }
-    };
+    }
     
     _handle_shell_reply(reply): Promise {
         events.trigger('shell_reply.Kernel', {kernel: this, reply:reply});
@@ -896,7 +896,7 @@ export class Kernel {
             });
         }
         return promise;
-    };
+    }
 
     /**
      * @function _handle_payloads
@@ -914,7 +914,7 @@ export class Kernel {
             }
         }
         return Promise.all(promise);
-    };
+    }
 
     /**
      * @function _handle_status_message
@@ -965,7 +965,7 @@ export class Kernel {
             events.trigger('kernel_dead.Kernel', {kernel: this});
             this._kernel_dead();
         }
-    };
+    }
     
     /**
      * Handle clear_output message
@@ -981,7 +981,7 @@ export class Kernel {
         if (callback) {
             callback(msg);
         }
-    };
+    }
 
     /**
      * handle an output message (execute_result, display_data, etc.)
@@ -1000,7 +1000,7 @@ export class Kernel {
         if (callback) {
             callback(msg);
         }
-    };
+    }
 
     /**
      * Handle an input message (execute_input).
@@ -1014,7 +1014,7 @@ export class Kernel {
             // do with it.
             events.trigger('received_unsolicited_message.Kernel', msg);
         }
-    };
+    }
 
     /**
      * Dispatch IOPub messages to respective handlers. Each message
@@ -1027,7 +1027,7 @@ export class Kernel {
         if (handler !== undefined) {
             return handler(msg);
         }
-    };
+    }
 
     /**
      * @function _handle_input_request
@@ -1047,7 +1047,7 @@ export class Kernel {
                 callbacks.input(request);
             }
         }
-    };
+    }
 
     public id: string;
     public name: string;
