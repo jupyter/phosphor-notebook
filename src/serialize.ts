@@ -37,12 +37,13 @@ function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelDataType {
 };
 
 
+/**
+ * deserialize the binary message format
+ * callback will be called with a message whose buffers attribute
+ * will be an array of DataViews.
+ */
 function _deserializeBinary(data: Blob | ArrayBuffer): IKernelDataType | Promise<IKernelDataType> {
-  /**
-   * deserialize the binary message format
-   * callback will be called with a message whose buffers attribute
-   * will be an array of DataViews.
-   */
+
   if (data instanceof Blob) {
     // data is Blob, have to deserialize from ArrayBuffer in reader callback
     var reader = new FileReader();
@@ -62,11 +63,11 @@ function _deserializeBinary(data: Blob | ArrayBuffer): IKernelDataType | Promise
 };
 
 
+/**
+ * deserialize a message and return a promise for the unpacked message
+ */
 export
   function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelDataType> {
-  /**
-   * deserialize a message and return a promise for the unpacked message
-   */
   if (typeof data === "string") {
     // text JSON message
     return Promise.resolve(JSON.parse(data));
@@ -77,11 +78,11 @@ export
 };
 
 
+/**
+ * implement the binary serialization protocol
+ * serializes JSON message to ArrayBuffer
+ */
 function _serializeBinary(msg: IKernelDataType): ArrayBuffer {
-  /**
-   * implement the binary serialization protocol
-   * serializes JSON message to ArrayBuffer
-   */
   msg = _.clone(msg);
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
@@ -121,6 +122,9 @@ function _serializeBinary(msg: IKernelDataType): ArrayBuffer {
 };
 
 
+/**
+ * implement the serialization protocol
+ */
 export
   function serialize(msg: IKernelDataType): string | ArrayBuffer {
   if (msg.buffers && msg.buffers.length) {

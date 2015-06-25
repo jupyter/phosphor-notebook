@@ -9,7 +9,7 @@ import comm = require('./comm');
 import serialize = require('./serialize');
 
 
-interface IKernelMessage extends comm.IKernelMessage {};
+interface IKernelMessage extends comm.IKernelMessage { };
 
 
 interface IAjaxSuccess {
@@ -33,8 +33,8 @@ interface IAjaxError {
      * @param {string} ws_url - the websockets URL
      * @param {string} name - the kernel type (e.g. python3)
      */
-export 
-class Kernel {
+export
+    class Kernel {
 
     id: string;
     name: string;
@@ -307,16 +307,16 @@ class Kernel {
         });
     }
 
+    /**
+     * POST /api/kernels/[:kernel_id]/restart
+     *
+     * Restart the kernel.
+     *
+     * @function interrupt
+     * @param {function} [success] - function executed on ajax success
+     * @param {function} [error] - functon executed on ajax error
+     */
     restart(success: Function, error: Function): void {
-        /**
-         * POST /api/kernels/[:kernel_id]/restart
-         *
-         * Restart the kernel.
-         *
-         * @function interrupt
-         * @param {function} [success] - function executed on ajax success
-         * @param {function} [error] - functon executed on ajax error
-         */
         this.events.trigger('kernel_restarting.Kernel', { kernel: this });
         this.stopChannels();
 
@@ -348,14 +348,16 @@ class Kernel {
         });
     }
 
+
+    /**
+     * Reconnect to a disconnected kernel. This is not actually a
+     * standard HTTP request, but useful function nonetheless for
+     * reconnecting to the kernel if the connection is somehow lost.
+     *
+     * @function reconnect
+     */
     reconnect(): void {
-        /**
-         * Reconnect to a disconnected kernel. This is not actually a
-         * standard HTTP request, but useful function nonetheless for
-         * reconnecting to the kernel if the connection is somehow lost.
-         *
-         * @function reconnect
-         */
+
         if (this.isConnected()) {
             return;
         }
@@ -367,15 +369,15 @@ class Kernel {
         this.startChannels();
     }
 
+    /**
+     * Handle a successful AJAX request by updating the kernel id and
+     * name from the response, and then optionally calling a provided
+     * callback.
+     *
+     * @function _on_success
+     * @param {function} success - callback
+     */
     private _on_success(success: Function): IAjaxSuccess {
-        /**
-         * Handle a successful AJAX request by updating the kernel id and
-         * name from the response, and then optionally calling a provided
-         * callback.
-         *
-         * @function _on_success
-         * @param {function} success - callback
-         */
         return (msg: comm.IKernelSuccess) => {
             if (msg.data) {
                 this.id = msg.data.id;
@@ -388,14 +390,15 @@ class Kernel {
         };
     }
 
+    /**
+     * Handle a failed AJAX request by logging the error message, and
+     * then optionally calling a provided callback.
+     *
+     * @function _on_error
+     * @param {function} error - callback
+     */
     private _onError(error?: Function): IAjaxError {
-        /**
-         * Handle a failed AJAX request by logging the error message, and
-         * then optionally calling a provided callback.
-         *
-         * @function _on_error
-         * @param {function} error - callback
-         */
+
         return (xhr: JQueryXHR, status: string, err: string) => {
             utils.logAjaxError(xhr, status, err);
             if (error) {
@@ -404,27 +407,27 @@ class Kernel {
         };
     }
 
+    /**
+     * Perform necessary tasks once the kernel has been started,
+     * including actually connecting to the kernel.
+     *
+     * @function _kernel_created
+     * @param {Object} data - information about the kernel including id
+     */
     private _kernelCreated(data: comm.IKernelData): void {
-        /**
-         * Perform necessary tasks once the kernel has been started,
-         * including actually connecting to the kernel.
-         *
-         * @function _kernel_created
-         * @param {Object} data - information about the kernel including id
-         */
         this.id = data.id;
         this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
         this.startChannels();
     }
 
+    /**
+     * Perform necessary tasks once the connection to the kernel has
+     * been established. This includes requesting information about
+     * the kernel.
+     *
+     * @function _kernel_connected
+     */
     private _kernelConnected(): void {
-        /**
-         * Perform necessary tasks once the connection to the kernel has
-         * been established. This includes requesting information about
-         * the kernel.
-         *
-         * @function _kernel_connected
-         */
         this.events.trigger('kernel_connected.Kernel', { kernel: this });
         // get kernel info so we know what state the kernel is in
         this.kernelInfo((reply?: comm.IKernelMsg) => {
@@ -433,24 +436,24 @@ class Kernel {
         });
     }
 
+    /**
+     * Perform necessary tasks after the kernel has died. This closing
+     * communication channels to the kernel if they are still somehow
+     * open.
+     *
+     * @function _kernel_dead
+     */
     private _kernelDead(): void {
-        /**
-         * Perform necessary tasks after the kernel has died. This closing
-         * communication channels to the kernel if they are still somehow
-         * open.
-         *
-         * @function _kernel_dead
-         */
         this.stopChannels();
     }
 
+    /**
+     * Start the websocket channels.
+     * Will stop and restart them if they already exist.
+     *
+     * @function start_channels
+     */
     startChannels(): void {
-        /**
-         * Start the websocket channels.
-         * Will stop and restart them if they already exist.
-         *
-         * @function start_channels
-         */
         this.stopChannels();
         var ws_host_url = this.ws_url + this.kernel_url;
 
@@ -492,8 +495,8 @@ class Kernel {
             this._wsClosed(ws_host_url, true);
         };
 
-        this.ws.onopen = (evt: comm.IKernelEvent) => { 
-            this._wsOpened(evt); 
+        this.ws.onopen = (evt: comm.IKernelEvent) => {
+            this._wsOpened(evt);
         };
         var ws_closed_late = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
@@ -515,28 +518,29 @@ class Kernel {
         };
     }
 
+    /**
+     * Handle a websocket entering the open state,
+     * signaling that the kernel is connected when websocket is open.
+     *
+     * @function _ws_opened
+     */
     private _wsOpened(evt: comm.IKernelEvent): void {
-        /**
-         * Handle a websocket entering the open state,
-         * signaling that the kernel is connected when websocket is open.
-         *
-         * @function _ws_opened
-         */
         if (this.isConnected()) {
             // all events ready, trigger started event.
             this._kernelConnected();
         }
     }
 
+    /**
+     * Handle a websocket entering the closed state.  If the websocket
+     * was not closed due to an error, try to reconnect to the kernel.
+     *
+     * @function _ws_closed
+     * @param {string} ws_url - the websocket url
+     * @param {bool} error - whether the connection was closed due to an error
+     */
     private _wsClosed(ws_url: string, error: boolean): void {
-        /**
-         * Handle a websocket entering the closed state.  If the websocket
-         * was not closed due to an error, try to reconnect to the kernel.
-         *
-         * @function _ws_closed
-         * @param {string} ws_url - the websocket url
-         * @param {bool} error - whether the connection was closed due to an error
-         */
+
         this.stopChannels();
 
         this.events.trigger('kernel_disconnected.Kernel', { kernel: this });
@@ -547,11 +551,12 @@ class Kernel {
         this._scheduleReconnect();
     }
 
+    /**
+     * function to call when kernel connection is lost
+     * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
+     */
     private _scheduleReconnect(): void {
-        /**
-         * function to call when kernel connection is lost
-         * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
-         */
+
         if (this._reconnect_attempt < this.reconnect_limit) {
             var timeout = Math.pow(2, this._reconnect_attempt);
             console.log("Connection lost, reconnecting in " + timeout + " seconds.");
@@ -565,13 +570,14 @@ class Kernel {
         }
     }
 
+    /**
+     * Close the websocket. After successful close, the value
+     * in `this.ws` will be null.
+     *
+     * @function stop_channels
+     */
     stopChannels(): void {
-        /**
-         * Close the websocket. After successful close, the value
-         * in `this.ws` will be null.
-         *
-         * @function stop_channels
-         */
+
         var close = () => {
             if (this.ws && this.ws.readyState === WebSocket.CLOSED) {
                 this.ws = null;
@@ -587,15 +593,16 @@ class Kernel {
         }
     }
 
+    /**
+     * Check whether there is a connection to the kernel. This
+     * function only returns true if websocket has been
+     * created and has a state of WebSocket.OPEN.
+     *
+     * @function is_connected
+     * @returns {bool} - whether there is a connection
+     */
     isConnected(): boolean {
-        /**
-         * Check whether there is a connection to the kernel. This
-         * function only returns true if websocket has been
-         * created and has a state of WebSocket.OPEN.
-         *
-         * @function is_connected
-         * @returns {bool} - whether there is a connection
-         */
+
         // if any channel is not ready, then we're not connected
         if (this.ws === null) {
             return false;
@@ -606,24 +613,26 @@ class Kernel {
         return true;
     }
 
+    /**
+     * Check whether the connection to the kernel has been completely
+     * severed. This function only returns true if all channel objects
+     * are null.
+     *
+     * @function is_fully_disconnected
+     * @returns {bool} - whether the kernel is fully disconnected
+     */
     isFullyDisconnected(): boolean {
-        /**
-         * Check whether the connection to the kernel has been completely
-         * severed. This function only returns true if all channel objects
-         * are null.
-         *
-         * @function is_fully_disconnected
-         * @returns {bool} - whether the kernel is fully disconnected
-         */
+
         return (this.ws === null);
     }
 
+    /**
+     * Send a message on the Kernel's shell channel
+     *
+     * @function send_shell_message
+     */
     sendShellMessage(msg_type: string, content: comm.IMsgContent, callbacks: comm.IKernelCallbacks, metadata: comm.IMetadata = {}, buffers: string[] = []): string {
-        /**
-         * Send a message on the Kernel's shell channel
-         *
-         * @function send_shell_message
-         */
+
         if (!this.isConnected()) {
             throw new Error("kernel is not connected");
         }
@@ -634,17 +643,18 @@ class Kernel {
         return msg.header.msg_id;
     }
 
+    /**
+     * Get kernel info
+     *
+     * @function kernel_info
+     * @param callback {function}
+     *
+     * When calling this method, pass a callback function that expects one argument.
+     * The callback will be passed the complete `kernel_info_reply` message documented
+     * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info)
+     */
     kernelInfo(callback?: Function): string {
-        /**
-         * Get kernel info
-         *
-         * @function kernel_info
-         * @param callback {function}
-         *
-         * When calling this method, pass a callback function that expects one argument.
-         * The callback will be passed the complete `kernel_info_reply` message documented
-         * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info)
-         */
+
         var callbacks: comm.IKernelShellCallbacks;
         if (callback) {
             callbacks = { shell: { reply: callback } };
@@ -652,19 +662,20 @@ class Kernel {
         return this.sendShellMessage("kernel_info_request", {}, callbacks);
     }
 
+    /**
+     * Get info on an object
+     *
+     * When calling this method, pass a callback function that expects one argument.
+     * The callback will be passed the complete `inspect_reply` message documented
+     * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#object-information)
+     *
+     * @function inspect
+     * @param code {string}
+     * @param cursor_pos {integer}
+     * @param callback {function}
+     */
     inspect(code: string, cursor_pos: number, callback: Function): string {
-        /**
-         * Get info on an object
-         *
-         * When calling this method, pass a callback function that expects one argument.
-         * The callback will be passed the complete `inspect_reply` message documented
-         * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#object-information)
-         *
-         * @function inspect
-         * @param code {string}
-         * @param cursor_pos {integer}
-         * @param callback {function}
-         */
+
         var callbacks: comm.IKernelShellCallbacks;
         if (callback) {
             callbacks = { shell: { reply: callback } };
@@ -678,56 +689,57 @@ class Kernel {
         return this.sendShellMessage("inspect_request", content, callbacks);
     }
 
+    /**
+     * Execute given code into kernel, and pass result to callback.
+     *
+     * @async
+     * @function execute
+     * @param {string} code
+     * @param [callbacks] {Object} With the following keys (all optional)
+     *      @param callbacks.shell.reply {function}
+     *      @param callbacks.shell.payload.[payload_name] {function}
+     *      @param callbacks.iopub.output {function}
+     *      @param callbacks.iopub.clear_output {function}
+     *      @param callbacks.input {function}
+     * @param {object} [options]
+     *      @param [options.silent=false] {Boolean}
+     *      @param [options.user_expressions=empty_dict] {Dict}
+     *      @param [options.allow_stdin=false] {Boolean} true|false
+     *
+     * @example
+     *
+     * The options object should contain the options for the execute
+     * call. Its default values are:
+     *
+     *      options = {
+     *        silent : true,
+     *        user_expressions : {},
+     *        allow_stdin : false
+     *      }
+     *
+     * When calling this method pass a callbacks structure of the
+     * form:
+     *
+     *      callbacks = {
+     *       shell : {
+     *         reply : execute_reply_callback,
+     *         payload : {
+     *           set_next_input : set_next_input_callback,
+     *         }
+     *       },
+     *       iopub : {
+     *         output : output_callback,
+     *         clear_output : clear_output_callback,
+     *       },
+     *       input : raw_input_callback
+     *      }
+     *
+     * Each callback will be passed the entire message as a single
+     * arugment.  Payload handlers will be passed the corresponding
+     * payload and the execute_reply message.
+     */
     execute(code: string, callbacks: comm.IKernelCallbacks, options: comm.IKernelOptions): string {
-        /**
-         * Execute given code into kernel, and pass result to callback.
-         *
-         * @async
-         * @function execute
-         * @param {string} code
-         * @param [callbacks] {Object} With the following keys (all optional)
-         *      @param callbacks.shell.reply {function}
-         *      @param callbacks.shell.payload.[payload_name] {function}
-         *      @param callbacks.iopub.output {function}
-         *      @param callbacks.iopub.clear_output {function}
-         *      @param callbacks.input {function}
-         * @param {object} [options]
-         *      @param [options.silent=false] {Boolean}
-         *      @param [options.user_expressions=empty_dict] {Dict}
-         *      @param [options.allow_stdin=false] {Boolean} true|false
-         *
-         * @example
-         *
-         * The options object should contain the options for the execute
-         * call. Its default values are:
-         *
-         *      options = {
-         *        silent : true,
-         *        user_expressions : {},
-         *        allow_stdin : false
-         *      }
-         *
-         * When calling this method pass a callbacks structure of the
-         * form:
-         *
-         *      callbacks = {
-         *       shell : {
-         *         reply : execute_reply_callback,
-         *         payload : {
-         *           set_next_input : set_next_input_callback,
-         *         }
-         *       },
-         *       iopub : {
-         *         output : output_callback,
-         *         clear_output : clear_output_callback,
-         *       },
-         *       input : raw_input_callback
-         *      }
-         *
-         * Each callback will be passed the entire message as a single
-         * arugment.  Payload handlers will be passed the corresponding
-         * payload and the execute_reply message.
-         */
+
         var content = {
             code: code,
             silent: true,

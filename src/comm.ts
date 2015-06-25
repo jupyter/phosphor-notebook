@@ -50,14 +50,14 @@ export
 };
 
 
-export 
-interface IKernelHeader {
-  username ?: string;
-  version ?: string;
-  data ?: string;
-  session ?: string;
-  msg_id ?: string;
-  msg_type ?: string;
+export
+  interface IKernelHeader {
+  username?: string;
+  version?: string;
+  data?: string;
+  session?: string;
+  msg_id?: string;
+  msg_type?: string;
 };
 
 
@@ -171,10 +171,10 @@ export class CommManager {
     };
   }
 
+  /**
+   * connect the kernel, and register message handlers
+   */
   init_kernel(kernel: kernel.Kernel) {
-    /**
-     * connect the kernel, and register message handlers
-     */
     this.kernel = kernel;
     kernel.registerIOPubHandler('comm_open',
       (msg: IKernelMsg) => this._commOpen(msg));
@@ -184,44 +184,46 @@ export class CommManager {
       (msg: IKernelMsg) => this._commMsg(msg));
   }
 
+  /**
+   * Create a new Comm, register it, and open its Kernel-side counterpart
+   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
+   */
   newComm(target_name: string, data: IKernelData, callbacks: IKernelCallbacks, metadata: IMetadata): Comm {
-    /**
-     * Create a new Comm, register it, and open its Kernel-side counterpart
-     * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
-     */
+
     var comm = new Comm(target_name);
     this.registerComm(comm);
     comm.open(data, callbacks, metadata);
     return comm;
   }
 
+  /**
+   * Register a target function for a given target name
+   */
   registerTarget(target_name: string, f: Function): void {
-    /**
-     * Register a target function for a given target name
-     */
     this.targets[target_name] = f;
   }
 
+  /**
+   * Unregister a target function for a given target name
+   */
   unregisterTarget(target_name: string, f: Function) {
-    /**
-     * Unregister a target function for a given target name
-     */
     delete this.targets[target_name];
   }
 
+  /**
+    * Register a comm in the mapping
+    */
   registerComm(comm: Comm) {
-    /**
-     * Register a comm in the mapping
-     */
     this.comms[comm.comm_id] = (Promise.resolve(comm));
     comm.kernel = this.kernel;
     return comm.comm_id;
   }
 
+  /**
+   * Remove a comm from the mapping
+   */
   unregisterComm(comm: Comm): void {
-    /**
-     * Remove a comm from the mapping
-     */
+
     delete this.comms[comm.comm_id];
   }
     

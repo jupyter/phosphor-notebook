@@ -64,14 +64,15 @@ export
   name: string;
   errorStack: Error[];
 
+  /**
+   * Wrappable Error class
+   *
+   * The Error class doesn't actually act on `this`.  Instead it always
+   * returns a new instance of Error.  Here we capture that instance so we
+   * can apply it's properties to `this`.
+   */
   constructor(message: string, error: Error) {
-    /**
-     * Wrappable Error class
-     *
-     * The Error class doesn't actually act on `this`.  Instead it always
-     * returns a new instance of Error.  Here we capture that instance so we
-     * can apply it's properties to `this`.
-     */
+
     var tmp = Error.apply(this, [message]);
 
     // Copy the properties of the error over to this.
@@ -473,14 +474,14 @@ export
   };
 
 
+/**
+ * wrapper around contructor to avoid requiring `var a = new constructor()`
+ * useful for passing constructors as callbacks,
+ * not for programmer laziness.
+ * from http://programmers.stackexchange.com/questions/118798
+ */
 export
   var alwaysNew = function(constructor: Function) {
-    /**
-     * wrapper around contructor to avoid requiring `var a = new constructor()`
-     * useful for passing constructors as callbacks,
-     * not for programmer laziness.
-     * from http://programmers.stackexchange.com/questions/118798
-     */
     return function() {
       var obj = Object.create(constructor.prototype);
       constructor.apply(obj, arguments);
@@ -489,11 +490,12 @@ export
   };
 
 
+/**
+ * join a sequence of url components with '/'
+ */
 export
   var urlPathJoin = function(...paths: string[]): string {
-    /**
-     * join a sequence of url components with '/'
-     */
+
     var url = '';
     for (var i = 0; i < paths.length; i++) {
       if (paths[i] === '') {
@@ -510,13 +512,12 @@ export
   };
 
 
+/**
+ * Like os.path.split for URLs.
+ * Always returns two strings, the directory path and the base filename
+ */
 export
   var urlPathSplit = function(path: string): string[] {
-    /**
-     * Like os.path.split for URLs.
-     * Always returns two strings, the directory path and the base filename
-     */
-
     var idx = path.lastIndexOf('/');
     if (idx === -1) {
       return ['', path];
@@ -526,50 +527,50 @@ export
   };
 
 
+/**
+ * an `a` element with an href allows attr-access to the parsed segments of a URL
+ * a = parse_url("http://localhost:8888/path/name#hash")
+ * a.protocol = "http:"
+ * a.host     = "localhost:8888"
+ * a.hostname = "localhost"
+ * a.port     = 8888
+ * a.pathname = "/path/name"
+ * a.hash     = "#hash"
+ */
 export
   var parseUrl = function(url: string) {
-    /**
-     * an `a` element with an href allows attr-access to the parsed segments of a URL
-     * a = parse_url("http://localhost:8888/path/name#hash")
-     * a.protocol = "http:"
-     * a.host     = "localhost:8888"
-     * a.hostname = "localhost"
-     * a.port     = 8888
-     * a.pathname = "/path/name"
-     * a.hash     = "#hash"
-     */
     var a = document.createElement("a");
     a.href = url;
     return a;
   };
 
 
+/**
+ * encode just the components of a multi-segment uri,
+ * leaving '/' separators
+ */
 export
   var encodeURIComponents = function(uri: string): string {
-    /**
-     * encode just the components of a multi-segment uri,
-     * leaving '/' separators
-     */
     return uri.split('/').map(encodeURIComponent).join('/');
   };
 
 
+/**
+ * join a sequence of url components with '/',
+ * encoding each component with encodeURIComponent
+ */
 export
   var urlJoinEncode = function(...args: string[]): string {
-    /**
-     * join a sequence of url components with '/',
-     * encoding each component with encodeURIComponent
-     */
     return encodeURIComponents(urlPathJoin.apply(null, args));
   };
 
 
+/**
+ * mimic Python os.path.splitext
+ * Returns ['base', '.ext']
+ */
 export
   var splitext = function(filename: string): string[] {
-    /**
-     * mimic Python os.path.splitext
-     * Returns ['base', '.ext']
-     */
     var idx = filename.lastIndexOf('.');
     if (idx > 0) {
       return [filename.slice(0, idx), filename.slice(idx)];
@@ -579,33 +580,35 @@ export
   };
 
 
+/**
+ * escape text to HTML
+ */
 export
   var escapeHtml = function(text: string): string {
-    /**
-     * escape text to HTML
-     */
+
     return $("<div/>").text(text).html();
   };
 
 
+/**
+ * get a url-encoded item from body.data and decode it
+ * we should never have any encoded URLs anywhere else in code
+ * until we are building an actual request
+ */
 export
   var getBodyData = function(key: string): string {
-    /**
-     * get a url-encoded item from body.data and decode it
-     * we should never have any encoded URLs anywhere else in code
-     * until we are building an actual request
-     */
     var val = String($('body').data(key));
     if (!val)
       return val;
     return decodeURIComponent(val);
   };
 
+
+/**
+ * get the absolute cursor position from CodeMirror's col, ch
+ */
 export
   var toAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor: CodeMirror.Cursor): number {
-    /**
-     * get the absolute cursor position from CodeMirror's col, ch
-     */
     if (!cursor) {
       cursor = cm.getCursor();
     }
@@ -616,11 +619,13 @@ export
     return cursor_pos;
   };
 
+
+/**
+ * turn absolute cursor position into CodeMirror col, ch cursor
+ */
 export
   var fromAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor_pos: CodeMirror.Cursor) {
-    /**
-     * turn absolute cursor position into CodeMirror col, ch cursor
-     */
+
     var i: number, line: string, next_line: string;
     var offset = 0;
     for (i = 0, next_line = cm.getLine(i); next_line !== undefined; i++ , next_line = cm.getLine(i)) {
@@ -641,6 +646,7 @@ export
     };
   };
 
+
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
   var browser: string[] = (function() {
@@ -656,6 +662,7 @@ export
     M = M ? [M[1], M[2]] : [N, navigator.appVersion, '-?'];
     return M;
   })();
+
 
 // http://stackoverflow.com/questions/11219582/how-to-detect-my-browser-version-and-operating-system-using-javascript
 export
@@ -673,10 +680,10 @@ export
   })();
 
 
+// get a URL parameter. I cannot believe we actually need this.
+// Based on http://stackoverflow.com/a/25359264/938949
 export
   var getURLParam = function(name: string): string {
-    // get a URL parameter. I cannot believe we actually need this.
-    // Based on http://stackoverflow.com/a/25359264/938949
     var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
     if (match) {
       return decodeURIComponent(match[1] || '');
@@ -684,19 +691,22 @@ export
   };
 
 
+/**
+ * Is b a child of a or a itself?
+ */
 export
   var isOrHas = function(a: any, b: any): boolean {
-    /**
-     * Is b a child of a or a itself?
-     */
+
     return a.has(b).length !== 0 || a.is(b);
   };
 
+
+/**
+ * Is element e, or one of its children focused?
+ */
 export
   var isFocused = function(e: any) {
-    /**
-     * Is element e, or one of its children focused?
-     */
+
     e = $(e);
     var target = $(document.activeElement);
     if (target.length > 0) {
@@ -710,6 +720,7 @@ export
     }
   };
 
+
 export
   var mergeopt = function(_class: any, options: Object, overwrite: Object) {
     options = options || {};
@@ -717,12 +728,14 @@ export
     return $.extend(true, {}, _class.options_default, options, overwrite);
   };
 
+
+/**
+ * Return a JSON error message if there is one,
+ * otherwise the basic HTTP status text.
+ */
 export
   var ajaxErrorMsg = function(jqXHR: JQueryXHR) {
-    /**
-     * Return a JSON error message if there is one,
-     * otherwise the basic HTTP status text.
-     */
+
     if (jqXHR.responseJSON && jqXHR.responseJSON.traceback) {
       return jqXHR.responseJSON.traceback;
     } else if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
@@ -732,24 +745,28 @@ export
     }
   };
 
+
+/**
+ * log ajax failures with informative messages
+ */
 export
   var logAjaxError = function(jqXHR: JQueryXHR, status: string, error: string) {
-    /**
-     * log ajax failures with informative messages
-     */
+
     var msg = "API request failed (" + jqXHR.status + "): ";
     console.log(jqXHR);
     msg += ajaxErrorMsg(jqXHR);
     console.log(msg);
   }
 
+
+/** 
+ * find a predefined mode or detect from CM metadata then
+ * require and callback with the resolveable mode string: mime or
+ * custom name
+ */
 export
   var requireCodeMirrorMode = function(mode: CodeMirror.Mode, callback: Function, errback: Function) {
-    /** 
-     * find a predefined mode or detect from CM metadata then
-     * require and callback with the resolveable mode string: mime or
-     * custom name
-     */
+
 
     var modename = (typeof mode == "string") ? mode :
       mode.mode || mode.name;
@@ -798,12 +815,13 @@ export
     return wrapped_error;
   };
 
+
+/**
+ * Like $.ajax, but returning an ES6 promise. success and error settings
+ * will be ignored.
+ */
 export
   var promisingAjax = function(url: string, settings: any): Promise<any> {
-    /**
-     * Like $.ajax, but returning an ES6 promise. success and error settings
-     * will be ignored.
-     */
     settings = settings || {};
     return new Promise(function(resolve, reject) {
       settings.success = function(data: any, status: string, jqXHR: JQueryXHR) {
@@ -818,15 +836,15 @@ export
   };
 
 
+/**
+ * Tries to load a class
+ *
+ * Tries to load a class from a module using require.js, if a module 
+ * is specified, otherwise tries to load a class from the global 
+ * registry, if the global registry is provided.
+ */
 export
   var loadClass = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
-    /**
-     * Tries to load a class
-     *
-     * Tries to load a class from a module using require.js, if a module 
-     * is specified, otherwise tries to load a class from the global 
-     * registry, if the global registry is provided.
-     */
     return new Promise(function(resolve, reject) {
 
       // Try loading the view module using require.js
@@ -848,12 +866,13 @@ export
     });
   };
 
+/**
+ * Resolve a promiseful dictionary.
+ * Returns a single Promise.
+ */
 export
   var resolvePromisesDict = function(d: { [string: string]: Promise<any>; }) {
-    /**
-     * Resolve a promiseful dictionary.
-     * Returns a single Promise.
-     */
+
     var keys = Object.keys(d);
     var values: Promise<any>[] = [];
     keys.forEach(function(key: string) {
@@ -868,15 +887,16 @@ export
     });
   };
 
+/**
+ * Creates a wrappable Promise rejection function.
+ * 
+ * Creates a function that returns a Promise.reject with a new WrappedError
+ * that has the provided message and wraps the original error that 
+ * caused the promise to reject.
+ */
 export
   var reject = function(message: string, log?: boolean): (error: any) => any {
-    /**
-     * Creates a wrappable Promise rejection function.
-     * 
-     * Creates a function that returns a Promise.reject with a new WrappedError
-     * that has the provided message and wraps the original error that 
-     * caused the promise to reject.
-     */
+
     return function(error: any): Promise<any> {
       var wrapped_error = new WrappedError(message, error);
       if (log) console.error(wrapped_error);
@@ -884,21 +904,22 @@ export
     };
   };
 
+/**
+ * Apply MathJax rendering to an element, and optionally set its text
+ *
+ * If MathJax is not available, make no changes.
+ *
+ * Returns the output any number of typeset elements, or undefined if
+ * MathJax was not available.
+ *
+ * Parameters
+ * ----------
+ * element: Node, NodeList, or jQuery selection
+ * text: option string
+ */
 export
   var typeset = function(element: any, text: string) {
-    /**
-     * Apply MathJax rendering to an element, and optionally set its text
-     *
-     * If MathJax is not available, make no changes.
-     *
-     * Returns the output any number of typeset elements, or undefined if
-     * MathJax was not available.
-     *
-     * Parameters
-     * ----------
-     * element: Node, NodeList, or jQuery selection
-     * text: option string
-     */
+
     var $el = element.jquery ? element : $(element);
     if (arguments.length > 1) {
       $el.text(text);
@@ -927,17 +948,18 @@ time.thresholds = {
   d: (<number>moment.relativeTimeThreshold('d')) * time.milliseconds.d,
 };
 
+/** compute a timeout based on dt
+ 
+input and output both in milliseconds
+ 
+use moment's relative time thresholds:
+ 
+- 10 seconds if in 'seconds ago' territory
+- 1 minute if in 'minutes ago'
+- 1 hour otherwise
+*/
+
 time.timeoutFromDt = function(dt: number) {
-  /** compute a timeout based on dt
-  
-  input and output both in milliseconds
-  
-  use moment's relative time thresholds:
-  
-  - 10 seconds if in 'seconds ago' territory
-  - 1 minute if in 'minutes ago'
-  - 1 hour otherwise
-  */
   if (dt < time.thresholds.s) {
     return 10 * time.milliseconds.s;
   } else if (dt < time.thresholds.m) {
