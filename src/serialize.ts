@@ -24,18 +24,18 @@ function _deserialize_array_buffer(buf: ArrayBuffer): IKernelDataType {
     var json_bytes = new Uint8Array(buf.slice(offsets[0], offsets[1]));
     var msg = JSON.parse(
         (new TextDecoder('utf8')).decode(json_bytes)
-    );
+        );
     // the remaining chunks are stored as DataViews in msg.buffers
     msg.buffers = [];
     var start: number, stop: number;
     for (i = 1; i < nbufs; i++) {
         start = offsets[i];
-        stop = offsets[i+1] || buf.byteLength;
+        stop = offsets[i + 1] || buf.byteLength;
         msg.buffers.push(new DataView(buf.slice(start, stop)));
     }
     return msg;
 };
-    
+
 
 function _deserialize_binary(data: Blob | ArrayBuffer): IKernelDataType | Promise<IKernelDataType> {
     /**
@@ -47,7 +47,7 @@ function _deserialize_binary(data: Blob | ArrayBuffer): IKernelDataType | Promis
         // data is Blob, have to deserialize from ArrayBuffer in reader callback
         var reader = new FileReader();
         var promise = new Promise(function(resolve, reject) {
-            reader.onload = function () {
+            reader.onload = function() {
                 var msg = _deserialize_array_buffer((<ArrayBuffer>this.result));
                 resolve(msg);
             };
@@ -77,7 +77,7 @@ export
 };
 
 
-function _serialize_binary(msg: IKernelDataType) : ArrayBuffer {
+function _serialize_binary(msg: IKernelDataType): ArrayBuffer {
     /**
      * implement the binary serialization protocol
      * serializes JSON message to ArrayBuffer
@@ -98,18 +98,18 @@ function _serialize_binary(msg: IKernelDataType) : ArrayBuffer {
     var nbufs = buffers.length;
     offsets.push(4 * (nbufs + 1));
     for (i = 0; i + 1 < buffers.length; i++) {
-        offsets.push(offsets[offsets.length-1] + buffers[i].byteLength);
+        offsets.push(offsets[offsets.length - 1] + buffers[i].byteLength);
     }
     var msg_buf = new Uint8Array(
-        offsets[offsets.length-1] + buffers[buffers.length-1].byteLength
-    );
+        offsets[offsets.length - 1] + buffers[buffers.length - 1].byteLength
+        );
     // use DataView.setUint32 for network byte-order
     var view = new DataView(msg_buf.buffer);
     // write nbufs to first 4 bytes
     view.setUint32(0, nbufs);
     // write offsets to next 4 * nbufs bytes
     for (i = 0; i < offsets.length; i++) {
-        view.setUint32(4 * (i+1), offsets[i]);
+        view.setUint32(4 * (i + 1), offsets[i]);
     }
     // write all the buffers at their respective offsets
     for (i = 0; i < buffers.length; i++) {
@@ -122,7 +122,7 @@ function _serialize_binary(msg: IKernelDataType) : ArrayBuffer {
 
 
 export
-function serialize(msg: IKernelDataType): string | ArrayBuffer {
+    function serialize(msg: IKernelDataType): string | ArrayBuffer {
     if (msg.buffers && msg.buffers.length) {
         return _serialize_binary(msg);
     } else {
