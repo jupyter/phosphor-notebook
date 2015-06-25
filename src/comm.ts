@@ -78,7 +78,7 @@ export
   header: IMsgHeader;
   msg_type?: string;
   channel?: string;
-  buffers?: string[] | ArrayBuffer[];
+  buffers?: string[]| ArrayBuffer[];
 };
 
 
@@ -86,7 +86,7 @@ export
   interface IMsgSuccess {
   data: IMsgData;
   status: string;
-  xhr: JQueryXHR;
+  xhr: any;
 };
 
 

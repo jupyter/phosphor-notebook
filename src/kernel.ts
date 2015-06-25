@@ -7,6 +7,7 @@ import $ = require('jquery');
 import utils = require('./utils');
 import comm = require('./comm');
 import serialize = require('./serialize');
+import phosphor = require('phosphor');
 
 
 interface IKernelMsg extends comm.IKernelMsg { };
@@ -50,7 +51,7 @@ export
     last_msg_id: string;
     last_msg_callbacks: any;
     reconnect_limit: number;
-    events: JQuery;
+    events: any;
 
     constructor(kernel_service_url: string, ws_url: string, name: string) {
 
@@ -143,6 +144,10 @@ export
         this.events.on('kernel_connected.Kernel', () => {
             this._reconnect_attempt = 0;
         });
+    }
+
+    private _recordStatus(evt: Event, info?: comm.IKernelInfo) {
+        console.log('Kernel: ' + evt.type + ' (' + info.kernel.id + ')');
     }
 
     /**
