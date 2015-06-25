@@ -1,13 +1,14 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import utils = require('./utils')
-import kernel = require('./kernel')
+import utils = require('./utils');
+import kernel = require('./kernel');
 
 
-export interface Data { }
-export interface Callbacks { (): void }
-export interface Metadata { }
+export interface Data { };
+export interface Callbacks { (): void };
+export interface Metadata { };
+
 
 interface IContent {
     comm_id: string;
@@ -18,9 +19,11 @@ interface IContent {
 
 export interface Msg {
     content: IContent;
-}
+};
 
-export interface TargetName extends String { }
+
+export interface TargetName extends String { };
+
 
 export class CommManager {
 

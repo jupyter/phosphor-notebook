@@ -9,7 +9,7 @@ import _ = require("underscore");
 
 interface IKernelDataType extends String {
     buffers?: ArrayBuffer[];
-}
+};
 
 
 function _deserialize_array_buffer(buf: ArrayBuffer): IKernelDataType {

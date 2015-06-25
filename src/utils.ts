@@ -22,6 +22,7 @@ interface MyWindow extends Window {
     MathJax?: MathJax
 };
 
+
 export interface MyError extends Error {
     xhr?: JQueryXHR;
     xhr_status?: string;
@@ -33,9 +34,11 @@ interface IPythonExtension extends String {
     load_ipython_extension?: Function;
 };
 
+
 interface ModError extends Error {
     requireModules: string[];
 };
+
 
 interface MyRegExp extends RegExp {
     sticky?: boolean;

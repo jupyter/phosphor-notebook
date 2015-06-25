@@ -20,7 +20,6 @@ interface IPayloadCallbacks {
 };
 
 
-
 interface IContent {
     payload?: IPayload[];
     execution_state?: string;
@@ -64,7 +63,8 @@ interface IKernelSuccess {
 interface IKernelShellCallbacks {
     reply?: Function;
     payload?: any;
-}
+};
+
 
 interface IKernelIOPubCallbacks {
     output?: Function;
@@ -77,7 +77,8 @@ interface IKernelCallbacks {
     shell?: IKernelShellCallbacks;
     iopub?: IKernelIOPubCallbacks;
     input?: Function;
-}
+};
+
 
 interface IKernelOptions {
     silent?: boolean;
@@ -89,21 +90,23 @@ interface IKernelOptions {
 interface IKernelEvent extends Event {
     wasClean?: boolean;
     data?: string | ArrayBuffer | Blob;
-}
+};
 
 
 interface IKernelParentHeader {
     msg_id: string;
-}
+};
 
 
 interface IChannel {
 
 };
 
+
 interface IHeader {
     msg_type: string;
 };
+
 
 interface IKernelMessage {
     channel: IChannel;
@@ -116,7 +119,7 @@ interface IKernelMessage {
 
 interface IAjaxSuccess {
     (data: any, status: string, xhr: JQueryXHR): void;
-}
+};
 
 
 interface IAjaxError {
