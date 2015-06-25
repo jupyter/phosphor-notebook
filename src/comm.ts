@@ -1,13 +1,13 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import utils = require('./utils') 
+import utils = require('./utils')
 import kernel = require('./kernel')
 
 
-export interface Data {}
-export interface Callbacks {():void }
-export interface Metadata {}
+export interface Data { }
+export interface Callbacks { (): void }
+export interface Metadata { }
 
 interface IContent {
     comm_id: string;
@@ -20,7 +20,7 @@ export interface Msg {
     content: IContent;
 }
 
-export interface TargetName extends String {}
+export interface TargetName extends String { }
 
 export class CommManager {
 
@@ -39,7 +39,7 @@ export class CommManager {
             this.init_kernel(kernel);
         }
     }
-    
+
     public init_kernel(kernel: kernel.Kernel) {
         /**
          * connect the kernel, and register message handlers
@@ -51,8 +51,8 @@ export class CommManager {
             kernel.register_iopub_handler(msg_type, $.proxy(this[msg_type], this));
         }
     }
-    
-    public new_comm(target_name:string, data:Data, callbacks:Callbacks, metadata:Metadata):Comm {
+
+    public new_comm(target_name: string, data: Data, callbacks: Callbacks, metadata: Metadata): Comm {
         /**
          * Create a new Comm, register it, and open its Kernel-side counterpart
          * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
@@ -62,21 +62,21 @@ export class CommManager {
         comm.open(data, callbacks, metadata);
         return comm;
     }
-   
-    public register_target(target_name:TargetName, f: Function):void {
+
+    public register_target(target_name: TargetName, f: Function): void {
         /**
          * Register a target function for a given target name
          */
         this.targets[<string>target_name] = f;
     }
-    
+
     public unregister_target(target_name: TargetName, f: Function) {
         /**
          * Unregister a target function for a given target name
          */
         delete this.targets[<string>target_name];
     }
-    
+
     public register_comm(comm: Comm) {
         /**
          * Register a comm in the mapping
@@ -85,8 +85,8 @@ export class CommManager {
         comm.kernel = this.kernel;
         return comm.comm_id;
     }
-    
-    public unregister_comm(comm:Comm):void {
+
+    public unregister_comm(comm: Comm): void {
         /**
          * Remove a comm from the mapping
          */
@@ -95,13 +95,13 @@ export class CommManager {
     
     // comm message handlers
     
-    public comm_open(msg:Msg):Promise<Comm> {
+    public comm_open(msg: Msg): Promise<Comm> {
         var content = msg.content;
         var that = this;
         var comm_id = content.comm_id;
 
-        this.comms[comm_id] = utils.load_class(content.target_name, content.target_module, 
-            this.targets).then(function(target:(a:any, b:any) => Promise<any>) {
+        this.comms[comm_id] = utils.load_class(content.target_name, content.target_module,
+            this.targets).then(function(target: (a: any, b: any) => Promise<any>) {
                 var comm = new Comm(content.target_name, comm_id);
                 comm.kernel = that.kernel;
                 try {
@@ -115,12 +115,12 @@ export class CommManager {
                 }
                 // Regardless of the target return value, we need to
                 // then return the comm
-                return Promise.resolve(response).then(function() {return comm;});
+                return Promise.resolve(response).then(function() { return comm; });
             }, utils.reject('Could not open comm', true));
         return this.comms[comm_id];
     }
-    
-    public comm_close(msg:Msg):Promise<void> {
+
+    public comm_close(msg: Msg): Promise<void> {
         var content = msg.content;
         if (this.comms[content.comm_id] === undefined) {
             console.error('Comm promise not found for comm id ' + content.comm_id);
@@ -140,8 +140,8 @@ export class CommManager {
         delete this.comms[content.comm_id];
         return Promise.resolve(undefined)
     }
-    
-    public comm_msg(msg:Msg) {
+
+    public comm_msg(msg: Msg) {
         var content = msg.content;
         if (this.comms[content.comm_id] === undefined) {
             console.error('Comm promise not found for comm id ' + content.comm_id);
@@ -164,14 +164,14 @@ export class CommManager {
     //-----------------------------------------------------------------------
 }
 
-export interface CommID extends String {}
+export interface CommID extends String { }
 
 export class Comm {
 
     kernel: kernel.Kernel;
     target_name: string;
     comm_id: CommID;
-    
+
     constructor(target_name: string, comm_id?: CommID) {
         this.target_name = target_name;
         this.comm_id = comm_id || <CommID>utils.uuid();
@@ -179,47 +179,47 @@ export class Comm {
     }
     
     // methods for sending messages
-    public open(data:Data, callbacks:Callbacks, metadata:Metadata) {
+    public open(data: Data, callbacks: Callbacks, metadata: Metadata) {
         var content = {
-            comm_id : this.comm_id,
-            target_name : this.target_name,
-            data : data || {},
+            comm_id: this.comm_id,
+            target_name: this.target_name,
+            data: data || {},
         };
         return this.kernel.send_shell_message("comm_open", content, callbacks, metadata);
     }
-    
-    public send(data:Data, callbacks:Callbacks, metadata:Metadata, buffers: string[] = []) {
+
+    public send(data: Data, callbacks: Callbacks, metadata: Metadata, buffers: string[] = []) {
         var content = {
-            comm_id : this.comm_id,
-            data : data || {},
+            comm_id: this.comm_id,
+            data: data || {},
         };
         return this.kernel.send_shell_message("comm_msg", content, callbacks, metadata, buffers);
     }
-    
-    public close(data?:Data, callbacks?, metadata?:Metadata) {
+
+    public close(data?: Data, callbacks?, metadata?: Metadata) {
         var content = {
-            comm_id : this.comm_id,
-            data : data || {},
+            comm_id: this.comm_id,
+            data: data || {},
         };
         return this.kernel.send_shell_message("comm_close", content, callbacks, metadata);
     }
     
     // methods for registering callbacks for incoming messages
-    private _register_callback(key: string, callback :Callbacks) {
+    private _register_callback(key: string, callback: Callbacks) {
         this['_' + key + '_callback'] = callback;
     }
-    
-    public on_msg(callback:Callbacks) {
+
+    public on_msg(callback: Callbacks) {
         this._register_callback('msg', callback);
     }
-    
-    public on_close(callback:Callbacks) {
+
+    public on_close(callback: Callbacks) {
         this._register_callback('close', callback);
     }
     
     // methods for handling incoming messages
     
-    private _callback(key:string, msg:Msg) {
+    private _callback(key: string, msg: Msg) {
         var callback = this['_' + key + '_callback'];
         if (callback) {
             try {
@@ -229,16 +229,16 @@ export class Comm {
             }
         }
     }
-    
-    public handle_msg(msg:Msg) {
+
+    public handle_msg(msg: Msg) {
         this._callback('msg', msg);
     }
-    
-    public handle_close(msg:Msg) {
+
+    public handle_close(msg: Msg) {
         this._callback('close', msg);
     }
 
-    private _msg_callback:(msg:Msg)=>void;
-    private _close_callback:(msg:Msg)=>void;
-    
+    private _msg_callback: (msg: Msg) => void;
+    private _close_callback: (msg: Msg) => void;
+
 }
