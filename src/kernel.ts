@@ -1120,7 +1120,7 @@ export class Kernel {
      *
      * @function _handle_output_message
      */
-    private _handle_output_message(msg: IKernelMessage): void {
+    protected _handle_output_message(msg: IKernelMessage): void {
         var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             // The message came from another client. Let the UI decide what to
