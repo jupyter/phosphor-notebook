@@ -9,112 +9,7 @@ import comm = require('./comm');
 import serialize = require('./serialize');
 
 
-interface IPayload {
-    source: string;
-
-};
-
-
-interface IPayloadCallbacks {
-    [s: string]: Function;
-};
-
-
-interface IContent {
-    payload?: IPayload[];
-    execution_state?: string;
-};
-
-
-interface IMetadata {
-
-};
-
-
-interface IKernelInput {
-
-};
-
-
-interface IKernelInfo {
-    kernel: { id: string };
-};
-
-
-
-interface IKernelData {
-    id: string;
-    name: string;
-};
-
-
-interface IKernelReply {
-    content: Object;
-};
-
-
-interface IKernelSuccess {
-    data: IKernelData;
-    status: string;
-    xhr: JQueryXHR;
-};
-
-
-interface IKernelShellCallbacks {
-    reply?: Function;
-    payload?: any;
-};
-
-
-interface IKernelIOPubCallbacks {
-    output?: Function;
-    clear_output?: Function;
-};
-
-
-interface IKernelCallbacks {
-    // @param callbacks.shell.payload.[payload_name] {function}
-    shell?: IKernelShellCallbacks;
-    iopub?: IKernelIOPubCallbacks;
-    input?: Function;
-};
-
-
-interface IKernelOptions {
-    silent?: boolean;
-    user_expressions?: Object;
-    allow_stdin?: boolean;
-};
-
-
-interface IKernelEvent extends Event {
-    wasClean?: boolean;
-    data?: string | ArrayBuffer | Blob;
-};
-
-
-interface IKernelParentHeader {
-    msg_id: string;
-};
-
-
-interface IChannel {
-
-};
-
-
-interface IHeader {
-    msg_type: string;
-};
-
-
-interface IKernelMessage {
-    channel: IChannel;
-    content: IContent;
-    metadata: IMetadata;
-    parent_header: IKernelParentHeader;
-    header: IHeader;
-};
+interface IKernelMessage extends comm.IKernelMessage {};
 
 
 interface IAjaxSuccess {
@@ -138,7 +33,8 @@ interface IAjaxError {
      * @param {string} ws_url - the websockets URL
      * @param {string} name - the kernel type (e.g. python3)
      */
-export class Kernel {
+export 
+class Kernel {
 
     id: string;
     name: string;
@@ -195,8 +91,8 @@ export class Kernel {
     /**
      * @function _get_msg
      */
-    private _getMsg(msg_type: string, content: IContent,
-        metadata: IMetadata = {}, buffers: string[] = []): any {
+    private _getMsg(msg_type: string, content: comm.IMsgContent,
+        metadata: comm.IMetadata = {}, buffers: string[] = []): any {
         var msg: any = {
             header: {
                 msg_id: utils.uuid(),
@@ -221,7 +117,7 @@ export class Kernel {
             this.sendInputReply(data);
         });
 
-        var record_status = (evt: Event, info: IKernelInfo) => {
+        var record_status = (evt: Event, info: comm.IKernelInfo) => {
             console.log('Kernel: ' + evt.type + ' (' + info.kernel.id + ')');
         };
 
@@ -309,7 +205,7 @@ export class Kernel {
         }
 
         this.events.trigger('kernel_starting.Kernel', { kernel: this });
-        var on_success = (msg: IKernelSuccess) => {
+        var on_success = (msg: comm.IKernelSuccess) => {
             this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
@@ -389,7 +285,7 @@ export class Kernel {
     interrupt(success: Function, error: Function): void {
         this.events.trigger('kernel_interrupting.Kernel', { kernel: this });
 
-        var on_success = (msg: IKernelSuccess) => {
+        var on_success = (msg: comm.IKernelSuccess) => {
             /**
              * get kernel info so we know what state the kernel is in
              */
@@ -424,7 +320,7 @@ export class Kernel {
         this.events.trigger('kernel_restarting.Kernel', { kernel: this });
         this.stopChannels();
 
-        var on_success = (msg: IKernelSuccess) => {
+        var on_success = (msg: comm.IKernelSuccess) => {
             this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
@@ -480,7 +376,7 @@ export class Kernel {
          * @function _on_success
          * @param {function} success - callback
          */
-        return (msg: IKernelSuccess) => {
+        return (msg: comm.IKernelSuccess) => {
             if (msg.data) {
                 this.id = msg.data.id;
                 this.name = msg.data.name;
@@ -508,7 +404,7 @@ export class Kernel {
         };
     }
 
-    private _kernelCreated(data: IKernelData): void {
+    private _kernelCreated(data: comm.IKernelData): void {
         /**
          * Perform necessary tasks once the kernel has been started,
          * including actually connecting to the kernel.
@@ -531,7 +427,7 @@ export class Kernel {
          */
         this.events.trigger('kernel_connected.Kernel', { kernel: this });
         // get kernel info so we know what state the kernel is in
-        this.kernelInfo((reply?: IKernelReply) => {
+        this.kernelInfo((reply?: comm.IKernelMsg) => {
             this.info_reply = reply.content;
             this.events.trigger('kernel_ready.Kernel', { kernel: this });
         });
@@ -568,7 +464,7 @@ export class Kernel {
             );
 
         var already_called_onclose = false; // only alert once
-        var ws_closed_early = (evt: IKernelEvent) => {
+        var ws_closed_early = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
                 return;
             }
@@ -588,7 +484,7 @@ export class Kernel {
                 });
             }
         };
-        var ws_closed_late = (evt: IKernelEvent) => {
+        var ws_closed_late = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
                 return;
             }
@@ -597,7 +493,7 @@ export class Kernel {
                 this._wsClosed(ws_host_url, false);
             }
         };
-        var ws_error = (evt: IKernelEvent) => {
+        var ws_error = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
                 return;
             }
@@ -617,7 +513,7 @@ export class Kernel {
         this.ws.onmessage = $.proxy(this._handleWSMessage, this);
     }
 
-    private _wsOpened(evt: IKernelEvent): void {
+    private _wsOpened(evt: comm.IKernelEvent): void {
         /**
          * Handle a websocket entering the open state,
          * signaling that the kernel is connected when websocket is open.
@@ -720,7 +616,7 @@ export class Kernel {
         return (this.ws === null);
     }
 
-    sendShellMessage(msg_type: string, content: IContent, callbacks: IKernelCallbacks, metadata: IMetadata = {}, buffers: string[] = []): string {
+    sendShellMessage(msg_type: string, content: comm.IMsgContent, callbacks: comm.IKernelCallbacks, metadata: comm.IMetadata = {}, buffers: string[] = []): string {
         /**
          * Send a message on the Kernel's shell channel
          *
@@ -747,7 +643,7 @@ export class Kernel {
          * The callback will be passed the complete `kernel_info_reply` message documented
          * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info)
          */
-        var callbacks: IKernelShellCallbacks;
+        var callbacks: comm.IKernelShellCallbacks;
         if (callback) {
             callbacks = { shell: { reply: callback } };
         }
@@ -767,7 +663,7 @@ export class Kernel {
          * @param cursor_pos {integer}
          * @param callback {function}
          */
-        var callbacks: IKernelShellCallbacks;
+        var callbacks: comm.IKernelShellCallbacks;
         if (callback) {
             callbacks = { shell: { reply: callback } };
         }
@@ -780,7 +676,7 @@ export class Kernel {
         return this.sendShellMessage("inspect_request", content, callbacks);
     }
 
-    execute(code: string, callbacks: IKernelCallbacks, options: IKernelOptions): string {
+    execute(code: string, callbacks: comm.IKernelCallbacks, options: comm.IKernelOptions): string {
         /**
          * Execute given code into kernel, and pass result to callback.
          *
@@ -859,7 +755,7 @@ export class Kernel {
      * @param callback {function}
      */
     complete(code: string, cursor_pos: number, callback: Function): string {
-        var callbacks: IKernelCallbacks;
+        var callbacks: comm.IKernelCallbacks;
         if (callback) {
             callbacks = { shell: { reply: callback } };
         }
@@ -873,7 +769,7 @@ export class Kernel {
     /**
      * @function send_input_reply
      */
-    sendInputReply(input: IKernelInput): string {
+    sendInputReply(input: comm.IKernelInput): string {
         if (!this.isConnected()) {
             throw new Error("kernel is not connected");
         }
@@ -962,7 +858,7 @@ export class Kernel {
      *
      * @function set_callbacks_for_msg
      */
-    setCallbacksForMsg(msg_id: string, callbacks: IKernelCallbacks): void {
+    setCallbacksForMsg(msg_id: string, callbacks: comm.IKernelCallbacks): void {
         this.last_msg_id = msg_id;
         if (callbacks) {
             // shallow-copy mapping, because we will modify it at the top level
@@ -977,7 +873,7 @@ export class Kernel {
         }
     }
 
-    private _handleWSMessage(e: IKernelEvent): Promise<any> {
+    private _handleWSMessage(e: comm.IKernelEvent): Promise<any> {
         this._msg_queue = this._msg_queue.then(() => {
             return serialize.deserialize(e.data);
         }).then(function(msg) { return this._finish_ws_message(msg); })
@@ -1031,10 +927,10 @@ export class Kernel {
     /**
      * @function _handle_payloads
      */
-    private _handlePayload(payloads: IPayload[],
-        payload_callbacks: IPayloadCallbacks,
+    private _handlePayload(payloads: comm.IPayload[],
+        payload_callbacks: comm.IPayloadCallbacks,
         msg: IKernelMessage): Promise<any> {
-        var promise: IKernelCallbacks[] = [];
+        var promise: comm.IKernelCallbacks[] = [];
         var l = payloads.length;
         // Payloads are handled by triggering events because we don't want the Kernel
         // to depend on the Notebook or Pager classes.
