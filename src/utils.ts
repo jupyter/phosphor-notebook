@@ -90,6 +90,26 @@ export
   }
 }
 
+
+/*
+  Copy the contents of one object to another, recursively
+
+  http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
+*/
+export
+  var extend = function(target: any, source: any): any {
+  target = target || {};
+  for (var prop in source) {
+    if (typeof source[prop] === 'object') {
+      target[prop] = extend(target[prop], source[prop]);
+    } else {
+      target[prop] = source[prop];
+    }
+  }
+  return target;
+};
+
+
 /**
  * load one or more Jupyter notebook extensions with requirejs
  **/
@@ -721,14 +741,6 @@ export
   };
 
 
-export
-  var mergeopt = function(_class: any, options: Object, overwrite: Object) {
-    options = options || {};
-    overwrite = overwrite || {};
-    return $.extend(true, {}, _class.options_default, options, overwrite);
-  };
-
-
 /**
  * Return a JSON error message if there is one,
  * otherwise the basic HTTP status text.
@@ -968,3 +980,5 @@ time.timeoutFromDt = function(dt: number) {
     return time.milliseconds.h;
   }
 };
+
+

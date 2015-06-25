@@ -9,7 +9,7 @@ import comm = require('./comm');
 import serialize = require('./serialize');
 
 
-interface IKernelMessage extends comm.IKernelMessage { };
+interface IKernelMsg extends comm.IKernelMsg { };
 
 
 interface IAjaxSuccess {
@@ -751,7 +751,7 @@ export
         if (callbacks.input !== undefined) {
             content.allow_stdin = true;
         }
-        $.extend(true, content, options);
+        utils.extend(content, options);
         this.events.trigger('execution_request.Kernel', { kernel: this, content: content });
         return this.sendShellMessage("execute_request", content, callbacks);
     }
@@ -895,7 +895,7 @@ export
         return;
     }
 
-    private _finishWSMessage(msg: IKernelMessage): Promise<any> {
+    private _finishWSMessage(msg: IKernelMsg): Promise<any> {
         switch (msg.channel) {
             case 'shell':
                 return this._handleShellReply(msg);
@@ -912,7 +912,7 @@ export
         return Promise.resolve();
     }
 
-    private _handleShellReply(reply: IKernelMessage): Promise<any> {
+    private _handleShellReply(reply: IKernelMsg): Promise<any> {
         this.events.trigger('shell_reply.Kernel', { kernel: this, reply: reply });
         var content = reply.content;
         var metadata = reply.metadata;
@@ -943,7 +943,7 @@ export
      */
     private _handlePayload(payloads: comm.IPayload[],
         payload_callbacks: comm.IPayloadCallbacks,
-        msg: IKernelMessage): Promise<any> {
+        msg: IKernelMsg): Promise<any> {
         var promise: comm.IKernelCallbacks[] = [];
         var l = payloads.length;
         // Payloads are handled by triggering events because we don't want the Kernel
@@ -961,7 +961,7 @@ export
     /**
      * @function _handle_status_message
      */
-    private _handleStatusMessage(msg: IKernelMessage): void {
+    private _handleStatusMessage(msg: IKernelMsg): void {
         var execution_state = msg.content.execution_state;
         var parent_id = msg.parent_header.msg_id;
         
@@ -989,7 +989,7 @@ export
 
         } else if (execution_state === 'starting') {
             this.events.trigger('kernel_starting.Kernel', { kernel: this });
-            this.kernelInfo((reply: IKernelMessage) => {
+            this.kernelInfo((reply: IKernelMsg) => {
                 this.info_reply = reply.content;
                 this.events.trigger('kernel_ready.Kernel', { kernel: this });
             });
@@ -1014,7 +1014,7 @@ export
      *
      * @function _handle_clear_output
      */
-    private _handle_clear_output(msg: IKernelMessage): void {
+    private _handle_clear_output(msg: IKernelMsg): void {
         var callbacks = this.getCallbacksForMsg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             return;
@@ -1030,7 +1030,7 @@ export
      *
      * @function _handle_output_message
      */
-    private _handleOutputMessage(msg: IKernelMessage): void {
+    private _handleOutputMessage(msg: IKernelMsg): void {
         var callbacks = this.getCallbacksForMsg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             // The message came from another client. Let the UI decide what to
@@ -1049,7 +1049,7 @@ export
      *
      * @function _handle_input message
      */
-    private _handleInputMessage(msg: IKernelMessage): void {
+    private _handleInputMessage(msg: IKernelMsg): void {
         var callbacks = this.getCallbacksForMsg(msg.parent_header.msg_id);
         if (!callbacks) {
             // The message came from another client. Let the UI decide what to
@@ -1064,7 +1064,7 @@ export
      *
      * @function _handle_iopub_message
      */
-    private _handleIOPubMessage(msg: IKernelMessage): void {
+    private _handleIOPubMessage(msg: IKernelMsg): void {
         var handler = this.getIOPubHandler(msg.header.msg_type);
         if (handler !== undefined) {
             handler(msg);
@@ -1074,7 +1074,7 @@ export
     /**
      * @function _handle_input_request
      */
-    private _handleInputRequest(request: IKernelMessage): void {
+    private _handleInputRequest(request: IKernelMsg): void {
         var header = request.header;
         var content = request.content;
         var metadata = request.metadata;

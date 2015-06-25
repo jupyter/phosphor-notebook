@@ -68,9 +68,9 @@ export
   msg_id?: string;
   parent_header: IKernelParentHeader;
   header: IKernelHeader;
+  channel?: IChannel;
   msg_type: string;
 };
-
 
 
 export
@@ -138,18 +138,9 @@ export
 };
 
 
-export
-  interface IKernelMessage {
-  channel: IChannel;
-  content: IMsgContent;
-  metadata: IMetadata;
-  parent_header: IKernelParentHeader;
-  header: IHeader;
-};
-
 
 interface ICommCallback {
-  (msg: IKernelMessage): void;
+  (msg: IKernelMsg): void;
 }
 
 
