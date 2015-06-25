@@ -5,13 +5,13 @@
 "use strict";
 
 import utils = require("./utils");
-import comm = require("./comm")
+import comm = require("./comm");
 
 
 interface IKernelMsg extends comm.IKernelMsg { };
 
 
-function _deserializeArrayBuffer(buf: ArrayBuffer): comm.IKernelMsg {
+function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
   var data = new DataView(buf);
   // read the header: 1 + nbufs 32b integers
   var nbufs = data.getUint32(0);
@@ -81,9 +81,7 @@ export
  * implement the binary serialization protocol
  * serializes JSON message to ArrayBuffer
  */
-function _serializeBinary(src_msg: IKernelMsg): ArrayBuffer {
-  var msg: IKernelMsg;
-  msg = utils.extend(msg , src_msg);
+function _serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
   var i: number;
@@ -95,6 +93,7 @@ function _serializeBinary(src_msg: IKernelMsg): ArrayBuffer {
   }
   delete msg.buffers;
   var json_utf8 = (new TextEncoder('utf8')).encode(JSON.stringify(msg));
+  msg.buffers = buffers;
   buffers.unshift(Array.prototype.slice.call(json_utf8));
   var nbufs = buffers.length;
   offsets.push(4 * (nbufs + 1));

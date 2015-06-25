@@ -70,7 +70,7 @@ export
   header: IKernelHeader;
   channel?: IChannel;
   msg_type?: string;
-  buffers?: string[];
+  buffers?: string[] | ArrayBuffer[];
 };
 
 
