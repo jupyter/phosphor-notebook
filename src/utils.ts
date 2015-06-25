@@ -23,9 +23,9 @@ interface MyWindow extends Window {
 };
 
 export interface MyError extends Error {
-    xhr?: Object;
+    xhr?: JQueryXHR;
     xhr_status?: string;
-    xhr_error?: Object;
+    xhr_error?: string;
 };
 
 
@@ -678,7 +678,7 @@ class WrappedError implements Error {
         return $.extend(true, {}, _class.options_default, options, overwrite);
     };
     
-    export var ajax_error_msg = function (jqXHR: any) {
+    export var ajax_error_msg = function (jqXHR: JQueryXHR) {
         /**
          * Return a JSON error message if there is one,
          * otherwise the basic HTTP status text.
@@ -692,7 +692,7 @@ class WrappedError implements Error {
         }
     };
     
-    export var log_ajax_error = function(jqXHR: any, status: string, error: string) {
+    export var log_ajax_error = function(jqXHR: JQueryXHR, status: string, error: string) {
         /**
          * log ajax failures with informative messages
          */
@@ -744,7 +744,7 @@ class WrappedError implements Error {
     /**
      * Wraps an AJAX error as an Error object.
      */
-    export var wrap_ajax_error = function (jqXHR: any, status: string, error: string) {
+    export var wrap_ajax_error = function (jqXHR: JQueryXHR, status: string, error: string) {
         var wrapped_error = <MyError>(new Error(ajax_error_msg(jqXHR)));
         wrapped_error.name =  XHR_ERROR;
         // provide xhr response
@@ -761,10 +761,10 @@ class WrappedError implements Error {
          */
         settings = settings || {};
         return new Promise(function(resolve, reject) {
-            settings.success = function(data: any, status: string, jqXHR: any) {
+            settings.success = function(data: any, status: string, jqXHR: JQueryXHR) {
                 resolve(data);
             };
-            settings.error = function(jqXHR: any, status: string, error: string) {
+            settings.error = function(jqXHR: JQueryXHR, status: string, error: string) {
                 log_ajax_error(jqXHR, status, error);
                 reject(wrap_ajax_error(jqXHR, status, error));
             };
@@ -773,7 +773,7 @@ class WrappedError implements Error {
     };
 
 
-    export var load_class = function(class_name: string, module_name: string, registry: { [string: string]: string; }) {
+    export var load_class = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
         /**
          * Tries to load a class
          *
