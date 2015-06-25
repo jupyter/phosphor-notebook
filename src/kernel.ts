@@ -54,18 +54,11 @@ interface IKernelReply {
 };
 
 
-interface IKernelReply {
+interface IKernelSuccess {
     data: IKernelData;
     status: string;
-    xhr: any;
+    xhr: JQueryXHR;
 }; 
-
-
-interface IKernelErrorMessage {
-    xhr: any;
-    status: string;
-    err: string;
-};
 
 
 interface IKernelShellCallbacks {
@@ -122,12 +115,12 @@ interface IKernelMessage {
 
 
 interface IAjaxSuccess {
-    (data: any, status: string, xhr: any): any;
+    (data: any, status: string, xhr: JQueryXHR): void;
 }
 
 
 interface IAjaxError {
-    (xhr: any, status: string, msg: string): any;
+    (xhr: JQueryXHR, status: string, err: string): void;
 };
 
 
@@ -158,7 +151,7 @@ export class Kernel {
     last_msg_id: string;
     last_msg_callbacks: any;
     reconnect_limit: number;
-    events: any;
+    events: JQuery;
 
     constructor(kernel_service_url: string, ws_url: string, name: string) {
 
@@ -221,7 +214,7 @@ export class Kernel {
      * @function bind_events
      */
     bind_events(): void {
-        this.events.on('send_input_reply.Kernel', (evt: Event, data: any) => { 
+        this.events.on('send_input_reply.Kernel', (evt: JQueryEventObject, data: any) => { 
             this.send_input_reply(data);
         });
 
@@ -313,7 +306,7 @@ export class Kernel {
         }
 
         this.events.trigger('kernel_starting.Kernel', {kernel: this});
-        var on_success = (msg: IKernelReply) => {
+        var on_success = (msg: IKernelSuccess) => {
             this.events.trigger('kernel_created.Kernel', {kernel: this});
             this._kernel_created(msg.data);
             if (success) {
@@ -393,7 +386,7 @@ export class Kernel {
     interrupt(success: Function, error: Function): void {
         this.events.trigger('kernel_interrupting.Kernel', {kernel: this});
 
-        var on_success = (msg: IKernelReply) => {
+        var on_success = (msg: IKernelSuccess) => {
             /**
              * get kernel info so we know what state the kernel is in
              */
@@ -428,7 +421,7 @@ export class Kernel {
         this.events.trigger('kernel_restarting.Kernel', {kernel: this});
         this.stop_channels();
 
-        var on_success = (msg: IKernelReply) => {
+        var on_success = (msg: IKernelSuccess) => {
             this.events.trigger('kernel_created.Kernel', {kernel: this});
             this._kernel_created(msg.data);
             if (success) {
@@ -436,11 +429,11 @@ export class Kernel {
             }
         };
 
-        var on_error = (msg: IKernelErrorMessage) => {
+        var on_error = (xhr: JQueryXHR, status: string, err: string) => {
             this.events.trigger('kernel_dead.Kernel', {kernel: this});
             this._kernel_dead();
             if (error) {
-                error(msg.xhr, msg.status, msg.err);
+                error(xhr, status, err);
             }
         };
 
@@ -484,7 +477,7 @@ export class Kernel {
          * @function _on_success
          * @param {function} success - callback
          */
-        return (msg: IKernelReply) => {
+        return (msg: IKernelSuccess) => {
             if (msg.data) {
                 this.id = msg.data.id;
                 this.name = msg.data.name;
@@ -496,7 +489,7 @@ export class Kernel {
         };
     }
 
-    protected _on_error(error: Function) : IAjaxError {
+    protected _on_error(error?: Function) : IAjaxError {
         /**
          * Handle a failed AJAX request by logging the error message, and
          * then optionally calling a provided callback.
@@ -504,10 +497,10 @@ export class Kernel {
          * @function _on_error
          * @param {function} error - callback
          */
-        return (msg: IKernelErrorMessage) => {
-            utils.log_ajax_error(msg.xhr, msg.status, msg.err);
+        return (xhr: JQueryXHR, status: string, err: string) => {
+            utils.log_ajax_error(xhr, status, err);
             if (error) {
-                error(msg.xhr, msg.status, msg.err);
+                error(xhr, status, err);
             }
         };
     }
