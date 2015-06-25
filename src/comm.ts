@@ -5,6 +5,8 @@ import utils = require('./utils');
 import kernel = require('./kernel');
 
 
+
+
 export
   interface IPayload {
   source: string;
@@ -48,10 +50,27 @@ export
 };
 
 
+export 
+interface IKernelHeader {
+  username ?: string;
+  version ?: string;
+  data ?: string;
+  session ?: string;
+  msg_id ?: string;
+  msg_type ?: string;
+};
+
+
 export
   interface IKernelMsg {
+  metadata?: IMetadata;
   content: IMsgContent;
+  msg_id?: string;
+  parent_header: IKernelParentHeader;
+  header: IKernelHeader;
+  msg_type: string;
 };
+
 
 
 export
@@ -102,7 +121,10 @@ export
 
 export
   interface IKernelParentHeader {
-  msg_id: string;
+  msg_id?: string;
+  version?: string;
+  session?: string;
+  msg_type?: string;
 };
 
 
