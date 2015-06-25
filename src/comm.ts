@@ -5,32 +5,31 @@ import utils = require('./utils');
 import kernel = require('./kernel');
 
 
-
-
 export
-  interface IPayload {
+  interface IMsgPayload {
   source: string;
 };
 
 
 export
-  interface IPayloadCallbacks {
+  interface IMsgPayloadCallbacks {
   [s: string]: Function;
 };
 
 
 export
   interface IMsgContent {
-  payload?: IPayload[];
+  payload?: IMsgPayload[];
   execution_state?: string;
   comm_id?: string;
   target_name?: string;
   target_module?: string;
+  value?: any;
 };
 
 
 export
-  interface IMetadata { };
+  interface IMsgMetadata { };
 
 
 export
@@ -44,14 +43,14 @@ export
 
 
 export
-  interface IKernelData {
+  interface IMsgData {
   id: string;
   name: string;
 };
 
 
 export
-  interface IKernelHeader {
+  interface IMsgHeader {
   username?: string;
   version?: string;
   data?: string;
@@ -62,21 +61,30 @@ export
 
 
 export
+  interface IMsgParentHeader {
+  msg_id?: string;
+  version?: string;
+  session?: string;
+  msg_type?: string;
+};
+
+
+export
   interface IKernelMsg {
-  metadata?: IMetadata;
+  metadata?: IMsgMetadata;
   content: IMsgContent;
   msg_id?: string;
-  parent_header: IKernelParentHeader;
-  header: IKernelHeader;
-  channel?: IChannel;
+  parent_header: IMsgParentHeader;
+  header: IMsgHeader;
   msg_type?: string;
+  channel?: string;
   buffers?: string[] | ArrayBuffer[];
 };
 
 
 export
-  interface IKernelSuccess {
-  data: IKernelData;
+  interface IMsgSuccess {
+  data: IMsgData;
   status: string;
   xhr: JQueryXHR;
 };
@@ -120,26 +128,6 @@ export
 };
 
 
-export
-  interface IKernelParentHeader {
-  msg_id?: string;
-  version?: string;
-  session?: string;
-  msg_type?: string;
-};
-
-
-export
-  interface IChannel { };
-
-
-export
-  interface IHeader {
-  msg_type: string;
-};
-
-
-
 interface ICommCallback {
   (msg: IKernelMsg): void;
 }
@@ -180,7 +168,7 @@ export class CommManager {
    * Create a new Comm, register it, and open its Kernel-side counterpart
    * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
    */
-  newComm(target_name: string, data: IKernelData, callbacks: IKernelCallbacks, metadata: IMetadata): Comm {
+  newComm(target_name: string, data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata): Comm {
 
     var comm = new Comm(target_name);
     this.registerComm(comm);
@@ -303,7 +291,7 @@ export class Comm {
   }
     
   // methods for sending messages
-  open(data: IKernelData, callbacks: IKernelCallbacks, metadata: IMetadata) {
+  open(data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata) {
     var content = {
       comm_id: this.comm_id,
       target_name: this.target_name,
@@ -312,7 +300,7 @@ export class Comm {
     return this.kernel.sendShellMessage("comm_open", content, callbacks, metadata);
   }
 
-  send(data: IKernelData, callbacks: IKernelCallbacks, metadata: IMetadata, buffers: string[] = []) {
+  send(data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata, buffers: string[] = []) {
     var content: IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},
@@ -320,7 +308,7 @@ export class Comm {
     return this.kernel.sendShellMessage("comm_msg", content, callbacks, metadata, buffers);
   }
 
-  close(data?: IKernelData, callbacks?: IKernelCallbacks, metadata?: IMetadata) {
+  close(data?: IMsgData, callbacks?: IKernelCallbacks, metadata?: IMsgMetadata) {
     var content: IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},

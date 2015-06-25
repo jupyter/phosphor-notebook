@@ -92,7 +92,7 @@ export
      * @function _get_msg
      */
     private _getMsg(msg_type: string, content: comm.IMsgContent,
-        metadata: comm.IMetadata = {}, buffers: string[] = []): comm.IKernelMsg {
+        metadata: comm.IMsgMetadata = {}, buffers: string[] = []): comm.IKernelMsg {
         var msg: IKernelMsg = {
             header: {
                 msg_id: utils.uuid(),
@@ -205,7 +205,7 @@ export
         }
 
         this.events.trigger('kernel_starting.Kernel', { kernel: this });
-        var on_success = (msg: comm.IKernelSuccess) => {
+        var on_success = (msg: comm.IMsgSuccess) => {
             this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
@@ -285,7 +285,7 @@ export
     interrupt(success: Function, error: Function): void {
         this.events.trigger('kernel_interrupting.Kernel', { kernel: this });
 
-        var on_success = (msg: comm.IKernelSuccess) => {
+        var on_success = (msg: comm.IMsgSuccess) => {
             /**
              * get kernel info so we know what state the kernel is in
              */
@@ -320,7 +320,7 @@ export
         this.events.trigger('kernel_restarting.Kernel', { kernel: this });
         this.stopChannels();
 
-        var on_success = (msg: comm.IKernelSuccess) => {
+        var on_success = (msg: comm.IMsgSuccess) => {
             this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
@@ -378,7 +378,7 @@ export
      * @param {function} success - callback
      */
     private _on_success(success: Function): IAjaxSuccess {
-        return (msg: comm.IKernelSuccess) => {
+        return (msg: comm.IMsgSuccess) => {
             if (msg.data) {
                 this.id = msg.data.id;
                 this.name = msg.data.name;
@@ -414,7 +414,7 @@ export
      * @function _kernel_created
      * @param {Object} data - information about the kernel including id
      */
-    private _kernelCreated(data: comm.IKernelData): void {
+    private _kernelCreated(data: comm.IMsgData): void {
         this.id = data.id;
         this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
         this.startChannels();
@@ -631,7 +631,7 @@ export
      *
      * @function send_shell_message
      */
-    sendShellMessage(msg_type: string, content: comm.IMsgContent, callbacks: comm.IKernelCallbacks, metadata: comm.IMetadata = {}, buffers: string[] = []): string {
+    sendShellMessage(msg_type: string, content: comm.IMsgContent, callbacks: comm.IKernelCallbacks, metadata: comm.IMsgMetadata = {}, buffers: string[] = []): string {
 
         if (!this.isConnected()) {
             throw new Error("kernel is not connected");
@@ -787,7 +787,7 @@ export
         if (!this.isConnected()) {
             throw new Error("kernel is not connected");
         }
-        var content = {
+        var content: comm.IMsgContent = {
             value: input
         };
         this.events.trigger('input_reply.Kernel', { kernel: this, content: content });
@@ -941,8 +941,8 @@ export
     /**
      * @function _handle_payloads
      */
-    private _handlePayload(payloads: comm.IPayload[],
-        payload_callbacks: comm.IPayloadCallbacks,
+    private _handlePayload(payloads: comm.IMsgPayload[],
+        payload_callbacks: comm.IMsgPayloadCallbacks,
         msg: IKernelMsg): Promise<any> {
         var promise: comm.IKernelCallbacks[] = [];
         var l = payloads.length;
