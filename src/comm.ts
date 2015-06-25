@@ -207,7 +207,7 @@ export class Comm {
     }
     
     // methods for registering callbacks for incoming messages
-    protected _register_callback(key: string, callback: Callbacks) {
+    private _register_callback(key: string, callback: Callbacks) {
         this['_' + key + '_callback'] = callback;
     }
 
@@ -221,7 +221,7 @@ export class Comm {
     
     // methods for handling incoming messages
     
-    protected _callback(key: string, msg: Msg) {
+    private _callback(key: string, msg: Msg) {
         var callback = this['_' + key + '_callback'];
         if (callback) {
             try {

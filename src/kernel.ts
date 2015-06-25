@@ -195,7 +195,7 @@ export class Kernel {
     /**
      * @function _get_msg
      */
-    protected _get_msg(msg_type: string, content: IContent,
+    private _get_msg(msg_type: string, content: IContent,
         metadata: IMetadata = {}, buffers: string[] = []): any {
         var msg: any = {
             header: {
@@ -471,7 +471,7 @@ export class Kernel {
         this.start_channels();
     }
 
-    protected _on_success(success: Function): IAjaxSuccess {
+    private _on_success(success: Function): IAjaxSuccess {
         /**
          * Handle a successful AJAX request by updating the kernel id and
          * name from the response, and then optionally calling a provided
@@ -492,7 +492,7 @@ export class Kernel {
         };
     }
 
-    protected _on_error(error?: Function): IAjaxError {
+    private _on_error(error?: Function): IAjaxError {
         /**
          * Handle a failed AJAX request by logging the error message, and
          * then optionally calling a provided callback.
@@ -508,7 +508,7 @@ export class Kernel {
         };
     }
 
-    protected _kernel_created(data: IKernelData): void {
+    private _kernel_created(data: IKernelData): void {
         /**
          * Perform necessary tasks once the kernel has been started,
          * including actually connecting to the kernel.
@@ -521,7 +521,7 @@ export class Kernel {
         this.start_channels();
     }
 
-    protected _kernel_connected(): void {
+    private _kernel_connected(): void {
         /**
          * Perform necessary tasks once the connection to the kernel has
          * been established. This includes requesting information about
@@ -537,7 +537,7 @@ export class Kernel {
         });
     }
 
-    protected _kernel_dead(): void {
+    private _kernel_dead(): void {
         /**
          * Perform necessary tasks after the kernel has died. This closing
          * communication channels to the kernel if they are still somehow
@@ -617,7 +617,7 @@ export class Kernel {
         this.ws.onmessage = $.proxy(this._handle_ws_message, this);
     }
 
-    protected _ws_opened(evt: IKernelEvent): void {
+    private _ws_opened(evt: IKernelEvent): void {
         /**
          * Handle a websocket entering the open state,
          * signaling that the kernel is connected when websocket is open.
@@ -630,7 +630,7 @@ export class Kernel {
         }
     }
 
-    protected _ws_closed(ws_url: string, error: boolean): void {
+    private _ws_closed(ws_url: string, error: boolean): void {
         /**
          * Handle a websocket entering the closed state.  If the websocket
          * was not closed due to an error, try to reconnect to the kernel.
@@ -649,7 +649,7 @@ export class Kernel {
         this._schedule_reconnect();
     }
 
-    protected _schedule_reconnect(): void {
+    private _schedule_reconnect(): void {
         /**
          * function to call when kernel connection is lost
          * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
@@ -930,7 +930,7 @@ export class Kernel {
     /**
      * @function _finish_shell
      */
-    protected _finish_shell(msg_id: string): void {
+    private _finish_shell(msg_id: string): void {
         var callbacks = this._msg_callbacks[msg_id];
         if (callbacks !== undefined) {
             callbacks.shell_done = true;
@@ -943,7 +943,7 @@ export class Kernel {
     /**
      * @function _finish_iopub
      */
-    protected _finish_iopub(msg_id: string): void {
+    private _finish_iopub(msg_id: string): void {
         var callbacks = this._msg_callbacks[msg_id];
         if (callbacks !== undefined) {
             callbacks.iopub_done = true;
@@ -977,7 +977,7 @@ export class Kernel {
         }
     }
 
-    protected _handle_ws_message(e: IKernelEvent): Promise<any> {
+    private _handle_ws_message(e: IKernelEvent): Promise<any> {
         this._msg_queue = this._msg_queue.then(() => {
             return serialize.deserialize(e.data);
         }).then(function(msg) { return this._finish_ws_message(msg); })
@@ -985,7 +985,7 @@ export class Kernel {
         return;
     }
 
-    protected _finish_ws_message(msg: IKernelMessage): Promise<any> {
+    private _finish_ws_message(msg: IKernelMessage): Promise<any> {
         switch (msg.channel) {
             case 'shell':
                 return this._handle_shell_reply(msg);
@@ -1002,7 +1002,7 @@ export class Kernel {
         return Promise.resolve();
     }
 
-    protected _handle_shell_reply(reply: IKernelMessage): Promise<any> {
+    private _handle_shell_reply(reply: IKernelMessage): Promise<any> {
         this.events.trigger('shell_reply.Kernel', { kernel: this, reply: reply });
         var content = reply.content;
         var metadata = reply.metadata;
@@ -1031,7 +1031,7 @@ export class Kernel {
     /**
      * @function _handle_payloads
      */
-    protected _handle_payload(payloads: IPayload[],
+    private _handle_payload(payloads: IPayload[],
         payload_callbacks: IPayloadCallbacks,
         msg: IKernelMessage): Promise<any> {
         var promise: IKernelCallbacks[] = [];
@@ -1051,7 +1051,7 @@ export class Kernel {
     /**
      * @function _handle_status_message
      */
-    protected _handle_status_message(msg: IKernelMessage): void {
+    private _handle_status_message(msg: IKernelMessage): void {
         var execution_state = msg.content.execution_state;
         var parent_id = msg.parent_header.msg_id;
         
@@ -1104,7 +1104,7 @@ export class Kernel {
      *
      * @function _handle_clear_output
      */
-    protected _handle_clear_output(msg: IKernelMessage): void {
+    private _handle_clear_output(msg: IKernelMessage): void {
         var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             return;
@@ -1120,7 +1120,7 @@ export class Kernel {
      *
      * @function _handle_output_message
      */
-    protected _handle_output_message(msg: IKernelMessage): void {
+    private _handle_output_message(msg: IKernelMessage): void {
         var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             // The message came from another client. Let the UI decide what to
@@ -1139,7 +1139,7 @@ export class Kernel {
      *
      * @function _handle_input message
      */
-    protected _handle_input_message(msg: IKernelMessage): void {
+    private _handle_input_message(msg: IKernelMessage): void {
         var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks) {
             // The message came from another client. Let the UI decide what to
@@ -1154,7 +1154,7 @@ export class Kernel {
      *
      * @function _handle_iopub_message
      */
-    protected _handle_iopub_message(msg: IKernelMessage): void {
+    private _handle_iopub_message(msg: IKernelMessage): void {
         var handler = this.get_iopub_handler(msg.header.msg_type);
         if (handler !== undefined) {
             handler(msg);
@@ -1164,7 +1164,7 @@ export class Kernel {
     /**
      * @function _handle_input_request
      */
-    protected _handle_input_request(request: IKernelMessage): void {
+    private _handle_input_request(request: IKernelMessage): void {
         var header = request.header;
         var content = request.content;
         var metadata = request.metadata;
