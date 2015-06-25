@@ -69,7 +69,8 @@ export
   parent_header: IKernelParentHeader;
   header: IKernelHeader;
   channel?: IChannel;
-  msg_type: string;
+  msg_type?: string;
+  buffers?: string[];
 };
 
 

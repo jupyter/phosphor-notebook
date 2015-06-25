@@ -5,14 +5,13 @@
 "use strict";
 
 import utils = require("./utils");
+import comm = require("./comm")
 
 
-interface IKernelDataType extends String {
-  buffers?: ArrayBuffer[];
-};
+interface IKernelMsg extends comm.IKernelMsg { };
 
 
-function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelDataType {
+function _deserializeArrayBuffer(buf: ArrayBuffer): comm.IKernelMsg {
   var data = new DataView(buf);
   // read the header: 1 + nbufs 32b integers
   var nbufs = data.getUint32(0);
@@ -42,7 +41,7 @@ function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelDataType {
  * callback will be called with a message whose buffers attribute
  * will be an array of DataViews.
  */
-function _deserializeBinary(data: Blob | ArrayBuffer): IKernelDataType | Promise<IKernelDataType> {
+function _deserializeBinary(data: Blob | ArrayBuffer): IKernelMsg | Promise<IKernelMsg> {
 
   if (data instanceof Blob) {
     // data is Blob, have to deserialize from ArrayBuffer in reader callback
@@ -67,7 +66,7 @@ function _deserializeBinary(data: Blob | ArrayBuffer): IKernelDataType | Promise
  * deserialize a message and return a promise for the unpacked message
  */
 export
-  function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelDataType> {
+  function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
   if (typeof data === "string") {
     // text JSON message
     return Promise.resolve(JSON.parse(data));
@@ -82,8 +81,8 @@ export
  * implement the binary serialization protocol
  * serializes JSON message to ArrayBuffer
  */
-function _serializeBinary(src_msg: IKernelDataType): ArrayBuffer {
-  var msg: IKernelDataType;
+function _serializeBinary(src_msg: IKernelMsg): ArrayBuffer {
+  var msg: IKernelMsg;
   msg = utils.extend(msg , src_msg);
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
@@ -127,7 +126,7 @@ function _serializeBinary(src_msg: IKernelDataType): ArrayBuffer {
  * implement the serialization protocol
  */
 export
-  function serialize(msg: IKernelDataType): string | ArrayBuffer {
+  function serialize(msg: IKernelMsg): string | ArrayBuffer {
   if (msg.buffers && msg.buffers.length) {
     return _serializeBinary(msg);
   } else {

@@ -92,8 +92,8 @@ export
      * @function _get_msg
      */
     private _getMsg(msg_type: string, content: comm.IMsgContent,
-        metadata: comm.IMetadata = {}, buffers: string[] = []): any {
-        var msg: any = {
+        metadata: comm.IMetadata = {}, buffers: string[] = []): comm.IKernelMsg {
+        var msg: IKernelMsg = {
             header: {
                 msg_id: utils.uuid(),
                 username: this.username,
