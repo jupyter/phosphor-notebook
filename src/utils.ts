@@ -741,6 +741,21 @@ export
   };
 
 
+/** 
+ * Return a serialized object string suitable for a query
+
+  http://stackoverflow.com/a/30707423
+ */
+ export
+var jsonToQueryString = function(json: any) {
+  return '?' +
+    Object.keys(json).map(function(key: any): any {
+      return encodeURIComponent(key) + '=' +
+        encodeURIComponent(json[key]);
+    }).join('&');
+}
+
+
 /**
  * Return a JSON error message if there is one,
  * otherwise the basic HTTP status text.

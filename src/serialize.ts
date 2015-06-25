@@ -4,7 +4,7 @@
 
 "use strict";
 
-import _ = require("underscore");
+import utils = require("./utils");
 
 
 interface IKernelDataType extends String {
@@ -82,8 +82,9 @@ export
  * implement the binary serialization protocol
  * serializes JSON message to ArrayBuffer
  */
-function _serializeBinary(msg: IKernelDataType): ArrayBuffer {
-  msg = _.clone(msg);
+function _serializeBinary(src_msg: IKernelDataType): ArrayBuffer {
+  var msg: IKernelDataType;
+  msg = utils.extend(msg , src_msg);
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
   var i: number;

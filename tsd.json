@@ -17,9 +17,6 @@
     "mathjax/mathjax.d.ts": {
       "commit": "575d70adcad0086ec8c6f672a5eb569a4689486c"
     },
-    "underscore/underscore.d.ts": {
-      "commit": "a6e165ec11d827fe22550c9af868b29e67b9e5b7"
-    },
     "jquery/jquery.d.ts": {
       "commit": "1ba173f3bc34379bd798103096c8002f75baaaa5"
     },

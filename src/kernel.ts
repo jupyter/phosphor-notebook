@@ -199,7 +199,7 @@ export
      */
     start(params: Object, success: Function, error: Function): string {
         var url: string = this.kernel_service_url;
-        var qs = $.param(params || {}); // query string for sage math stuff
+        var qs = utils.jsonToQueryString(params || {}); // query string for sage math stuff
         if (qs !== "") {
             url = url + "?" + qs;
         }
