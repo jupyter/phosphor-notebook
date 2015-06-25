@@ -1,8 +1,6 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-
-import $ = require('jquery')
 import utils = require('./utils') 
 import kernel = require('./kernel')
 
@@ -173,8 +171,6 @@ export class Comm {
     kernel: kernel.Kernel;
     target_name: string;
     comm_id: CommID;
-    private _msg_callback:(msg:Msg)=>void;
-    private _close_callback:(msg:Msg)=>void;
     
     constructor(target_name: string, comm_id?: CommID) {
         this.target_name = target_name;
@@ -241,5 +237,8 @@ export class Comm {
     public handle_close(msg:Msg) {
         this._callback('close', msg);
     }
+
+    private _msg_callback:(msg:Msg)=>void;
+    private _close_callback:(msg:Msg)=>void;
     
 }
