@@ -61,7 +61,6 @@ export
     class WrappedError implements Error {
 
     message: string;
-    error: string;
     name: string;
     error_stack: Error[];
 
@@ -76,10 +75,8 @@ export
         var tmp = Error.apply(this, [message]);
 
         // Copy the properties of the error over to this.
-        var properties = Object.getOwnPropertyNames(tmp);
-        for (var i = 0; i < properties.length; i++) {
-            this[properties[i]] = tmp[properties[i]];
-        }
+        this.message = error.message;
+        this.name = error.name;
 
         // Keep a stack of the original error messages.
         if (error instanceof WrappedError) {
@@ -408,13 +405,13 @@ export
 
                 // consume sequence of color escapes
                 var numbers = pattern.match(/\d+/g);
-                var attrs = {};
+                var attrs: { [string: string]: string;} = {};
                 while (numbers.length > 0) {
                     _process_numbers(attrs, numbers);
                 }
 
-                var span = "<span ";
-                Object.keys(attrs).map(function(attr: string): string {
+                var span: string = "<span ";
+                Object.keys(attrs).map(function(attr: string): void {
                     span = span + " " + attr + '="' + attrs[attr] + '"';
                 });
                 return span + ">";
@@ -870,7 +867,7 @@ export
     };
 
 export
-    var reject = function(message: string, log?: boolean): Function {
+    var reject = function(message: string, log?: boolean): (error: any) => any {
         /**
          * Creates a wrappable Promise rejection function.
          * 
