@@ -7,7 +7,10 @@ import $ = require('jquery');
 import utils = require('./utils');
 import comm = require('./comm');
 import serialize = require('./serialize');
-import phosphor = require('phosphor');
+
+import Signal = phosphor.core.Signal;
+import emit = phosphor.core.emit;
+import Pair = phosphor.utility.Pair;
 
 
 interface IKernelMsg extends comm.IKernelMsg { };
@@ -37,6 +40,27 @@ interface IAjaxError {
 export
     class Kernel {
 
+    static sendInputReply = new Signal<Kernel, any>();
+    static created = new Signal<Kernel, void>();
+    static reconnecting = new Signal<Kernel, number>();
+    static starting = new Signal<Kernel, void>();
+    static restarting = new Signal<Kernel, void>();
+    static autorestarting = new Signal<Kernel, number>();
+    static interrupting = new Signal<Kernel, void>();
+    static disconnected = new Signal<Kernel, void>();
+    static idle = new Signal<Kernel, void>();
+    static busy = new Signal<Kernel, void>();
+    static ready = new Signal<Kernel, void>();
+    static killed = new Signal<Kernel, void>();
+    static dead = new Signal<Kernel, void>();
+    static connected = new Signal<Kernel, void>();
+    static connectionFailed = new Signal < Kernel, Pair<string, number>>();
+    static connectionDead = new Signal<Kernel, number>();
+    static executionRequest = new Signal<Kernel, comm.IMsgContent>();
+    static inputReply = new Signal<Kernel, comm.IMsgContent>();
+    static shellReply = new Signal<Kernel, IKernelMsg>();
+    static receivedUnsolicitedMessage = new Signal<Kernel, IKernelMsg>();
+
     id: string;
     name: string;
     kernel_service_url: string;
@@ -51,7 +75,6 @@ export
     last_msg_id: string;
     last_msg_callbacks: any;
     reconnect_limit: number;
-    events: any;
 
     constructor(kernel_service_url: string, ws_url: string, name: string) {
 
@@ -77,7 +100,6 @@ export
             alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
         }
 
-        this.bindEvents();
         this.initIOPubHandlers();
         this.comm_manager = new comm.CommManager(this);
 
@@ -110,44 +132,8 @@ export
         return msg;
     }
 
-    /**
-     * @function bind_events
-     */
-    bindEvents(): void {
-        this.events.on('send_input_reply.Kernel', (evt: JQueryEventObject, data: any) => {
-            this.sendInputReply(data);
-        });
-
-        var record_status = (evt: Event, info: comm.IKernelInfo) => {
-            console.log('Kernel: ' + evt.type + ' (' + info.kernel.id + ')');
-        };
-
-        this.events.on('kernel_created.Kernel', record_status);
-        this.events.on('kernel_reconnecting.Kernel', record_status);
-        this.events.on('kernel_connected.Kernel', record_status);
-        this.events.on('kernel_starting.Kernel', record_status);
-        this.events.on('kernel_restarting.Kernel', record_status);
-        this.events.on('kernel_autorestarting.Kernel', record_status);
-        this.events.on('kernel_interrupting.Kernel', record_status);
-        this.events.on('kernel_disconnected.Kernel', record_status);
-        // these are commented out because they are triggered a lot, but can
-        // be uncommented for debugging purposes
-        //this.events.on('kernel_idle.Kernel', record_status);
-        //this.events.on('kernel_busy.Kernel', record_status);
-        this.events.on('kernel_ready.Kernel', record_status);
-        this.events.on('kernel_killed.Kernel', record_status);
-        this.events.on('kernel_dead.Kernel', record_status);
-
-        this.events.on('kernel_ready.Kernel', () => {
-            this._autorestart_attempt = 0;
-        });
-        this.events.on('kernel_connected.Kernel', () => {
-            this._reconnect_attempt = 0;
-        });
-    }
-
-    private _recordStatus(evt: Event, info?: comm.IKernelInfo) {
-        console.log('Kernel: ' + evt.type + ' (' + info.kernel.id + ')');
+    private _recordStatus(status: string) {
+        console.log('Kernel: ' + status + ' (' + this.id + ')');
     }
 
     /**
@@ -209,9 +195,8 @@ export
             url = url + "?" + qs;
         }
 
-        this.events.trigger('kernel_starting.Kernel', { kernel: this });
+        this._recordStatus('starting');
         var on_success = (msg: comm.IMsgSuccess) => {
-            this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
                 success(msg.data, msg.status, msg.xhr);
@@ -266,7 +251,8 @@ export
      * @param {function} [error] - functon executed on ajax error
      */
     kill(success: Function, error: Function): void {
-        this.events.trigger('kernel_killed.Kernel', { kernel: this });
+        this._recordStatus('killed');
+        emit(this, Kernel.killed, void 0);
         this._kernelDead();
         $.ajax(this.kernel_url, {
             processData: false,
@@ -288,7 +274,8 @@ export
      * @param {function} [error] - functon executed on ajax error
      */
     interrupt(success: Function, error: Function): void {
-        this.events.trigger('kernel_interrupting.Kernel', { kernel: this });
+        this._recordStatus('interrupting');
+        emit(this, Kernel.interrupting, void 0);
 
         var on_success = (msg: comm.IMsgSuccess) => {
             /**
@@ -322,11 +309,11 @@ export
      * @param {function} [error] - functon executed on ajax error
      */
     restart(success: Function, error: Function): void {
-        this.events.trigger('kernel_restarting.Kernel', { kernel: this });
+        this._recordStatus('restarting');
+        emit(this, Kernel.restarting, void 0);
         this.stopChannels();
 
         var on_success = (msg: comm.IMsgSuccess) => {
-            this.events.trigger('kernel_created.Kernel', { kernel: this });
             this._kernelCreated(msg.data);
             if (success) {
                 success(msg.data, msg.status, msg.xhr);
@@ -334,7 +321,6 @@ export
         };
 
         var on_error = (xhr: JQueryXHR, status: string, err: string) => {
-            this.events.trigger('kernel_dead.Kernel', { kernel: this });
             this._kernelDead();
             if (error) {
                 error(xhr, status, err);
@@ -367,10 +353,8 @@ export
             return;
         }
         this._reconnect_attempt = this._reconnect_attempt + 1;
-        this.events.trigger('kernel_reconnecting.Kernel', {
-            kernel: this,
-            attempt: this._reconnect_attempt,
-        });
+        this._recordStatus('reconnecting');
+        emit(this, Kernel.reconnecting, this._reconnect_attempt);
         this.startChannels();
     }
 
@@ -420,6 +404,8 @@ export
      * @param {Object} data - information about the kernel including id
      */
     private _kernelCreated(data: comm.IMsgData): void {
+        this._recordStatus('created');
+        emit(this, Kernel.created, void 0);
         this.id = data.id;
         this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
         this.startChannels();
@@ -433,11 +419,15 @@ export
      * @function _kernel_connected
      */
     private _kernelConnected(): void {
-        this.events.trigger('kernel_connected.Kernel', { kernel: this });
+        this._recordStatus('connected');
+        this._reconnect_attempt = 0;
+        emit(this, Kernel.connected, void 0);
         // get kernel info so we know what state the kernel is in
         this.kernelInfo((reply?: comm.IKernelMsg) => {
             this.info_reply = reply.content;
-            this.events.trigger('kernel_ready.Kernel', { kernel: this });
+            this._recordStatus('ready');
+            this._autorestart_attempt = 0;
+            emit(this, Kernel.ready, void 0);
         });
     }
 
@@ -449,6 +439,8 @@ export
      * @function _kernel_dead
      */
     private _kernelDead(): void {
+        this._recordStatus('dead');
+        emit(this, Kernel.dead, void 0);
         this.stopChannels();
     }
 
@@ -487,7 +479,6 @@ export
                 this.getInfo(function() {
                     this._ws_closed(ws_host_url, false);
                 }, function() {
-                    this.events.trigger('kernel_dead.Kernel', { kernel: this });
                     this._kernel_dead();
                 });
             }
@@ -548,10 +539,12 @@ export
 
         this.stopChannels();
 
-        this.events.trigger('kernel_disconnected.Kernel', { kernel: this });
+        this._recordStatus('disconnected');
+        emit(this, Kernel.disconnected, void 0);
         if (error) {
             console.log('WebSocket connection failed: ', ws_url);
-            this.events.trigger('kernel_connection_failed.Kernel', { kernel: this, ws_url: ws_url, attempt: this._reconnect_attempt });
+            emit(this, Kernel.connectionFailed, 
+                 {ws_url: ws_url, attempt: this._reconnect_attempt });
         }
         this._scheduleReconnect();
     }
@@ -567,10 +560,7 @@ export
             console.log("Connection lost, reconnecting in " + timeout + " seconds.");
             setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
         } else {
-            this.events.trigger('kernel_connection_dead.Kernel', {
-                kernel: this,
-                reconnect_attempt: this._reconnect_attempt,
-            });
+            emit(this, Kernel.connectionDead, this._reconnect_attempt);
             console.log("Failed to reconnect, giving up.");
         }
     }
@@ -745,7 +735,7 @@ export
      */
     execute(code: string, callbacks: comm.IKernelCallbacks, options: comm.IKernelOptions): string {
 
-        var content = {
+        var content: comm.IMsgContent = {
             code: code,
             silent: true,
             store_history: false,
@@ -757,7 +747,7 @@ export
             content.allow_stdin = true;
         }
         utils.extend(content, options);
-        this.events.trigger('execution_request.Kernel', { kernel: this, content: content });
+        emit(this, Kernel.executionRequest, content);
         return this.sendShellMessage("execute_request", content, callbacks);
     }
 
@@ -795,7 +785,7 @@ export
         var content: comm.IMsgContent = {
             value: input
         };
-        this.events.trigger('input_reply.Kernel', { kernel: this, content: content });
+        emit(this, Kernel.inputReply, content);
         var msg = this._getMsg("input_reply", content);
         msg.channel = 'stdin';
         this.ws.send(serialize.serialize(msg));
@@ -918,7 +908,7 @@ export
     }
 
     private _handleShellReply(reply: IKernelMsg): Promise<any> {
-        this.events.trigger('shell_reply.Kernel', { kernel: this, reply: reply });
+        emit(this, Kernel.shellReply, reply);
         var content = reply.content;
         var metadata = reply.metadata;
         var parent_id = reply.parent_header.msg_id;
@@ -981,7 +971,9 @@ export
         }
 
         if (execution_state === 'busy') {
-            this.events.trigger('kernel_busy.Kernel', { kernel: this });
+            // uncomment for debugging
+            //this._recordStatus('busy');
+            emit(this, Kernel.busy, void 0);
 
         } else if (execution_state === 'idle') {
             // signal that iopub callbacks are (probably) done
@@ -990,13 +982,18 @@ export
             this._finishIOPub(parent_id);
             
             // trigger status_idle event
-            this.events.trigger('kernel_idle.Kernel', { kernel: this });
+            // uncomment for debugging
+            //this._recordStatus('idle');
+            emit(this, Kernel.idle, void 0);
 
         } else if (execution_state === 'starting') {
-            this.events.trigger('kernel_starting.Kernel', { kernel: this });
+            this._recordStatus('starting');
+            emit(this, Kernel.starting, void 0);
             this.kernelInfo((reply: IKernelMsg) => {
                 this.info_reply = reply.content;
-                this.events.trigger('kernel_ready.Kernel', { kernel: this });
+                this._recordStatus('ready');
+                this._autorestart_attempt = 0;
+                emit(this, Kernel.ready, void 0);
             });
 
         } else if (execution_state === 'restarting') {
@@ -1005,11 +1002,12 @@ export
             // kernel_restarting sets the notification widget,
             // autorestart shows the more prominent dialog.
             this._autorestart_attempt = this._autorestart_attempt + 1;
-            this.events.trigger('kernel_restarting.Kernel', { kernel: this });
-            this.events.trigger('kernel_autorestarting.Kernel', { kernel: this, attempt: this._autorestart_attempt });
+            this._recordStatus('restarting');
+            emit(this, Kernel.restarting, void 0);
+            this._recordStatus('autorestarting');
+            emit(this, Kernel.autorestarting, this._autorestart_attempt);
 
         } else if (execution_state === 'dead') {
-            this.events.trigger('kernel_dead.Kernel', { kernel: this });
             this._kernelDead();
         }
     }
@@ -1040,7 +1038,7 @@ export
         if (!callbacks || !callbacks.iopub) {
             // The message came from another client. Let the UI decide what to
             // do with it.
-            this.events.trigger('received_unsolicited_message.Kernel', msg);
+            emit(this, Kernel.receivedUnsolicitedMessage, msg);
             return;
         }
         var callback = callbacks.iopub.output;
@@ -1059,7 +1057,7 @@ export
         if (!callbacks) {
             // The message came from another client. Let the UI decide what to
             // do with it.
-            this.events.trigger('received_unsolicited_message.Kernel', msg);
+            emit(this, Kernel.receivedUnsolicitedMessage, msg);
         }
     }
 
