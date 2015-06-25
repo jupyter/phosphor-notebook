@@ -48,11 +48,11 @@ export class CommManager {
          * connect the kernel, and register message handlers
          */
         this.kernel = kernel;
-        kernel.register_iopub_handler('comm_open', 
+        kernel.registerIOPubHandler('comm_open', 
                                       (msg: Msg) => this._commOpen(msg));
-        kernel.register_iopub_handler('comm_close', 
+        kernel.registerIOPubHandler('comm_close', 
                                       (msg: Msg) => this._commClose(msg));
-        kernel.register_iopub_handler('comm_msg', 
+        kernel.registerIOPubHandler('comm_msg', 
                                       (msg: Msg) => this._commMsg(msg));
     }
 
@@ -104,7 +104,7 @@ export class CommManager {
         var that = this;
         var comm_id = content.comm_id;
 
-        this.comms[comm_id] = utils.load_class(content.target_name, content.target_module,
+        this.comms[comm_id] = utils.loadClass(content.target_name, content.target_module,
             this.targets).then(function(target: (a: any, b: any) => Promise<any>) {
                 var comm = new Comm(content.target_name, comm_id);
                 comm.kernel = that.kernel;
@@ -189,7 +189,7 @@ export class Comm {
             target_name: this.target_name,
             data: data || {},
         };
-        return this.kernel.send_shell_message("comm_open", content, callbacks, metadata);
+        return this.kernel.sendShellMessage("comm_open", content, callbacks, metadata);
     }
 
     send(data: Data, callbacks: Callbacks, metadata: Metadata, buffers: string[] = []) {
@@ -197,7 +197,7 @@ export class Comm {
             comm_id: this.comm_id,
             data: data || {},
         };
-        return this.kernel.send_shell_message("comm_msg", content, callbacks, metadata, buffers);
+        return this.kernel.sendShellMessage("comm_msg", content, callbacks, metadata, buffers);
     }
 
     close(data?: Data, callbacks?: Callbacks, metadata?: Metadata) {
@@ -205,7 +205,7 @@ export class Comm {
             comm_id: this.comm_id,
             data: data || {},
         };
-        return this.kernel.send_shell_message("comm_close", content, callbacks, metadata);
+        return this.kernel.sendShellMessage("comm_close", content, callbacks, metadata);
     }
 
     onMsg(callback: Callbacks) {

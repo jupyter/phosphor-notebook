@@ -62,7 +62,7 @@ export
 
     message: string;
     name: string;
-    error_stack: Error[];
+    errorStack: Error[];
 
     constructor(message: string, error: Error) {
         /**
@@ -80,11 +80,11 @@ export
 
         // Keep a stack of the original error messages.
         if (error instanceof WrappedError) {
-            this.error_stack = error.error_stack;
+            this.errorStack = error.errorStack;
         } else {
-            this.error_stack = [error];
+            this.errorStack = [error];
         }
-        this.error_stack.push(tmp);
+        this.errorStack.push(tmp);
 
     }
 }
@@ -93,11 +93,11 @@ export
  * load one or more Jupyter notebook extensions with requirejs
  **/
 export
-    var load_extensions = function(...exts: IPythonExtension[]): void {
+    var loadExtensions = function(...exts: IPythonExtension[]): void {
 
         var extensions: string[] = [];
-        var extension_names = exts;
-        for (var i = 0; i < extension_names.length; i++) {
+        var extensionNames = exts;
+        for (var i = 0; i < extensionNames.length; i++) {
             extensions.push("nbextensions/" + exts[i]);
         }
 
@@ -105,7 +105,7 @@ export
             function() {
                 for (var i = 0; i < exts.length; i++) {
                     var ext = exts[i];
-                    var ext_name = extension_names[i];
+                    var ext_name = extensionNames[i];
                     // success callback
                     console.log("Loaded extension: " + ext_name);
                     if (ext && ext.load_ipython_extension !== undefined) {
@@ -126,12 +126,12 @@ export
  * in a 'load_extensions' key inside it.
  */
 export
-    var load_extensions_from_config = function(section: ISection): void {
+    var loadExtensionsFromConfig = function(section: ISection): void {
         section.loaded.then(function() {
             if (section.data.load_extensions) {
                 var nbextension_paths = Object.getOwnPropertyNames(
                     section.data.load_extensions);
-                load_extensions.apply(this, nbextension_paths);
+                loadExtensions.apply(this, nbextension_paths);
             }
         });
     }
@@ -179,7 +179,7 @@ export
  * // -> ['..', 'word', '1', ' ', 'word', '2', '..']
  */
 export
-    var regex_split = function(str: string, separator: MyRegExp, limit: number): string[] {
+    var regexSplit = function(str: string, separator: MyRegExp, limit: number): string[] {
         var output: string[] = [],
             flags: string = (separator.ignoreCase ? "i" : "") +
                 (separator.multiline ? "m" : "") +
@@ -282,7 +282,7 @@ export
 
 //Map from terminal commands to CSS classes
 export
-    var ansi_colormap: { [s: string]: string; } = {
+    var ansiColormap: { [s: string]: string; } = {
         "01": "ansibold",
 
         "30": "ansiblack",
@@ -305,14 +305,14 @@ export
     };
 
 
-function _process_numbers(attrs: { style?: string; class?: string; }, numbers: string[]) {
+function _processNumbers(attrs: { style?: string; class?: string; }, numbers: string[]) {
     // process ansi escapes
     var n = numbers.shift();
-    if (ansi_colormap[n]) {
+    if (ansiColormap[n]) {
         if (!attrs["class"]) {
-            attrs["class"] = ansi_colormap[n];
+            attrs["class"] = ansiColormap[n];
         } else {
-            attrs["class"] += " " + ansi_colormap[n];
+            attrs["class"] += " " + ansiColormap[n];
         }
     } else if (n == "38" || n == "48") {
         // VT100 256 color or 24 bit RGB
@@ -330,7 +330,7 @@ function _process_numbers(attrs: { style?: string; class?: string; }, numbers: s
                 // indexed ANSI
                 // ignore bright / non-bright distinction
                 idx = idx % 8;
-                var ansiclass = ansi_colormap[n[0] + (idx % 8).toString()];
+                var ansiclass = ansiColormap[n[0] + (idx % 8).toString()];
                 if (!attrs["class"]) {
                     attrs["class"] = ansiclass;
                 } else {
@@ -407,7 +407,7 @@ export
                 var numbers = pattern.match(/\d+/g);
                 var attrs: { [string: string]: string;} = {};
                 while (numbers.length > 0) {
-                    _process_numbers(attrs, numbers);
+                    _processNumbers(attrs, numbers);
                 }
 
                 var span: string = "<span ";
@@ -461,7 +461,7 @@ export
 
 
 export
-    var points_to_pixels = function(points: number): number {
+    var pointsToPixels = function(points: number): number {
         /**
          * A reasonably good way of converting between points and pixels.
          */
@@ -474,7 +474,7 @@ export
 
 
 export
-    var always_new = function(constructor: Function) {
+    var alwaysNew = function(constructor: Function) {
         /**
          * wrapper around contructor to avoid requiring `var a = new constructor()`
          * useful for passing constructors as callbacks,
@@ -490,7 +490,7 @@ export
 
 
 export
-    var url_path_join = function(...paths: string[]): string {
+    var urlPathJoin = function(...paths: string[]): string {
         /**
          * join a sequence of url components with '/'
          */
@@ -511,7 +511,7 @@ export
 
 
 export
-    var url_path_split = function(path: string): string[] {
+    var urlPathSplit = function(path: string): string[] {
         /**
          * Like os.path.split for URLs.
          * Always returns two strings, the directory path and the base filename
@@ -527,7 +527,7 @@ export
 
 
 export
-    var parse_url = function(url: string) {
+    var parseUrl = function(url: string) {
         /**
          * an `a` element with an href allows attr-access to the parsed segments of a URL
          * a = parse_url("http://localhost:8888/path/name#hash")
@@ -545,7 +545,7 @@ export
 
 
 export
-    var encode_uri_components = function(uri: string): string {
+    var encodeURIComponents = function(uri: string): string {
         /**
          * encode just the components of a multi-segment uri,
          * leaving '/' separators
@@ -555,12 +555,12 @@ export
 
 
 export
-    var url_join_encode = function(...args: string[]): string {
+    var urlJoinEncode = function(...args: string[]): string {
         /**
          * join a sequence of url components with '/',
          * encoding each component with encodeURIComponent
          */
-        return encode_uri_components(url_path_join.apply(null, args));
+        return encodeURIComponents(urlPathJoin.apply(null, args));
     };
 
 
@@ -580,7 +580,7 @@ export
 
 
 export
-    var escape_html = function(text: string): string {
+    var escapeHtml = function(text: string): string {
         /**
          * escape text to HTML
          */
@@ -589,7 +589,7 @@ export
 
 
 export
-    var get_body_data = function(key: string): string {
+    var getBodyData = function(key: string): string {
         /**
          * get a url-encoded item from body.data and decode it
          * we should never have any encoded URLs anywhere else in code
@@ -602,7 +602,7 @@ export
     };
 
 export
-    var to_absolute_cursor_pos = function(cm: CodeMirror.Editor, cursor: CodeMirror.Cursor): number {
+    var toAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor: CodeMirror.Cursor): number {
         /**
          * get the absolute cursor position from CodeMirror's col, ch
          */
@@ -617,7 +617,7 @@ export
     };
 
 export
-    var from_absolute_cursor_pos = function(cm: CodeMirror.Editor, cursor_pos: CodeMirror.Cursor) {
+    var fromAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor_pos: CodeMirror.Cursor) {
         /**
          * turn absolute cursor position into CodeMirror col, ch cursor
          */
@@ -672,8 +672,9 @@ export
         return OSName;
     })();
 
+
 export
-    var get_url_param = function(name: string): string {
+    var getURLParam = function(name: string): string {
         // get a URL parameter. I cannot believe we actually need this.
         // Based on http://stackoverflow.com/a/25359264/938949
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
@@ -682,8 +683,9 @@ export
         }
     };
 
+
 export
-    var is_or_has = function(a: any, b: any): boolean {
+    var isOrHas = function(a: any, b: any): boolean {
         /**
          * Is b a child of a or a itself?
          */
@@ -691,14 +693,14 @@ export
     };
 
 export
-    var is_focused = function(e: any) {
+    var isFocused = function(e: any) {
         /**
          * Is element e, or one of its children focused?
          */
         e = $(e);
         var target = $(document.activeElement);
         if (target.length > 0) {
-            if (is_or_has(e, target)) {
+            if (isOrHas(e, target)) {
                 return true;
             } else {
                 return false;
@@ -716,7 +718,7 @@ export
     };
 
 export
-    var ajax_error_msg = function(jqXHR: JQueryXHR) {
+    var ajaxErrorMsg = function(jqXHR: JQueryXHR) {
         /**
          * Return a JSON error message if there is one,
          * otherwise the basic HTTP status text.
@@ -731,13 +733,13 @@ export
     };
 
 export
-    var log_ajax_error = function(jqXHR: JQueryXHR, status: string, error: string) {
+    var logAjaxError = function(jqXHR: JQueryXHR, status: string, error: string) {
         /**
          * log ajax failures with informative messages
          */
         var msg = "API request failed (" + jqXHR.status + "): ";
         console.log(jqXHR);
-        msg += ajax_error_msg(jqXHR);
+        msg += ajaxErrorMsg(jqXHR);
         console.log(msg);
     }
 
@@ -786,8 +788,8 @@ export
  * Wraps an AJAX error as an Error object.
  */
 export
-    var wrap_ajax_error = function(jqXHR: JQueryXHR, status: string, error: string) {
-        var wrapped_error = <MyError>(new Error(ajax_error_msg(jqXHR)));
+    var wrapAjaxError = function(jqXHR: JQueryXHR, status: string, error: string) {
+        var wrapped_error = <MyError>(new Error(ajaxErrorMsg(jqXHR)));
         wrapped_error.name = XHR_ERROR;
         // provide xhr response
         wrapped_error.xhr = jqXHR;
@@ -797,7 +799,7 @@ export
     };
 
 export
-    var promising_ajax = function(url: string, settings: any): Promise<any> {
+    var promisingAjax = function(url: string, settings: any): Promise<any> {
         /**
          * Like $.ajax, but returning an ES6 promise. success and error settings
          * will be ignored.
@@ -808,8 +810,8 @@ export
                 resolve(data);
             };
             settings.error = function(jqXHR: JQueryXHR, status: string, error: string) {
-                log_ajax_error(jqXHR, status, error);
-                reject(wrap_ajax_error(jqXHR, status, error));
+                logAjaxError(jqXHR, status, error);
+                reject(wrapAjaxError(jqXHR, status, error));
             };
             $.ajax(url, settings);
         });
@@ -817,7 +819,7 @@ export
 
 
 export
-    var load_class = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
+    var loadClass = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
         /**
          * Tries to load a class
          *
@@ -847,7 +849,7 @@ export
     };
 
 export
-    var resolve_promises_dict = function(d: { [string: string]: Promise<any>; }) {
+    var resolvePromisesDict = function(d: { [string: string]: Promise<any>; }) {
         /**
          * Resolve a promiseful dictionary.
          * Returns a single Promise.
@@ -925,7 +927,7 @@ time.thresholds = {
     d: (<number>moment.relativeTimeThreshold('d')) * time.milliseconds.d,
 };
 
-time.timeout_from_dt = function(dt: number) {
+time.timeoutFromDt = function(dt: number) {
     /** compute a timeout based on dt
     
     input and output both in milliseconds

@@ -12,7 +12,7 @@ interface IKernelDataType extends String {
 };
 
 
-function _deserialize_array_buffer(buf: ArrayBuffer): IKernelDataType {
+function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelDataType {
     var data = new DataView(buf);
     // read the header: 1 + nbufs 32b integers
     var nbufs = data.getUint32(0);
@@ -37,7 +37,7 @@ function _deserialize_array_buffer(buf: ArrayBuffer): IKernelDataType {
 };
 
 
-function _deserialize_binary(data: Blob | ArrayBuffer): IKernelDataType | Promise<IKernelDataType> {
+function _deserializeBinary(data: Blob | ArrayBuffer): IKernelDataType | Promise<IKernelDataType> {
     /**
      * deserialize the binary message format
      * callback will be called with a message whose buffers attribute
@@ -48,7 +48,7 @@ function _deserialize_binary(data: Blob | ArrayBuffer): IKernelDataType | Promis
         var reader = new FileReader();
         var promise = new Promise(function(resolve, reject) {
             reader.onload = function() {
-                var msg = _deserialize_array_buffer((<ArrayBuffer>this.result));
+                var msg = _deserializeArrayBuffer((<ArrayBuffer>this.result));
                 resolve(msg);
             };
         });
@@ -56,7 +56,7 @@ function _deserialize_binary(data: Blob | ArrayBuffer): IKernelDataType | Promis
         return promise;
     } else {
         // data is ArrayBuffer, can deserialize directly
-        var msg = _deserialize_array_buffer((<ArrayBuffer>data));
+        var msg = _deserializeArrayBuffer((<ArrayBuffer>data));
         return msg;
     }
 };
@@ -72,12 +72,12 @@ export
         return Promise.resolve(JSON.parse(data));
     } else {
         // binary message
-        return Promise.resolve(_deserialize_binary(data));
+        return Promise.resolve(_deserializeBinary(data));
     }
 };
 
 
-function _serialize_binary(msg: IKernelDataType): ArrayBuffer {
+function _serializeBinary(msg: IKernelDataType): ArrayBuffer {
     /**
      * implement the binary serialization protocol
      * serializes JSON message to ArrayBuffer
@@ -124,7 +124,7 @@ function _serialize_binary(msg: IKernelDataType): ArrayBuffer {
 export
     function serialize(msg: IKernelDataType): string | ArrayBuffer {
     if (msg.buffers && msg.buffers.length) {
-        return _serialize_binary(msg);
+        return _serializeBinary(msg);
     } else {
         return JSON.stringify(msg);
     }
