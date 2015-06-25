@@ -153,12 +153,12 @@ class Kernel {
     initIOPubHandlers(): void {
         var output_msg_types = ['stream', 'display_data', 'execute_result', 'error'];
         this._iopub_handlers = {};
-        this.registerIOPubHandler('status', $.proxy(this._handleStatusMessage, this));
-        this.registerIOPubHandler('clear_output', $.proxy(this._handle_clear_output, this));
-        this.registerIOPubHandler('execute_input', $.proxy(this._handleInputMessage, this));
+        this.registerIOPubHandler('status', this._handleStatusMessage);
+        this.registerIOPubHandler('clear_output', this._handle_clear_output);
+        this.registerIOPubHandler('execute_input', this._handleInputMessage);
 
         for (var i = 0; i < output_msg_types.length; i++) {
-            this.registerIOPubHandler(output_msg_types[i], $.proxy(this._handleOutputMessage, this));
+            this.registerIOPubHandler(output_msg_types[i], this._handleOutputMessage);
         }
     }
 
@@ -464,7 +464,7 @@ class Kernel {
             );
 
         var already_called_onclose = false; // only alert once
-        var ws_closed_early = (evt: comm.IKernelEvent) => {
+        this.ws.onclose = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
                 return;
             }
@@ -484,6 +484,17 @@ class Kernel {
                 });
             }
         };
+        this.ws.onerror = (evt: comm.IKernelEvent) => {
+            if (already_called_onclose) {
+                return;
+            }
+            already_called_onclose = true;
+            this._wsClosed(ws_host_url, true);
+        };
+
+        this.ws.onopen = (evt: comm.IKernelEvent) => { 
+            this._wsOpened(evt); 
+        };
         var ws_closed_late = (evt: comm.IKernelEvent) => {
             if (already_called_onclose) {
                 return;
@@ -493,24 +504,15 @@ class Kernel {
                 this._wsClosed(ws_host_url, false);
             }
         };
-        var ws_error = (evt: comm.IKernelEvent) => {
-            if (already_called_onclose) {
-                return;
-            }
-            already_called_onclose = true;
-            this._wsClosed(ws_host_url, true);
-        };
-
-        this.ws.onopen = $.proxy(this._wsOpened, this);
-        this.ws.onclose = ws_closed_early;
-        this.ws.onerror = ws_error;
         // switch from early-close to late-close message after 1s
         setTimeout(() => {
             if (this.ws !== null) {
                 this.ws.onclose = ws_closed_late;
             }
         }, 1000);
-        this.ws.onmessage = $.proxy(this._handleWSMessage, this);
+        this.ws.onmessage = (evt: comm.IKernelEvent) => {
+            this._handleWSMessage(evt);
+        };
     }
 
     private _wsOpened(evt: comm.IKernelEvent): void {
@@ -553,7 +555,7 @@ class Kernel {
         if (this._reconnect_attempt < this.reconnect_limit) {
             var timeout = Math.pow(2, this._reconnect_attempt);
             console.log("Connection lost, reconnecting in " + timeout + " seconds.");
-            setTimeout($.proxy(this.reconnect, this), 1e3 * timeout);
+            setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
         } else {
             this.events.trigger('kernel_connection_dead.Kernel', {
                 kernel: this,
@@ -787,7 +789,7 @@ class Kernel {
      * @function register_iopub_handler
      */
     registerIOPubHandler(msg_type: string, callback: Function): void {
-        this._iopub_handlers[msg_type] = callback;
+        this._iopub_handlers[msg_type] = () => { callback(); };
     }
 
     /**
