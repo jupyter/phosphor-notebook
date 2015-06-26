@@ -130,7 +130,7 @@ export
 
 
 export
-interface ICommCallback {
+  interface ICommCallback {
   (msg: IKernelMsg): void;
 }
 
@@ -167,9 +167,9 @@ export class CommManager {
   }
 
   /**
-   * Create a new Comm, register it, and open its Kernel-side counterpart
-   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
-   */
+  * Create a new Comm, register it, and open its Kernel-side counterpart
+  * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
+  */
   newComm(target_name: string, data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata): Comm {
 
     var comm = new Comm(target_name);

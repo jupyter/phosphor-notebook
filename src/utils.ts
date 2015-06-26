@@ -45,16 +45,17 @@ export
 */
 export
   var extend = function(target: any, source: any): any {
-  target = target || {};
-  for (var prop in source) {
-    if (typeof source[prop] === 'object') {
-      target[prop] = extend(target[prop], source[prop]);
-    } else {
-      target[prop] = source[prop];
+    target = target || {};
+    for (var prop in source) {
+      if (typeof source[prop] === 'object') {
+        target[prop] = extend(target[prop], source[prop]);
+      } else {
+        target[prop] = source[prop];
+      }
     }
-  }
-  return target;
-};
+    return target;
+  };
+
 
 export
   var uuid = function(): string {
@@ -152,51 +153,51 @@ export
 
   http://stackoverflow.com/a/30707423
  */
- export
-var jsonToQueryString = function(json: any) {
-  return '?' +
-    Object.keys(json).map(function(key: any): any {
-      return encodeURIComponent(key) + '=' +
-        encodeURIComponent(json[key]);
-    }).join('&');
-}
+export
+  var jsonToQueryString = function(json: any) {
+    return '?' +
+      Object.keys(json).map(function(key: any): any {
+        return encodeURIComponent(key) + '=' +
+          encodeURIComponent(json[key]);
+      }).join('&');
+  }
 
 
 interface IAJaxSuccessType {
   data: any;
   status: string;
   xhr: XMLHttpRequest;
- };
+};
 
 
 interface IAJaxErrorType {
-   xhr: XMLHttpRequest;
-   status: string;
-   err: string;
- };
+  xhr: XMLHttpRequest;
+  status: string;
+  err: string;
+};
 
 
 export
- interface IAJaxSuccess {
-   (data: any, status: string, xhr: XMLHttpRequest): void;
- };
+  interface IAJaxSuccess {
+  (data: any, status: string, xhr: XMLHttpRequest): void;
+};
 
 
 export
- interface IAJaxError {
-   (xhr: XMLHttpRequest, status: string, err: string): void;
- };
+  interface IAJaxError {
+  (xhr: XMLHttpRequest, status: string, err: string): void;
+};
 
 
 export
-interface IAJaxSetttings {
+  interface IAJaxSetttings {
   method: string;
   dataType: string;
   success: IAJaxSuccess;
   error: IAJaxError;
   contentType?: string;
   data?: any;
- };
+};
 
 /*
  * Asynchronous XMLHTTPRequest handler

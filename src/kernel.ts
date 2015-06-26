@@ -516,8 +516,8 @@ export
         emit(this, Kernel.disconnected, void 0);
         if (error) {
             console.log('WebSocket connection failed: ', ws_url);
-            emit(this, Kernel.connectionFailed, 
-                 {ws_url: ws_url, attempt: this._reconnect_attempt });
+            emit(this, Kernel.connectionFailed,
+                { ws_url: ws_url, attempt: this._reconnect_attempt });
         }
         this._scheduleReconnect();
     }
