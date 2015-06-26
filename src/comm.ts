@@ -87,7 +87,7 @@ export
   interface IMsgSuccess {
   data: IMsgData;
   status: string;
-  xhr: any;
+  xhr: XMLHttpRequest;
 };
 
 

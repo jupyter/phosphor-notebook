@@ -17,9 +17,6 @@
     "mathjax/mathjax.d.ts": {
       "commit": "575d70adcad0086ec8c6f672a5eb569a4689486c"
     },
-    "jquery/jquery.d.ts": {
-      "commit": "1ba173f3bc34379bd798103096c8002f75baaaa5"
-    },
     "moment/moment.d.ts": {
       "commit": "4e5e52edca5d0d8eb92710cb40fa04b0cfda04d9"
     },

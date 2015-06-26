@@ -296,7 +296,7 @@ export
             }
         };
 
-        var on_error = (xhr: JQueryXHR, status: string, err: string) => {
+        var on_error = (xhr: XMLHttpRequest, status: string, err: string) => {
             this._kernelDead();
             if (error) {
                 error(xhr, status, err);
