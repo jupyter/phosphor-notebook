@@ -15,23 +15,17 @@ import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
 
-/* TODO:
-  fix handler methods
-  
-  think about comm target registry
-  */
-
 /**
-     * A Kernel class to communicate with the Python kernel. This
-     * should generally not be constructed directly, but be created
-     * by.  the `Session` object. Once created, this object should be
-     * used to communicate with the kernel.
-     * 
-     * @class Kernel
-     * @param {string} kernel_service_url - the URL to access the kernel REST api
-     * @param {string} ws_url - the websockets URL
-     * @param {string} name - the kernel type (e.g. python3)
-     */
+ * A Kernel class to communicate with the Python kernel. This
+ * should generally not be constructed directly, but be created
+ * by.  the `Session` object. Once created, this object should be
+ * used to communicate with the kernel.
+ * 
+ * @class Kernel
+ * @param {string} kernel_service_url - the URL to access the kernel REST api
+ * @param {string} ws_url - the websockets URL
+ * @param {string} name - the kernel type (e.g. python3)
+ */
 export
 class Kernel {
 

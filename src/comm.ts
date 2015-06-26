@@ -13,7 +13,7 @@ interface IMsgPayload {
 
 export
 interface IMsgPayloadCallbacks {
-  [s: string]: Function;
+  [s: string]: (payload: IMsgPayload, msg: IKernelMsg) => IKernelCallbacks;
 };
 
 
