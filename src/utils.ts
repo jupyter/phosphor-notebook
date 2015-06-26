@@ -661,6 +661,20 @@ var jsonToQueryString = function(json: any) {
 }
 
 
+interface IAJaxSuccessType {
+  data: any;
+  status: string;
+  xhr: XMLHttpRequest;
+ };
+
+
+interface IAJaxErrorType {
+   xhr: XMLHttpRequest;
+   status: string;
+   err: string;
+ };
+
+
 export
  interface IAJaxSuccess {
    (data: any, status: string, xhr: XMLHttpRequest): void;
@@ -691,7 +705,16 @@ interface IAJaxSetttings {
 export
   var ajaxProxy = function(url: string, settings: IAJaxSetttings): Promise<any> {
 
-    return new Promise(function(success, error) {
+
+    var success = function(resp: IAJaxSuccessType) {
+      settings.success(resp.data, resp.status, resp.xhr);
+    }
+
+    var error = function(resp: IAJaxErrorType) {
+      settings.error(resp.xhr, resp.status, resp.err);
+    }
+
+    return new Promise(function(resolve, reject) {
       var req = new XMLHttpRequest();
       req.open(settings.method, url);
       if (settings.contentType) {
@@ -701,19 +724,19 @@ export
       req.onload = function(evt: Event) {
         if (req.status == 200) {
           if (settings.dataType === 'json') {
-            settings.success(JSON.parse(req.response), req.statusText, req);
+            resolve({ data: JSON.parse(req.response), status: req.statusText, xhr: req });
           }
           else {
-            settings.success(req.response, req.statusText, req);
+            resolve({ data: req.response, status: req.statusText, xhr: req });
           }
         }
         else {
-          settings.error(req, req.statusText, evt.type);
+          reject({ xhr: req, status: req.statusText, err: evt.type });
         }
       }
 
       req.onerror = function(evt: Event) {
-        settings.error(req, req.statusText, evt.type);
+        reject({ xhr: req, status: req.statusText, err: evt.type });
       }
 
       if (settings.data) {
@@ -721,7 +744,7 @@ export
       } else {
         req.send();
       }
-    });
+    }).then(success, error);
   };
 
 /**
