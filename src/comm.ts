@@ -25,6 +25,7 @@ export
   target_name?: string;
   target_module?: string;
   value?: any;
+  allow_stdin?: boolean;
 };
 
 

@@ -10,7 +10,6 @@ import serialize = require('./serialize');
 
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
-import Pair = phosphor.utility.Pair;
 
 
 interface IKernelMsg extends comm.IKernelMsg { };
@@ -54,7 +53,7 @@ export
     static killed = new Signal<Kernel, void>();
     static dead = new Signal<Kernel, void>();
     static connected = new Signal<Kernel, void>();
-    static connectionFailed = new Signal < Kernel, Pair<string, number>>();
+    static connectionFailed = new Signal<Kernel, { ws_url: string; attempt: number; }>();
     static connectionDead = new Signal<Kernel, number>();
     static executionRequest = new Signal<Kernel, comm.IMsgContent>();
     static inputReply = new Signal<Kernel, comm.IMsgContent>();
