@@ -5,7 +5,7 @@ import moment = require('moment');
 
 
 export
-  class WrappedError implements Error {
+class WrappedError implements Error {
 
   message: string;
   name: string;
@@ -44,57 +44,57 @@ export
   http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
 */
 export
-  var extend = function(target: any, source: any): any {
-    target = target || {};
-    for (var prop in source) {
-      if (typeof source[prop] === 'object') {
-        target[prop] = extend(target[prop], source[prop]);
-      } else {
-        target[prop] = source[prop];
-      }
+var extend = function(target: any, source: any): any {
+  target = target || {};
+  for (var prop in source) {
+    if (typeof source[prop] === 'object') {
+      target[prop] = extend(target[prop], source[prop]);
+    } else {
+      target[prop] = source[prop];
     }
-    return target;
-  };
+  }
+  return target;
+};
 
 
 export
-  var uuid = function(): string {
-    /**
-     * http://www.ietf.org/rfc/rfc4122.txt
-     */
-    var s: string[] = [];
-    var hexDigits = "0123456789ABCDEF";
-    for (var i = 0; i < 32; i++) {
-      s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
-    }
-    s[12] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
-    s[16] = hexDigits.substr((Number(s[16]) & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
+var uuid = function(): string {
+  /**
+   * http://www.ietf.org/rfc/rfc4122.txt
+   */
+  var s: string[] = [];
+  var hexDigits = "0123456789ABCDEF";
+  for (var i = 0; i < 32; i++) {
+    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+  }
+  s[12] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
+  s[16] = hexDigits.substr((Number(s[16]) & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
 
-    var uuid = s.join("");
-    return uuid;
-  };
+  var uuid = s.join("");
+  return uuid;
+};
 
 
 /**
  * join a sequence of url components with '/'
  */
 export
-  var urlPathJoin = function(...paths: string[]): string {
+var urlPathJoin = function(...paths: string[]): string {
 
-    var url = '';
-    for (var i = 0; i < paths.length; i++) {
-      if (paths[i] === '') {
-        continue;
-      }
-      if (url.length > 0 && url[url.length - 1] != '/') {
-        url = url + '/' + paths[i];
-      } else {
-        url = url + paths[i];
-      }
+  var url = '';
+  for (var i = 0; i < paths.length; i++) {
+    if (paths[i] === '') {
+      continue;
     }
-    url = url.replace(/\/\/+/, '/');
-    return url;
-  };
+    if (url.length > 0 && url[url.length - 1] != '/') {
+      url = url + '/' + paths[i];
+    } else {
+      url = url + paths[i];
+    }
+  }
+  url = url.replace(/\/\/+/, '/');
+  return url;
+};
 
 
 /**
@@ -102,9 +102,9 @@ export
  * leaving '/' separators
  */
 export
-  var encodeURIComponents = function(uri: string): string {
-    return uri.split('/').map(encodeURIComponent).join('/');
-  };
+var encodeURIComponents = function(uri: string): string {
+  return uri.split('/').map(encodeURIComponent).join('/');
+};
 
 
 /**
@@ -112,26 +112,26 @@ export
  * encoding each component with encodeURIComponent
  */
 export
-  var urlJoinEncode = function(...args: string[]): string {
-    return encodeURIComponents(urlPathJoin.apply(null, args));
-  };
+var urlJoinEncode = function(...args: string[]): string {
+  return encodeURIComponents(urlPathJoin.apply(null, args));
+};
 
 
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
-  var browser: string[] = (function() {
-    if (typeof navigator === 'undefined') {
-      // navigator undefined in node
-      return ['None'];
-    }
-    var N: string = navigator.appName;
-    var ua: string = navigator.userAgent
-    var tem: RegExpMatchArray;
-    var M: RegExpMatchArray = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
-    if (M && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) M[2] = tem[1];
-    M = M ? [M[1], M[2]] : [N, navigator.appVersion, '-?'];
-    return M;
-  })();
+var browser: string[] = (function() {
+  if (typeof navigator === 'undefined') {
+    // navigator undefined in node
+    return ['None'];
+  }
+  var N: string = navigator.appName;
+  var ua: string = navigator.userAgent
+  var tem: RegExpMatchArray;
+  var M: RegExpMatchArray = ua.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i);
+  if (M && (tem = ua.match(/version\/([\.\d]+)/i)) !== null) M[2] = tem[1];
+  M = M ? [M[1], M[2]] : [N, navigator.appVersion, '-?'];
+  return M;
+})();
 
 
 /** 
@@ -140,13 +140,13 @@ export
   http://stackoverflow.com/a/30707423
  */
 export
-  var jsonToQueryString = function(json: any) {
-    return '?' +
-      Object.keys(json).map(function(key: any): any {
-        return encodeURIComponent(key) + '=' +
-          encodeURIComponent(json[key]);
-      }).join('&');
-  }
+var jsonToQueryString = function(json: any) {
+  return '?' +
+    Object.keys(json).map(function(key: any): any {
+      return encodeURIComponent(key) + '=' +
+        encodeURIComponent(json[key]);
+    }).join('&');
+}
 
 
 export
@@ -166,7 +166,7 @@ interface IAjaxError {
 
 
 export
-  interface IAjaxSetttings {
+interface IAjaxSetttings {
   method: string;
   dataType: string;
   contentType?: string;
@@ -179,52 +179,52 @@ export
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-  var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSuccess> {
+var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSuccess> {
 
-    return new Promise(function(resolve, reject) {
-      var req = new XMLHttpRequest();
-      req.open(settings.method, url);
-      if (settings.contentType) {
-        req.overrideMimeType(settings.contentType);
-      }
+  return new Promise(function(resolve, reject) {
+    var req = new XMLHttpRequest();
+    req.open(settings.method, url);
+    if (settings.contentType) {
+      req.overrideMimeType(settings.contentType);
+    }
 
-      req.onload = function(evt: Event) {
-        if (req.status == 200) {
-          if (settings.dataType === 'json') {
-            resolve({ data: JSON.parse(req.response), status: req.statusText, xhr: req });
-          }
-          else {
-            resolve({ data: req.response, status: req.statusText, xhr: req });
-          }
+    req.onload = function(evt: Event) {
+      if (req.status == 200) {
+        if (settings.dataType === 'json') {
+          resolve({ data: JSON.parse(req.response), status: req.statusText, xhr: req });
         }
         else {
-          reject({ xhr: req, status: req.statusText, err: evt.type });
+          resolve({ data: req.response, status: req.statusText, xhr: req });
         }
       }
-
-      req.onerror = function(evt: Event) {
+      else {
         reject({ xhr: req, status: req.statusText, err: evt.type });
       }
+    }
 
-      if (settings.data) {
-        req.send(settings.data);
-      } else {
-        req.send();
-      }
-    });
-  };
+    req.onerror = function(evt: Event) {
+      reject({ xhr: req, status: req.statusText, err: evt.type });
+    }
+
+    if (settings.data) {
+      req.send(settings.data);
+    } else {
+      req.send();
+    }
+  });
+};
 
 /**
  * log ajax failures with informative messages
  */
 export
-  var logAjaxError = function(xhr: XMLHttpRequest, status: string, error: string) {
+var logAjaxError = function(xhr: XMLHttpRequest, status: string, error: string) {
 
-    var msg = "API request failed (" + xhr.status + "): ";
-    console.log(xhr);
-    msg += xhr.statusText;
-    console.log(msg);
-  }
+  var msg = "API request failed (" + xhr.status + "): ";
+  console.log(xhr);
+  msg += xhr.statusText;
+  console.log(msg);
+}
 
 
 declare function require(modules: string[], success: Function, reject: Function): void;
@@ -237,27 +237,27 @@ declare function require(modules: string[], success: Function, reject: Function)
  * registry, if the global registry is provided.
  */
 export
-  var loadClass = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
-    return new Promise(function(resolve, reject) {
+var loadClass = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
+  return new Promise(function(resolve, reject) {
 
-      // Try loading the view module using require.js
-      if (module_name) {
-        require([module_name], function(module: any) {
-          if (module[class_name] === undefined) {
-            reject(new Error('Class ' + class_name + ' not found in module ' + module_name));
-          } else {
-            resolve(module[class_name]);
-          }
-        }, reject);
-      } else {
-        if (registry && registry[class_name]) {
-          resolve(registry[class_name]);
+    // Try loading the view module using require.js
+    if (module_name) {
+      require([module_name], function(module: any) {
+        if (module[class_name] === undefined) {
+          reject(new Error('Class ' + class_name + ' not found in module ' + module_name));
         } else {
-          reject(new Error('Class ' + class_name + ' not found in registry '));
+          resolve(module[class_name]);
         }
+      }, reject);
+    } else {
+      if (registry && registry[class_name]) {
+        resolve(registry[class_name]);
+      } else {
+        reject(new Error('Class ' + class_name + ' not found in registry '));
       }
-    });
-  };
+    }
+  });
+};
 
 
 /**
@@ -268,11 +268,11 @@ export
  * caused the promise to reject.
  */
 export
-  var reject = function(message: string, log?: boolean): (error: any) => any {
+var reject = function(message: string, log?: boolean): (error: any) => any {
 
-    return function(error: any): Promise<any> {
-      var wrapped_error = new WrappedError(message, error);
-      if (log) console.error(wrapped_error);
-      return Promise.reject(wrapped_error);
-    };
+  return function(error: any): Promise<any> {
+    var wrapped_error = new WrappedError(message, error);
+    if (log) console.error(wrapped_error);
+    return Promise.reject(wrapped_error);
   };
+};

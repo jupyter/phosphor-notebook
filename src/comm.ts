@@ -6,19 +6,19 @@ import kernel = require('./kernel');
 
 
 export
-  interface IMsgPayload {
+interface IMsgPayload {
   source: string;
 };
 
 
 export
-  interface IMsgPayloadCallbacks {
+interface IMsgPayloadCallbacks {
   [s: string]: Function;
 };
 
 
 export
-  interface IMsgContent {
+interface IMsgContent {
   payload?: IMsgPayload[];
   execution_state?: string;
   comm_id?: string;
@@ -30,28 +30,28 @@ export
 
 
 export
-  interface IMsgMetadata { };
+interface IMsgMetadata { };
 
 
 export
-  interface IKernelInput { };
+interface IKernelInput { };
 
 
 export
-  interface IKernelInfo {
+interface IKernelInfo {
   kernel: { id: string };
 };
 
 
 export
-  interface IMsgData {
+interface IMsgData {
   id: string;
   name: string;
 };
 
 
 export
-  interface IMsgHeader {
+interface IMsgHeader {
   username?: string;
   version?: string;
   data?: string;
@@ -62,7 +62,7 @@ export
 
 
 export
-  interface IMsgParentHeader {
+interface IMsgParentHeader {
   msg_id?: string;
   version?: string;
   session?: string;
@@ -71,7 +71,7 @@ export
 
 
 export
-  interface IKernelMsg {
+interface IKernelMsg {
   metadata?: IMsgMetadata;
   content: IMsgContent;
   msg_id?: string;
@@ -84,7 +84,7 @@ export
 
 
 export
-  interface IMsgSuccess {
+interface IMsgSuccess {
   data: IMsgData;
   status: string;
   xhr: XMLHttpRequest;
@@ -92,21 +92,21 @@ export
 
 
 export
-  interface IKernelShellCallbacks {
+interface IKernelShellCallbacks {
   reply?: Function;
   payload?: any;
 };
 
 
 export
-  interface IKernelIOPubCallbacks {
+interface IKernelIOPubCallbacks {
   output?: Function;
   clear_output?: Function;
 };
 
 
 export
-  interface IKernelCallbacks {
+interface IKernelCallbacks {
   // @param callbacks.shell.payload.[payload_name] {function}
   shell?: IKernelShellCallbacks;
   iopub?: IKernelIOPubCallbacks;
@@ -115,7 +115,7 @@ export
 
 
 export
-  interface IKernelOptions {
+interface IKernelOptions {
   silent?: boolean;
   user_expressions?: Object;
   allow_stdin?: boolean;
@@ -123,19 +123,20 @@ export
 
 
 export
-  interface IKernelEvent extends Event {
+interface IKernelEvent extends Event {
   wasClean?: boolean;
   data?: string | ArrayBuffer | Blob;
 };
 
 
 export
-  interface ICommCallback {
+interface ICommCallback {
   (msg: IKernelMsg): void;
 }
 
 
-export class CommManager {
+export 
+class CommManager {
 
   comms: { [id: string]: Promise<Comm> };
   targets: { [string: string]: Function; };
@@ -279,7 +280,8 @@ export class CommManager {
   //-----------------------------------------------------------------------
 }
 
-export class Comm {
+export 
+class Comm {
 
   kernel: kernel.Kernel;
   target_name: string;
