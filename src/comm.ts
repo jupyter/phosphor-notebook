@@ -37,7 +37,6 @@ export
 interface IKernelInput { };
 
 
-export
 interface IKernelInfo {
   kernel: { id: string };
 };
@@ -79,7 +78,7 @@ interface IKernelMsg {
   header: IMsgHeader;
   msg_type?: string;
   channel?: string;
-  buffers?: string[]| ArrayBuffer[];
+  buffers?: string[] | ArrayBuffer[];
 };
 
 
@@ -117,7 +116,7 @@ interface IKernelCallbacks {
 export
 interface IKernelOptions {
   silent?: boolean;
-  user_expressions?: Object;
+  user_expressions?: any;
   allow_stdin?: boolean;
 };
 
@@ -127,12 +126,6 @@ interface IKernelEvent extends Event {
   wasClean?: boolean;
   data?: string | ArrayBuffer | Blob;
 };
-
-
-export
-interface ICommCallback {
-  (msg: IKernelMsg): void;
-}
 
 
 export 
@@ -150,21 +143,14 @@ class CommManager {
     this.comms = {};
     this.targets = {};
     if (kernel !== undefined) {
-      this.init_kernel(kernel);
-    };
-  }
-
-  /**
-   * connect the kernel, and register message handlers
-   */
-  init_kernel(kernel: kernel.Kernel) {
-    this.kernel = kernel;
-    kernel.registerIOPubHandler('comm_open',
-      (msg: IKernelMsg) => this._commOpen(msg));
-    kernel.registerIOPubHandler('comm_close',
-      (msg: IKernelMsg) => this._commClose(msg));
-    kernel.registerIOPubHandler('comm_msg',
-      (msg: IKernelMsg) => this._commMsg(msg));
+      this.kernel = kernel;
+      kernel.registerIOPubHandler('comm_open',
+        (msg: IKernelMsg) => this._commOpen(msg));
+      kernel.registerIOPubHandler('comm_close',
+        (msg: IKernelMsg) => this._commClose(msg));
+      kernel.registerIOPubHandler('comm_msg',
+        (msg: IKernelMsg) => this._commMsg(msg));
+    }
   }
 
   /**
@@ -283,15 +269,27 @@ class CommManager {
 export 
 class Comm {
 
-  kernel: kernel.Kernel;
-  target_name: string;
-  comm_id: string;
-
   constructor(target_name: string, comm_id?: string) {
-    this.target_name = target_name;
-    this.comm_id = comm_id || <string>utils.uuid();
+    this._target_name = target_name;
+    this._comm_id = comm_id || <string>utils.uuid();
     this._msg_callback = null;
     this._close_callback = null;
+  }
+
+  get comm_id(): string {
+    return this._comm_id;
+  }
+
+  get target_name(): string {
+    return this._target_name;
+  }
+
+  get kernel(): kernel.Kernel {
+    return this._kernel;
+  }
+
+  set kernel(k: kernel.Kernel) {
+    this._kernel = k;
   }
     
   // methods for sending messages
@@ -320,23 +318,15 @@ class Comm {
     return this.kernel.sendShellMessage("comm_close", content, callbacks, metadata);
   }
 
-  onMsg(callback: ICommCallback) {
+  onMsg(callback: (msg: IKernelMsg) => void) {
     this._msg_callback = callback;
   }
 
-  onClose(callback: ICommCallback) {
+  onClose(callback: (msg: IKernelMsg) => void) {
     this._close_callback = callback;
   }
     
   // methods for handling incoming messages
-    
-  private _callback(callback: Function, msg: IKernelMsg) {
-    try {
-      callback(msg);
-    } catch (e) {
-      console.log("Exception in Comm callback", e, e.stack, msg);
-    }
-  }
 
   handleMsg(msg: IKernelMsg) {
     this._callback(this._msg_callback, msg);
@@ -346,7 +336,17 @@ class Comm {
     this._callback(this._close_callback, msg);
   }
 
+  private _callback(callback: Function, msg: IKernelMsg) {
+    try {
+      callback(msg);
+    } catch (e) {
+      console.log("Exception in Comm callback", e, e.stack, msg);
+    }
+  }
+
   private _msg_callback: (msg: IKernelMsg) => void;
   private _close_callback: (msg: IKernelMsg) => void;
-
+  private _kernel: kernel.Kernel;
+  private _target_name: string;
+  private _comm_id: string;
 }

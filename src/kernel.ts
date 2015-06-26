@@ -13,7 +13,7 @@ import emit = phosphor.core.emit;
 import IKernelMsg = comm.IKernelMsg;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
-import IAjaxSettings = utils.IAjaxSetttings;
+
 
 /**
      * A Kernel class to communicate with the Python kernel. This
@@ -84,7 +84,7 @@ class Kernel {
     this._msg_queue = Promise.resolve();
     this.info_reply = {}; // kernel_info_reply stored here after starting
 
-    if (typeof (WebSocket) === 'undefined') {
+    if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
     }
 
@@ -150,13 +150,14 @@ class Kernel {
    * @param {function} [success] - function executed on ajax success
    * @param {function} [error] - functon executed on ajax error
    */
-  list(success: (arg: IAjaxSuccess) => void, error: Function): void {
+  list(success: Function, error: Function): void {
     utils.ajaxProxy(this.kernel_service_url, {
       method: "GET",
       dataType: "json"
-    }).then(success, (arg: IAjaxError) => {
-      this._onError(arg)
-      error(arg.xhr, arg.status, arg.err)
+    }).then((arg: IAjaxSuccess) => {
+        this._onSuccess(arg, success);
+    }, (arg: IAjaxError) => {
+        this._onError(arg, error);
     });
   }
 
@@ -191,11 +192,9 @@ class Kernel {
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
       this._kernelCreated(arg.data);
-      this._onSuccess(arg);
-      success(arg.data, arg.status, arg.xhr);
+      this._onSuccess(arg, success);
     }, (arg: IAjaxError) => {
-      this._onError(arg);
-      error(arg.xhr, arg.status, arg.err);
+        this._onError(arg, error);
     });
     return url;
   }
@@ -214,11 +213,9 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
-      this._onSuccess(arg);
-      success(arg.data, arg.status, arg.xhr);
+        this._onSuccess(arg, success);
     }, (arg: IAjaxError) => {
-      this._onError(arg);
-      error(arg.xhr, arg.status, arg.err);
+        this._onError(arg, error);
     });
   }
 
@@ -243,11 +240,9 @@ class Kernel {
       method: "DELETE",
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
-      this._onSuccess(arg);
-      success(arg.data, arg.status, arg.xhr);
+        this._onSuccess(arg, success);
     }, (arg: IAjaxError) => {
-      this._onError(arg);
-      error(arg.xhr, arg.status, arg.err);
+        this._onError(arg, error);
     });
   }
 
@@ -273,11 +268,9 @@ class Kernel {
        * get kernel info so we know what state the kernel is in
        */
       this.kernelInfo();
-      this._onSuccess(arg);
-      success(arg.data, arg.status, arg.xhr);
+      this._onSuccess(arg, success);
     }, (arg: IAjaxError) => {
-      this._onError(arg);
-      error(arg.xhr, arg.status, arg.err);
+      this._onError(arg, error)
     });
   }
 
@@ -301,12 +294,10 @@ class Kernel {
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
       this._kernelCreated(arg.data);
-      this._onSuccess(arg);
-      success(arg.data, arg.status, arg.xhr);
+      this._onSuccess(arg, success);
     }, (arg: IAjaxError) => {
       this._kernelDead();
-      this._onError(arg);
-      error(arg.xhr, arg.status, arg.err);
+      this._onError(arg, error);
     });
   }
 
@@ -333,26 +324,34 @@ class Kernel {
    * name from the response, and then optionally calling a provided
    * callback.
    *
-   * @function _on_success
+   * @function _onSuccess
+   * @param {IAjaxSucces} msg - Ajax Success Message
    * @param {function} success - callback
    */
-  private _onSuccess(msg: IAjaxSuccess): void {
+  private _onSuccess(msg: IAjaxSuccess, success?: Function): void {
     if (msg.data) {
       this.id = msg.data.id;
       this.name = msg.data.name;
     }
     this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
+    if (success) {
+        success(msg.data, msg.status, msg.xhr);
+    }
   }
 
   /**
    * Handle a failed AJAX request by logging the error message, and
    * then optionally calling a provided callback.
    *
-   * @function _on_error
+   * @function _onError
+   * @param {IAjaxError} msg - Ajax Error Message
    * @param {function} error - callback
    */
-  private _onError(msg: IAjaxError): void {
+  private _onError(msg: IAjaxError, error?: Function): void {
     utils.logAjaxError(msg.xhr, msg.status, msg.err);
+    if (error) {
+        error(msg.xhr, msg.status, msg.err);
+    }
   }
 
   /**
