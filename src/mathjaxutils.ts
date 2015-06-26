@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 
 
-var utils: any = {browser: ""}
+import utils = require('./utils');
 
 export var init = function () {
 // MathJax loaded
