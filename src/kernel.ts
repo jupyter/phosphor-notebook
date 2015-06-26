@@ -71,7 +71,7 @@ export
 
         this.kernel_service_url = kernel_service_url;
         this.kernel_url = null;
-        this.ws_url = ws_url || utils.getBodyData("wsUrl");
+        this.ws_url = ws_url;
         if (!this.ws_url) {
             // trailing 's' in https will become wss for secure web sockets
             this.ws_url = location.protocol.replace('http', 'ws') + "//" + location.host;

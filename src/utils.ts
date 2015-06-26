@@ -117,20 +117,6 @@ export
   };
 
 
-/**
- * get a url-encoded item from body.data and decode it
- * we should never have any encoded URLs anywhere else in code
- * until we are building an actual request
- */
-export
-  var getBodyData = function(key: string): string {
-    var val = String($('body').data(key));
-    if (!val)
-      return val;
-    return decodeURIComponent(val);
-  };
-
-
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
   var browser: string[] = (function() {
@@ -260,6 +246,8 @@ export
     console.log(msg);
   }
 
+
+declare function require(modules: string[], success: Function, reject: Function): void;
 
 /**
  * Tries to load a class
