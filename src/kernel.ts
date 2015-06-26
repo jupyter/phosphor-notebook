@@ -11,7 +11,9 @@ import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
 
 import IKernelMsg = comm.IKernelMsg;
-
+import IAjaxSuccess = utils.IAjaxSuccess;
+import IAjaxError = utils.IAjaxError;
+import IAjaxSettings = utils.IAjaxSetttings;
 
 /**
      * A Kernel class to communicate with the Python kernel. This
@@ -149,12 +151,13 @@ export
      * @param {function} [success] - function executed on ajax success
      * @param {function} [error] - functon executed on ajax error
      */
-    list(success: utils.IAJaxSuccess, error: Function): void {
+    list(success: (arg: IAjaxSuccess) => void, error: Function): void {
         utils.ajaxProxy(this.kernel_service_url, {
             method: "GET",
-            dataType: "json",
-            success: success,
-            error: this._onError(error)
+            dataType: "json"
+        }).then(success, (arg: IAjaxError) => {
+            this._onError(arg)
+            error(arg.xhr, arg.status, arg.err)
         });
     }
 
@@ -181,22 +184,20 @@ export
         }
 
         this._recordStatus('starting');
-        var on_success = (msg: comm.IMsgSuccess) => {
-            this._kernelCreated(msg.data);
-            if (success) {
-                success(msg.data, msg.status, msg.xhr);
-            }
-        };
 
         utils.ajaxProxy(url, {
             method: "POST",
             data: JSON.stringify({ name: this.name }),
             contentType: 'application/json',
-            dataType: "json",
-            success: this._onSuccess(on_success),
-            error: this._onError(error)
+            dataType: "json"
+        }).then((arg: IAjaxSuccess) => {
+            this._kernelCreated(arg.data);
+            this._onSuccess(arg);
+            success(arg.data, arg.status, arg.xhr);
+        }, (arg: IAjaxError) => {
+            this._onError(arg);
+            error(arg.xhr, arg.status, arg.err);
         });
-
         return url;
     }
 
@@ -212,9 +213,13 @@ export
     getInfo(success: Function, error: Function): void {
         utils.ajaxProxy(this.kernel_url, {
             method: "GET",
-            dataType: "json",
-            success: this._onSuccess(success),
-            error: this._onError(error)
+            dataType: "json"
+        }).then((arg: IAjaxSuccess) => {
+            this._onSuccess(arg);
+            success(arg.data, arg.status, arg.xhr);
+        }, (arg: IAjaxError) => {
+            this._onError(arg);
+            error(arg.xhr, arg.status, arg.err);
         });
     }
 
@@ -237,9 +242,13 @@ export
         this._kernelDead();
         utils.ajaxProxy(this.kernel_url, {
             method: "DELETE",
-            dataType: "json",
-            success: this._onSuccess(success),
-            error: this._onError(error)
+            dataType: "json"
+        }).then((arg: IAjaxSuccess) => {
+            this._onSuccess(arg);
+            success(arg.data, arg.status, arg.xhr);
+        }, (arg: IAjaxError) => {
+            this._onError(arg);
+            error(arg.xhr, arg.status, arg.err);
         });
     }
 
@@ -256,23 +265,21 @@ export
         this._recordStatus('interrupting');
         emit(this, Kernel.interrupting, void 0);
 
-        var on_success = (msg: comm.IMsgSuccess) => {
+        var url = utils.urlJoinEncode(this.kernel_url, 'interrupt');
+        utils.ajaxProxy(url, {
+            method: "POST",
+            dataType: "json"
+        }).then((arg: IAjaxSuccess) => {
             /**
              * get kernel info so we know what state the kernel is in
              */
             this.kernelInfo();
-            if (success) {
-                success(msg.data, msg.status, msg.xhr);
-            }
-        };
-
-        var url = utils.urlJoinEncode(this.kernel_url, 'interrupt');
-        utils.ajaxProxy(url, {
-            method: "POST",
-            dataType: "json",
-            success: this._onSuccess(on_success),
-            error: this._onError(error)
-        });
+            this._onSuccess(arg);
+            success(arg.data, arg.status, arg.xhr);
+            }, (arg: IAjaxError) => {
+                this._onError(arg);
+                error(arg.xhr, arg.status, arg.err);
+            });
     }
 
     /**
@@ -289,27 +296,19 @@ export
         emit(this, Kernel.restarting, void 0);
         this.stopChannels();
 
-        var on_success = (msg: comm.IMsgSuccess) => {
-            this._kernelCreated(msg.data);
-            if (success) {
-                success(msg.data, msg.status, msg.xhr);
-            }
-        };
-
-        var on_error = (xhr: XMLHttpRequest, status: string, err: string) => {
-            this._kernelDead();
-            if (error) {
-                error(xhr, status, err);
-            }
-        };
-
         var url = utils.urlJoinEncode(this.kernel_url, 'restart');
         utils.ajaxProxy(url, {
             method: "POST",
-            dataType: "json",
-            success: this._onSuccess(on_success),
-            error: this._onError(on_error)
-        });
+            dataType: "json"
+        }).then((arg: IAjaxSuccess) => {
+            this._kernelCreated(arg.data);
+            this._onSuccess(arg);
+            success(arg.data, arg.status, arg.xhr);
+            }, (arg: IAjaxError) => {
+                this._kernelDead();
+                this._onError(arg);
+                error(arg.xhr, arg.status, arg.err);
+            });
     }
 
 
@@ -339,17 +338,12 @@ export
      * @function _on_success
      * @param {function} success - callback
      */
-    private _onSuccess(success: Function): utils.IAJaxSuccess {
-        return (msg: comm.IMsgSuccess) => {
-            if (msg.data) {
-                this.id = msg.data.id;
-                this.name = msg.data.name;
-            }
-            this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
-            if (success) {
-                success(msg.data, msg.status, msg.xhr);
-            }
-        };
+    private _onSuccess(msg: IAjaxSuccess): void {
+        if (msg.data) {
+            this.id = msg.data.id;
+            this.name = msg.data.name;
+        }
+        this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
     }
 
     /**
@@ -359,14 +353,8 @@ export
      * @function _on_error
      * @param {function} error - callback
      */
-    private _onError(error?: Function): utils.IAJaxError {
-
-        return (xhr: XMLHttpRequest, status: string, err: string) => {
-            utils.logAjaxError(xhr, status, err);
-            if (error) {
-                error(xhr, status, err);
-            }
-        };
+    private _onError(msg: IAjaxError): void {
+        utils.logAjaxError(msg.xhr, msg.status, msg.err);
     }
 
     /**

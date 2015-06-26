@@ -149,14 +149,16 @@ export
   }
 
 
-interface IAJaxSuccessType {
+export
+interface IAjaxSuccess {
   data: any;
   status: string;
   xhr: XMLHttpRequest;
 };
 
 
-interface IAJaxErrorType {
+export
+interface IAjaxError {
   xhr: XMLHttpRequest;
   status: string;
   err: string;
@@ -164,23 +166,9 @@ interface IAJaxErrorType {
 
 
 export
-  interface IAJaxSuccess {
-  (data: any, status: string, xhr: XMLHttpRequest): void;
-};
-
-
-export
-  interface IAJaxError {
-  (xhr: XMLHttpRequest, status: string, err: string): void;
-};
-
-
-export
-  interface IAJaxSetttings {
+  interface IAjaxSetttings {
   method: string;
   dataType: string;
-  success: IAJaxSuccess;
-  error: IAJaxError;
   contentType?: string;
   data?: any;
 };
@@ -191,15 +179,7 @@ export
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-  var ajaxProxy = function(url: string, settings: IAJaxSetttings): Promise<any> {
-
-    var success = function(resp: IAJaxSuccessType) {
-      settings.success(resp.data, resp.status, resp.xhr);
-    }
-
-    var error = function(resp: IAJaxErrorType) {
-      settings.error(resp.xhr, resp.status, resp.err);
-    }
+  var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSuccess> {
 
     return new Promise(function(resolve, reject) {
       var req = new XMLHttpRequest();
@@ -231,7 +211,7 @@ export
       } else {
         req.send();
       }
-    }).then(success, error);
+    });
   };
 
 /**
