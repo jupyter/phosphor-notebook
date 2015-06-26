@@ -6,14 +6,127 @@
 import utils = require('./utils');
 import comm = require('./comm');
 import serialize = require('./serialize');
-import defs = require('./messagedefs');
 
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
 
-import IKernelMsg = defs.IKernelMsg;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
+
+
+export
+interface IMsgPayload {
+  source: string;
+};
+
+
+interface IMsgPayloadCallbacks {
+  [s: string]: (payload: IMsgPayload, msg: IKernelMsg) => IKernelCallbacks;
+};
+
+
+export
+interface IMsgContent {
+  payload?: IMsgPayload[];
+  execution_state?: string;
+  comm_id?: string;
+  target_name?: string;
+  target_module?: string;
+  value?: any;
+  allow_stdin?: boolean;
+};
+
+
+export
+interface IMsgMetadata { };
+
+
+export
+interface IKernelInput { };
+
+
+export
+interface IMsgData {
+  id: string;
+  name: string;
+};
+
+
+export
+interface IMsgHeader {
+  username?: string;
+  version?: string;
+  data?: string;
+  session?: string;
+  msg_id?: string;
+  msg_type?: string;
+};
+
+
+export
+interface IMsgParentHeader {
+  msg_id?: string;
+  version?: string;
+  session?: string;
+  msg_type?: string;
+};
+
+
+export
+interface IKernelMsg {
+  metadata?: IMsgMetadata;
+  content: IMsgContent;
+  msg_id?: string;
+  parent_header: IMsgParentHeader;
+  header: IMsgHeader;
+  msg_type?: string;
+  channel?: string;
+  buffers?: string[]| ArrayBuffer[];
+};
+
+
+interface IMsgSuccess {
+  data: IMsgData;
+  status: string;
+  xhr: XMLHttpRequest;
+};
+
+
+export
+interface IKernelShellCallbacks {
+  reply?: Function;
+  payload?: any;
+};
+
+
+export
+interface IKernelIOPubCallbacks {
+  output?: Function;
+  clear_output?: Function;
+};
+
+
+export
+interface IKernelCallbacks {
+  // @param callbacks.shell.payload.[payload_name] {function}
+  shell?: IKernelShellCallbacks;
+  iopub?: IKernelIOPubCallbacks;
+  input?: Function;
+};
+
+
+export
+interface IKernelOptions {
+  silent?: boolean;
+  user_expressions?: any;
+  allow_stdin?: boolean;
+};
+
+
+interface IKernelEvent extends Event {
+  wasClean?: boolean;
+  data?: string | ArrayBuffer | Blob;
+};
 
 
 /**
@@ -46,8 +159,8 @@ class Kernel {
   static connected = new Signal<Kernel, void>();
   static connectionFailed = new Signal<Kernel, { ws_url: string; attempt: number; }>();
   static connectionDead = new Signal<Kernel, number>();
-  static executionRequest = new Signal<Kernel, defs.IMsgContent>();
-  static inputReply = new Signal<Kernel, defs.IMsgContent>();
+  static executionRequest = new Signal<Kernel, IMsgContent>();
+  static inputReply = new Signal<Kernel, IMsgContent>();
   static shellReply = new Signal<Kernel, IKernelMsg>();
   static receivedUnsolicitedMessage = new Signal<Kernel, IKernelMsg>();
 
@@ -321,7 +434,7 @@ class Kernel {
    *
    * @function send_shell_message
    */
-  sendShellMessage(msg_type: string, content: defs.IMsgContent, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata = {}, buffers: string[] = []): string {
+  sendShellMessage(msg_type: string, content: IMsgContent, callbacks: IKernelCallbacks, metadata: IMsgMetadata = {}, buffers: string[] = []): string {
     if (!this.isConnected()) {
         throw new Error("kernel is not connected");
     }
@@ -343,7 +456,7 @@ class Kernel {
    * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info)
    */
   kernelInfo(callback?: Function): string {
-    var callbacks: defs.IKernelShellCallbacks;
+    var callbacks: IKernelShellCallbacks;
     if (callback) {
         callbacks = { shell: { reply: callback } };
     }
@@ -363,7 +476,7 @@ class Kernel {
    * @param callback {function}
    */
   inspect(code: string, cursor_pos: number, callback: Function): string {
-    var callbacks: defs.IKernelShellCallbacks;
+    var callbacks: IKernelShellCallbacks;
     if (callback) {
       callbacks = { shell: { reply: callback } };
     }
@@ -425,8 +538,8 @@ class Kernel {
    * arugment.  Payload handlers will be passed the corresponding
    * payload and the execute_reply message.
    */
-  execute(code: string, callbacks: defs.IKernelCallbacks, options: defs.IKernelOptions): string {
-    var content: defs.IMsgContent = {
+  execute(code: string, callbacks: IKernelCallbacks, options: IKernelOptions): string {
+    var content: IMsgContent = {
       code: code,
       silent: true,
       store_history: false,
@@ -455,7 +568,7 @@ class Kernel {
    * @param callback {function}
    */
   complete(code: string, cursor_pos: number, callback: Function): string {
-    var callbacks: defs.IKernelCallbacks;
+    var callbacks: IKernelCallbacks;
     if (callback) {
       callbacks = { shell: { reply: callback } };
     }
@@ -469,11 +582,11 @@ class Kernel {
   /**
    * @function send_input_reply
    */
-  sendInputReply(input: defs.IKernelInput): string {
+  sendInputReply(input: IKernelInput): string {
     if (!this.isConnected()) {
       throw new Error("kernel is not connected");
     }
-    var content: defs.IMsgContent = {
+    var content: IMsgContent = {
       value: input
     };
     emit(this, Kernel.inputReply, content);
@@ -532,7 +645,7 @@ class Kernel {
    *
    * @function set_callbacks_for_msg
    */
-  setCallbacksForMsg(msg_id: string, callbacks: defs.IKernelCallbacks): void {
+  setCallbacksForMsg(msg_id: string, callbacks: IKernelCallbacks): void {
     this._last_msg_id = msg_id;
     if (callbacks) {
       // shallow-copy mapping, because we will modify it at the top level
@@ -550,8 +663,8 @@ class Kernel {
   /**
    * @function _get_msg
    */
-  private _getMsg(msg_type: string, content: defs.IMsgContent,
-      metadata: defs.IMsgMetadata = {}, buffers: string[] = []): defs.IKernelMsg {
+  private _getMsg(msg_type: string, content: IMsgContent,
+      metadata: IMsgMetadata = {}, buffers: string[] = []): IKernelMsg {
       var msg: IKernelMsg = {
           header: {
               msg_id: utils.uuid(),
@@ -631,7 +744,7 @@ class Kernel {
    * @function _kernel_created
    * @param {Object} data - information about the kernel including id
    */
-  private _kernelCreated(data: defs.IMsgData): void {
+  private _kernelCreated(data: IMsgData): void {
       this._recordStatus('created');
       emit(this, Kernel.created, void 0);
       this._id = data.id;
@@ -651,7 +764,7 @@ class Kernel {
       this._reconnect_attempt = 0;
       emit(this, Kernel.connected, void 0);
       // get kernel info so we know what state the kernel is in
-      this.kernelInfo((reply?: defs.IKernelMsg) => {
+      this.kernelInfo((reply?: IKernelMsg) => {
           this._info_reply = reply.content;
           this._recordStatus('ready');
           this._autorestart_attempt = 0;
@@ -692,7 +805,7 @@ class Kernel {
           );
 
       var already_called_onclose = false; // only alert once
-      this._ws.onclose = (evt: defs.IKernelEvent) => {
+      this._ws.onclose = (evt: IKernelEvent) => {
           if (already_called_onclose) {
               return;
           }
@@ -711,7 +824,7 @@ class Kernel {
               });
           }
       };
-      this._ws.onerror = (evt: defs.IKernelEvent) => {
+      this._ws.onerror = (evt: IKernelEvent) => {
           if (already_called_onclose) {
               return;
           }
@@ -719,10 +832,10 @@ class Kernel {
           this._wsClosed(ws_host_url, true);
       };
 
-      this._ws.onopen = (evt: defs.IKernelEvent) => {
+      this._ws.onopen = (evt: IKernelEvent) => {
           this._wsOpened(evt);
       };
-      var ws_closed_late = (evt: defs.IKernelEvent) => {
+      var ws_closed_late = (evt: IKernelEvent) => {
           if (already_called_onclose) {
               return;
           }
@@ -737,7 +850,7 @@ class Kernel {
               this._ws.onclose = ws_closed_late;
           }
       }, 1000);
-      this._ws.onmessage = (evt: defs.IKernelEvent) => {
+      this._ws.onmessage = (evt: IKernelEvent) => {
           this._handleWSMessage(evt);
       };
   }
@@ -748,7 +861,7 @@ class Kernel {
    *
    * @function _ws_opened
    */
-  private _wsOpened(evt: defs.IKernelEvent): void {
+  private _wsOpened(evt: IKernelEvent): void {
       if (this.isConnected()) {
           // all events ready, trigger started event.
           this._kernelConnected();
@@ -818,7 +931,7 @@ class Kernel {
       }
   }
 
-  private _handleWSMessage(e: defs.IKernelEvent): Promise<any> {
+  private _handleWSMessage(e: IKernelEvent): Promise<any> {
     this._msg_queue = this._msg_queue.then(() => {
       return serialize.deserialize(e.data);
     }).then(function(msg) { return this._finish_ws_message(msg); })
@@ -872,10 +985,10 @@ class Kernel {
   /**
    * @function _handle_payloads
    */
-  private _handlePayload(payloads: defs.IMsgPayload[],
-    payload_callbacks: defs.IMsgPayloadCallbacks,
+  private _handlePayload(payloads: IMsgPayload[],
+    payload_callbacks: IMsgPayloadCallbacks,
     msg: IKernelMsg): Promise<any> {
-    var promise: defs.IKernelCallbacks[] = [];
+    var promise: IKernelCallbacks[] = [];
     var l = payloads.length;
     // Payloads are handled by triggering events because we don't want the Kernel
     // to depend on the Notebook or Pager classes.

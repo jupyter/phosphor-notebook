@@ -3,10 +3,9 @@
 
 import utils = require('./utils');
 import kernel = require('./kernel');
-import defs = require('./messagedefs')
 
-import IMsgData = defs.IMsgData;
-import IKernelMsg = defs.IKernelMsg;
+import IMsgData = kernel.IMsgData;
+import IKernelMsg = kernel.IKernelMsg;
 
 export 
 class CommManager {
@@ -33,7 +32,7 @@ class CommManager {
   * Create a new Comm, register it, and open its Kernel-side counterpart
   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
   */
-  newComm(target_name: string, data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata): Comm {
+  newComm(target_name: string, data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata): Comm {
 
     var comm = new Comm(target_name);
     this.registerComm(comm);
@@ -172,7 +171,7 @@ class Comm {
   }
     
   // methods for sending messages
-  open(data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata) {
+  open(data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata) {
     var content = {
       comm_id: this.comm_id,
       target_name: this.target_name,
@@ -181,16 +180,16 @@ class Comm {
     return this.kernel.sendShellMessage("comm_open", content, callbacks, metadata);
   }
 
-  send(data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata, buffers: string[] = []) {
-    var content: defs.IMsgContent = {
+  send(data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata, buffers: string[] = []) {
+    var content: kernel.IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},
     };
     return this.kernel.sendShellMessage("comm_msg", content, callbacks, metadata, buffers);
   }
 
-  close(data?: IMsgData, callbacks?: defs.IKernelCallbacks, metadata?: defs.IMsgMetadata) {
-    var content: defs.IMsgContent = {
+  close(data?: IMsgData, callbacks?: kernel.IKernelCallbacks, metadata?: kernel.IMsgMetadata) {
+    var content: kernel.IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},
     };
