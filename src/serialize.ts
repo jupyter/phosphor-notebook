@@ -7,8 +7,7 @@
 import utils = require("./utils");
 import comm = require("./comm");
 
-
-interface IKernelMsg extends comm.IKernelMsg { };
+import IKernelMsg = comm.IKernelMsg;
 
 
 function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {

@@ -1,35 +1,10 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-
-/// <amd-dependency path="codemirror/mode/meta" name="CodeMirrorModeMeta"/>
-/// <amd-dependency path="codemirror/lib/codemirror" name="CodeMirror"/>
-import $ = require('jquery');
 import moment = require('moment');
 
 
-export interface MathJax {
-  Hub: { Queue: Function; };
-};
-
-declare var MathJax: MathJax;
-
-import CodeMirror = require("codemirror/lib/codemirror");
-import CodeMirrorModeMeta = require('codemirror/mode/meta');
-
-
-interface MyWindow extends Window {
-  MathJax?: MathJax
-};
-
-
-export interface MyError extends Error {
-  xhr?: JQueryXHR;
-  xhr_status?: string;
-  xhr_error?: string;
-};
-
-
+export
 interface IPythonExtension extends String {
   load_ipython_extension?: Function;
 };
@@ -40,17 +15,20 @@ interface ModError extends Error {
 };
 
 
+export
 interface MyRegExp extends RegExp {
   sticky?: boolean;
   extended?: boolean;
 };
 
 
+export
 interface ISectionData {
   load_extensions: string[];
 };
 
 
+export
 interface ISection {
   loaded: Promise<any>;
   data: ISectionData;
@@ -624,49 +602,6 @@ export
   };
 
 
-/**
- * get the absolute cursor position from CodeMirror's col, ch
- */
-export
-  var toAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor: CodeMirror.Cursor): number {
-    if (!cursor) {
-      cursor = cm.getCursor();
-    }
-    var cursor_pos = cursor.ch;
-    for (var i = 0; i < cursor.line; i++) {
-      cursor_pos += cm.getLine(i).length + 1;
-    }
-    return cursor_pos;
-  };
-
-
-/**
- * turn absolute cursor position into CodeMirror col, ch cursor
- */
-export
-  var fromAbsoluteCursorPos = function(cm: CodeMirror.Editor, cursor_pos: CodeMirror.Cursor) {
-
-    var i: number, line: string, next_line: string;
-    var offset = 0;
-    for (i = 0, next_line = cm.getLine(i); next_line !== undefined; i++ , next_line = cm.getLine(i)) {
-      line = next_line;
-      if (offset + next_line.length < cursor_pos) {
-        offset += next_line.length + 1;
-      } else {
-        return {
-          line: i,
-          ch: cursor_pos - offset,
-        };
-      }
-    }
-    // reached end, return endpoint
-    return {
-      line: i - 1,
-      ch: line.length - 1,
-    };
-  };
-
-
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
   var browser: string[] = (function() {
@@ -711,36 +646,6 @@ export
   };
 
 
-/**
- * Is b a child of a or a itself?
- */
-export
-  var isOrHas = function(a: any, b: any): boolean {
-
-    return a.has(b).length !== 0 || a.is(b);
-  };
-
-
-/**
- * Is element e, or one of its children focused?
- */
-export
-  var isFocused = function(e: any) {
-
-    e = $(e);
-    var target = $(document.activeElement);
-    if (target.length > 0) {
-      if (isOrHas(e, target)) {
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  };
-
-
 /** 
  * Return a serialized object string suitable for a query
 
@@ -756,111 +661,80 @@ var jsonToQueryString = function(json: any) {
 }
 
 
-/**
- * Return a JSON error message if there is one,
- * otherwise the basic HTTP status text.
+export
+ interface IAJaxSuccess {
+   (data: any, status: string, xhr: XMLHttpRequest): void;
+ };
+
+
+export
+ interface IAJaxError {
+   (xhr: XMLHttpRequest, status: string, err: string): void;
+ };
+
+
+export
+interface IAJaxSetttings {
+  method: string;
+  dataType: string;
+  success: IAJaxSuccess;
+  error: IAJaxError;
+  contentType?: string;
+  data?: any;
+ };
+
+/*
+ * Asynchronous XMLHTTPRequest handler
+ *
+ * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-  var ajaxErrorMsg = function(jqXHR: JQueryXHR) {
+  var ajaxProxy = function(url: string, settings: IAJaxSetttings): Promise<any> {
 
-    if (jqXHR.responseJSON && jqXHR.responseJSON.traceback) {
-      return jqXHR.responseJSON.traceback;
-    } else if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
-      return jqXHR.responseJSON.message;
-    } else {
-      return jqXHR.statusText;
-    }
+    return new Promise(function(success, error) {
+      var req = new XMLHttpRequest();
+      req.open(settings.method, url);
+      if (settings.contentType) {
+        req.overrideMimeType(settings.contentType);
+      }
+
+      req.onload = function(evt: Event) {
+        if (req.status == 200) {
+          if (settings.dataType === 'json') {
+            settings.success(JSON.parse(req.response), req.statusText, req);
+          }
+          else {
+            settings.success(req.response, req.statusText, req);
+          }
+        }
+        else {
+          settings.error(req, req.statusText, evt.type);
+        }
+      }
+
+      req.onerror = function(evt: Event) {
+        settings.error(req, req.statusText, evt.type);
+      }
+
+      if (settings.data) {
+        req.send(settings.data);
+      } else {
+        req.send();
+      }
+    });
   };
-
 
 /**
  * log ajax failures with informative messages
  */
 export
-  var logAjaxError = function(jqXHR: JQueryXHR, status: string, error: string) {
+  var logAjaxError = function(xhr: XMLHttpRequest, status: string, error: string) {
 
-    var msg = "API request failed (" + jqXHR.status + "): ";
-    console.log(jqXHR);
-    msg += ajaxErrorMsg(jqXHR);
+    var msg = "API request failed (" + xhr.status + "): ";
+    console.log(xhr);
+    msg += xhr.statusText;
     console.log(msg);
   }
-
-
-/** 
- * find a predefined mode or detect from CM metadata then
- * require and callback with the resolveable mode string: mime or
- * custom name
- */
-export
-  var requireCodeMirrorMode = function(mode: CodeMirror.Mode, callback: Function, errback: Function) {
-
-
-    var modename = (typeof mode == "string") ? mode :
-      mode.mode || mode.name;
-
-    // simplest, cheapest check by mode name: mode may also have config
-    if (CodeMirror.modes.hasOwnProperty(modename)) {
-      // return the full mode object, if it has a name
-      callback(mode.name ? mode : modename);
-      return;
-    }
-
-    // *somehow* get back a CM.modeInfo-like object that has .mode and
-    // .mime
-    var info = (mode && mode.mode && mode.mime && mode) ||
-      CodeMirror.findModeByName(modename) ||
-      CodeMirror.findModeByExtension(modename.split(".").slice(-1)) ||
-      CodeMirror.findModeByMIME(modename) ||
-      { mode: modename, mime: modename };
-
-    require([
-      // might want to use CodeMirror.modeURL here
-      ['codemirror/mode', info.mode, info.mode].join('/'),
-    ], function() {
-      // return the original mode, as from a kernelspec on first load
-      // or the mimetype, as for most highlighting
-      callback(mode.name ? mode : info.mime);
-    }, errback
-      );
-  };
-
-/** Error type for wrapped XHR errors. */
-export
-  var XHR_ERROR = 'XhrError';
-
-/**
- * Wraps an AJAX error as an Error object.
- */
-export
-  var wrapAjaxError = function(jqXHR: JQueryXHR, status: string, error: string) {
-    var wrapped_error = <MyError>(new Error(ajaxErrorMsg(jqXHR)));
-    wrapped_error.name = XHR_ERROR;
-    // provide xhr response
-    wrapped_error.xhr = jqXHR;
-    wrapped_error.xhr_status = status;
-    wrapped_error.xhr_error = error;
-    return wrapped_error;
-  };
-
-
-/**
- * Like $.ajax, but returning an ES6 promise. success and error settings
- * will be ignored.
- */
-export
-  var promisingAjax = function(url: string, settings: any): Promise<any> {
-    settings = settings || {};
-    return new Promise(function(resolve, reject) {
-      settings.success = function(data: any, status: string, jqXHR: JQueryXHR) {
-        resolve(data);
-      };
-      settings.error = function(jqXHR: JQueryXHR, status: string, error: string) {
-        logAjaxError(jqXHR, status, error);
-        reject(wrapAjaxError(jqXHR, status, error));
-      };
-      $.ajax(url, settings);
-    });
-  };
 
 
 /**
@@ -931,34 +805,6 @@ export
     };
   };
 
-/**
- * Apply MathJax rendering to an element, and optionally set its text
- *
- * If MathJax is not available, make no changes.
- *
- * Returns the output any number of typeset elements, or undefined if
- * MathJax was not available.
- *
- * Parameters
- * ----------
- * element: Node, NodeList, or jQuery selection
- * text: option string
- */
-export
-  var typeset = function(element: any, text: string) {
-
-    var $el = element.jquery ? element : $(element);
-    if (arguments.length > 1) {
-      $el.text(text);
-    }
-    if (!(<MyWindow>window).MathJax) {
-      return;
-    }
-    return $el.map(function() {
-      // MathJax takes a DOM node: $.map makes `this` the context
-      return (<MyWindow>window).MathJax.Hub.Queue(["Typeset", (<MyWindow>window).MathJax.Hub, this]);
-    });
-  };
 
 export var time: any = {};
 time.milliseconds = {};

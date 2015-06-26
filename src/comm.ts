@@ -129,6 +129,7 @@ export
 };
 
 
+export
 interface ICommCallback {
   (msg: IKernelMsg): void;
 }

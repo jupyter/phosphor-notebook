@@ -3,7 +3,6 @@
 
 "use strict";
 
-import $ = require('jquery');
 import utils = require('./utils');
 import comm = require('./comm');
 import serialize = require('./serialize');
@@ -11,18 +10,7 @@ import serialize = require('./serialize');
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
 
-
-interface IKernelMsg extends comm.IKernelMsg { };
-
-
-interface IAjaxSuccess {
-    (data: any, status: string, xhr: JQueryXHR): void;
-};
-
-
-interface IAjaxError {
-    (xhr: JQueryXHR, status: string, err: string): void;
-};
+import IKernelMsg = comm.IKernelMsg;
 
 
 /**
@@ -161,11 +149,9 @@ export
      * @param {function} [success] - function executed on ajax success
      * @param {function} [error] - functon executed on ajax error
      */
-    list(success: IAjaxSuccess, error: Function): void {
-        $.ajax(this.kernel_service_url, {
-            processData: false,
-            cache: false,
-            type: "GET",
+    list(success: utils.IAJaxSuccess, error: Function): void {
+        utils.ajaxProxy(this.kernel_service_url, {
+            method: "GET",
             dataType: "json",
             success: success,
             error: this._onError(error)
@@ -202,14 +188,12 @@ export
             }
         };
 
-        $.ajax(url, {
-            processData: false,
-            cache: false,
-            type: "POST",
+        utils.ajaxProxy(url, {
+            method: "POST",
             data: JSON.stringify({ name: this.name }),
             contentType: 'application/json',
             dataType: "json",
-            success: this._on_success(on_success),
+            success: this._onSuccess(on_success),
             error: this._onError(error)
         });
 
@@ -226,12 +210,10 @@ export
      * @param {function} [error] - functon executed on ajax error
      */
     getInfo(success: Function, error: Function): void {
-        $.ajax(this.kernel_url, {
-            processData: false,
-            cache: false,
-            type: "GET",
+        utils.ajaxProxy(this.kernel_url, {
+            method: "GET",
             dataType: "json",
-            success: this._on_success(success),
+            success: this._onSuccess(success),
             error: this._onError(error)
         });
     }
@@ -253,12 +235,10 @@ export
         this._recordStatus('killed');
         emit(this, Kernel.killed, void 0);
         this._kernelDead();
-        $.ajax(this.kernel_url, {
-            processData: false,
-            cache: false,
-            type: "DELETE",
+        utils.ajaxProxy(this.kernel_url, {
+            method: "DELETE",
             dataType: "json",
-            success: this._on_success(success),
+            success: this._onSuccess(success),
             error: this._onError(error)
         });
     }
@@ -287,13 +267,10 @@ export
         };
 
         var url = utils.urlJoinEncode(this.kernel_url, 'interrupt');
-        $.ajax(url, {
-            processData: false,
-            cache: false,
-            type: "POST",
-            contentType: false,  // there's no data with this
+        utils.ajaxProxy(url, {
+            method: "POST",
             dataType: "json",
-            success: this._on_success(on_success),
+            success: this._onSuccess(on_success),
             error: this._onError(error)
         });
     }
@@ -327,13 +304,10 @@ export
         };
 
         var url = utils.urlJoinEncode(this.kernel_url, 'restart');
-        $.ajax(url, {
-            processData: false,
-            cache: false,
-            type: "POST",
-            contentType: false,  // there's no data with this
+        utils.ajaxProxy(url, {
+            method: "POST",
             dataType: "json",
-            success: this._on_success(on_success),
+            success: this._onSuccess(on_success),
             error: this._onError(on_error)
         });
     }
@@ -365,7 +339,7 @@ export
      * @function _on_success
      * @param {function} success - callback
      */
-    private _on_success(success: Function): IAjaxSuccess {
+    private _onSuccess(success: Function): utils.IAJaxSuccess {
         return (msg: comm.IMsgSuccess) => {
             if (msg.data) {
                 this.id = msg.data.id;
@@ -385,9 +359,9 @@ export
      * @function _on_error
      * @param {function} error - callback
      */
-    private _onError(error?: Function): IAjaxError {
+    private _onError(error?: Function): utils.IAJaxError {
 
-        return (xhr: JQueryXHR, status: string, err: string) => {
+        return (xhr: XMLHttpRequest, status: string, err: string) => {
             utils.logAjaxError(xhr, status, err);
             if (error) {
                 error(xhr, status, err);
