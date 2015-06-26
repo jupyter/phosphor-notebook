@@ -268,7 +268,7 @@ var loadClass = function(class_name: string, module_name: string, registry: { [s
  * caused the promise to reject.
  */
 export
-var reject = function(message: string, log?: boolean): (error: any) => any {
+  var reject = function(message: string, log?: boolean): (error: any) => Promise<any> {
 
   return function(error: any): Promise<any> {
     var wrapped_error = new WrappedError(message, error);
