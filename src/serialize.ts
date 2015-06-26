@@ -65,7 +65,7 @@ function _deserializeBinary(data: Blob | ArrayBuffer): IKernelMsg | Promise<IKer
  * deserialize a message and return a promise for the unpacked message
  */
 export
-  function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
+function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
   if (typeof data === "string") {
     // text JSON message
     return Promise.resolve(JSON.parse(data));
@@ -124,7 +124,7 @@ function _serializeBinary(msg: IKernelMsg): ArrayBuffer {
  * implement the serialization protocol
  */
 export
-  function serialize(msg: IKernelMsg): string | ArrayBuffer {
+function serialize(msg: IKernelMsg): string | ArrayBuffer {
   if (msg.buffers && msg.buffers.length) {
     return _serializeBinary(msg);
   } else {
