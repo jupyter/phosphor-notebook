@@ -131,19 +131,15 @@ interface IKernelEvent extends Event {
 export 
 class CommManager {
 
-  comms: { [id: string]: Promise<Comm> };
-  targets: { [string: string]: Function; };
-  kernel: kernel.Kernel;
-
   //-----------------------------------------------------------------------
   // CommManager class
   //-----------------------------------------------------------------------
     
   constructor(kernel: kernel.Kernel) {
-    this.comms = {};
-    this.targets = {};
+    this._comms = {};
+    this._targets = {};
     if (kernel !== undefined) {
-      this.kernel = kernel;
+      this._kernel = kernel;
       kernel.registerIOPubHandler('comm_open',
         (msg: IKernelMsg) => this._commOpen(msg));
       kernel.registerIOPubHandler('comm_close',
@@ -169,22 +165,22 @@ class CommManager {
    * Register a target function for a given target name
    */
   registerTarget(target_name: string, f: Function): void {
-    this.targets[target_name] = f;
+    this._targets[target_name] = f;
   }
 
   /**
    * Unregister a target function for a given target name
    */
   unregisterTarget(target_name: string, f: Function) {
-    delete this.targets[target_name];
+    delete this._targets[target_name];
   }
 
   /**
     * Register a comm in the mapping
     */
   registerComm(comm: Comm) {
-    this.comms[comm.comm_id] = (Promise.resolve(comm));
-    comm.kernel = this.kernel;
+    this._comms[comm.comm_id] = (Promise.resolve(comm));
+    comm.kernel = this._kernel;
     return comm.comm_id;
   }
 
@@ -193,7 +189,7 @@ class CommManager {
    */
   unregisterComm(comm: Comm): void {
 
-    delete this.comms[comm.comm_id];
+    delete this._comms[comm.comm_id];
   }
     
   // comm message handlers
@@ -203,10 +199,10 @@ class CommManager {
     var that = this;
     var comm_id = content.comm_id;
 
-    this.comms[comm_id] = utils.loadClass(content.target_name, content.target_module,
-      this.targets).then(function(target: (a: any, b: any) => Promise<any>) {
+    this._comms[comm_id] = utils.loadClass(content.target_name, content.target_module,
+      this._targets).then(function(target: (a: any, b: any) => Promise<any>) {
         var comm = new Comm(content.target_name, comm_id);
-        comm.kernel = that.kernel;
+        comm.kernel = that._kernel;
         try {
           var response = target(comm, msg);
         } catch (e) {
@@ -220,16 +216,16 @@ class CommManager {
         // then return the comm
         return Promise.resolve(response).then(function() { return comm; });
       }, utils.reject('Could not open comm', true));
-    return this.comms[comm_id];
+    return this._comms[comm_id];
   }
 
   private _commClose(msg: IKernelMsg): Promise<void> {
     var content = msg.content;
-    if (this.comms[content.comm_id] === undefined) {
+    if (this._comms[content.comm_id] === undefined) {
       console.error('Comm promise not found for comm id ' + content.comm_id);
       return;
     }
-    this.comms[content.comm_id].then((comm) => {
+    this._comms[content.comm_id].then((comm) => {
       this.unregisterComm(comm);
       try {
         comm.handleClose(msg);
@@ -239,18 +235,18 @@ class CommManager {
       // don't return a comm, so that further .then() functions
       // get an undefined comm input
     });
-    delete this.comms[content.comm_id];
+    delete this._comms[content.comm_id];
     return Promise.resolve(undefined);
   }
 
   private _commMsg(msg: IKernelMsg) {
     var content = msg.content;
-    if (this.comms[content.comm_id] === undefined) {
+    if (this._comms[content.comm_id] === undefined) {
       console.error('Comm promise not found for comm id ' + content.comm_id);
       return;
     }
 
-    this.comms[content.comm_id] = this.comms[content.comm_id].then(function(comm) {
+    this._comms[content.comm_id] = this._comms[content.comm_id].then(function(comm) {
       try {
         comm.handleMsg(msg);
       } catch (e) {
@@ -258,14 +254,18 @@ class CommManager {
       }
       return comm;
     });
-    return this.comms[content.comm_id];
+    return this._comms[content.comm_id];
   }
     
-  //-----------------------------------------------------------------------
-  // Comm base class
-  //-----------------------------------------------------------------------
+  private _kernel: kernel.Kernel;
+  private _comms: { [id: string]: Promise<Comm> };
+  private _targets: { [string: string]: Function; };
 }
 
+
+//-----------------------------------------------------------------------
+// Comm base class
+//-----------------------------------------------------------------------
 export 
 class Comm {
 

@@ -15,6 +15,13 @@ import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
 
+/* TODO:
+  fix public atttibutes
+  fix handler methods
+  
+  think about comm target registry
+  */
+
 /**
      * A Kernel class to communicate with the Python kernel. This
      * should generally not be constructed directly, but be created
