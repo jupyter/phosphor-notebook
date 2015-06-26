@@ -3,130 +3,10 @@
 
 import utils = require('./utils');
 import kernel = require('./kernel');
+import defs = require('./messagedefs')
 
-
-export
-interface IMsgPayload {
-  source: string;
-};
-
-
-export
-interface IMsgPayloadCallbacks {
-  [s: string]: (payload: IMsgPayload, msg: IKernelMsg) => IKernelCallbacks;
-};
-
-
-export
-interface IMsgContent {
-  payload?: IMsgPayload[];
-  execution_state?: string;
-  comm_id?: string;
-  target_name?: string;
-  target_module?: string;
-  value?: any;
-  allow_stdin?: boolean;
-};
-
-
-export
-interface IMsgMetadata { };
-
-
-export
-interface IKernelInput { };
-
-
-interface IKernelInfo {
-  kernel: { id: string };
-};
-
-
-export
-interface IMsgData {
-  id: string;
-  name: string;
-};
-
-
-export
-interface IMsgHeader {
-  username?: string;
-  version?: string;
-  data?: string;
-  session?: string;
-  msg_id?: string;
-  msg_type?: string;
-};
-
-
-export
-interface IMsgParentHeader {
-  msg_id?: string;
-  version?: string;
-  session?: string;
-  msg_type?: string;
-};
-
-
-export
-interface IKernelMsg {
-  metadata?: IMsgMetadata;
-  content: IMsgContent;
-  msg_id?: string;
-  parent_header: IMsgParentHeader;
-  header: IMsgHeader;
-  msg_type?: string;
-  channel?: string;
-  buffers?: string[] | ArrayBuffer[];
-};
-
-
-export
-interface IMsgSuccess {
-  data: IMsgData;
-  status: string;
-  xhr: XMLHttpRequest;
-};
-
-
-export
-interface IKernelShellCallbacks {
-  reply?: Function;
-  payload?: any;
-};
-
-
-export
-interface IKernelIOPubCallbacks {
-  output?: Function;
-  clear_output?: Function;
-};
-
-
-export
-interface IKernelCallbacks {
-  // @param callbacks.shell.payload.[payload_name] {function}
-  shell?: IKernelShellCallbacks;
-  iopub?: IKernelIOPubCallbacks;
-  input?: Function;
-};
-
-
-export
-interface IKernelOptions {
-  silent?: boolean;
-  user_expressions?: any;
-  allow_stdin?: boolean;
-};
-
-
-export
-interface IKernelEvent extends Event {
-  wasClean?: boolean;
-  data?: string | ArrayBuffer | Blob;
-};
-
+import IMsgData = defs.IMsgData;
+import IKernelMsg = defs.IKernelMsg;
 
 export 
 class CommManager {
@@ -153,7 +33,7 @@ class CommManager {
   * Create a new Comm, register it, and open its Kernel-side counterpart
   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
   */
-  newComm(target_name: string, data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata): Comm {
+  newComm(target_name: string, data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata): Comm {
 
     var comm = new Comm(target_name);
     this.registerComm(comm);
@@ -292,7 +172,7 @@ class Comm {
   }
     
   // methods for sending messages
-  open(data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata) {
+  open(data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata) {
     var content = {
       comm_id: this.comm_id,
       target_name: this.target_name,
@@ -301,16 +181,16 @@ class Comm {
     return this.kernel.sendShellMessage("comm_open", content, callbacks, metadata);
   }
 
-  send(data: IMsgData, callbacks: IKernelCallbacks, metadata: IMsgMetadata, buffers: string[] = []) {
-    var content: IMsgContent = {
+  send(data: IMsgData, callbacks: defs.IKernelCallbacks, metadata: defs.IMsgMetadata, buffers: string[] = []) {
+    var content: defs.IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},
     };
     return this.kernel.sendShellMessage("comm_msg", content, callbacks, metadata, buffers);
   }
 
-  close(data?: IMsgData, callbacks?: IKernelCallbacks, metadata?: IMsgMetadata) {
-    var content: IMsgContent = {
+  close(data?: IMsgData, callbacks?: defs.IKernelCallbacks, metadata?: defs.IMsgMetadata) {
+    var content: defs.IMsgContent = {
       comm_id: this.comm_id,
       data: data || {},
     };

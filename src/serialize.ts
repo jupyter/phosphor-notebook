@@ -5,9 +5,9 @@
 "use strict";
 
 import utils = require("./utils");
-import comm = require("./comm");
+import defs = require("./messagedefs");
 
-import IKernelMsg = comm.IKernelMsg;
+import IKernelMsg = defs.IKernelMsg;
 
 
 function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {

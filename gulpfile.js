@@ -21,6 +21,7 @@ var tsSources = [
     "utils",
     "serialize",
     "comm",
+    "messagedefs"
 ].map(function(name) {return "./src/" + name + ".ts"; });
 
 
