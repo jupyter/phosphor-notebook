@@ -57,95 +57,38 @@ class Kernel {
   static shellReply = new Signal<Kernel, IKernelMsg>();
   static receivedUnsolicitedMessage = new Signal<Kernel, IKernelMsg>();
 
-  id: string;
-  name: string;
-  kernel_service_url: string;
-  kernel_url: string;
-  ws_url: string;
-  username: string;
-  session_id: string;
-  ws: WebSocket;
-  info_reply: any;
-  WebSocket: any;
-  comm_manager: comm.CommManager;
-  last_msg_id: string;
-  last_msg_callbacks: any;
-  reconnect_limit: number;
-
   constructor(kernel_service_url: string, ws_url: string, name: string) {
-    this.id = null;
-    this.name = name;
-    this.ws = null;
+    this._id = null;
+    this._name = name;
+    this._ws = null;
 
-    this.kernel_service_url = kernel_service_url;
-    this.kernel_url = null;
-    this.ws_url = ws_url;
-    if (!this.ws_url) {
+    this._kernel_service_url = kernel_service_url;
+    this._kernel_url = null;
+    this._ws_url = ws_url;
+    if (!this._ws_url) {
       // trailing 's' in https will become wss for secure web sockets
-      this.ws_url = location.protocol.replace('http', 'ws') + "//" + location.host;
+      this._ws_url = location.protocol.replace('http', 'ws') + "//" + location.host;
     }
 
-    this.username = "username";
-    this.session_id = utils.uuid();
+    this._username = "username";
+    this._session_id = utils.uuid();
     this._msg_callbacks = {};
     this._msg_queue = Promise.resolve();
-    this.info_reply = {}; // kernel_info_reply stored here after starting
+    this._info_reply = {}; // kernel_info_reply stored here after starting
 
     if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
     }
 
     this.initIOPubHandlers();
-    this.comm_manager = new comm.CommManager(this);
+    this._comm_manager = new comm.CommManager(this);
 
-    this.last_msg_id = null;
-    this.last_msg_callbacks = {};
+    this._last_msg_id = null;
+    this._last_msg_callbacks = {};
 
     this._autorestart_attempt = 0;
     this._reconnect_attempt = 0;
-    this.reconnect_limit = 7;
-  }
-
-  /**
-   * @function _get_msg
-   */
-  private _getMsg(msg_type: string, content: comm.IMsgContent,
-    metadata: comm.IMsgMetadata = {}, buffers: string[] = []): comm.IKernelMsg {
-    var msg: IKernelMsg = {
-      header: {
-        msg_id: utils.uuid(),
-        username: this.username,
-        session: this.session_id,
-        msg_type: msg_type,
-        version: "5.0"
-      },
-      metadata: metadata || {},
-      content: content,
-      buffers: buffers || [],
-      parent_header: {}
-    };
-    return msg;
-  }
-
-  private _recordStatus(status: string) {
-    console.log('Kernel: ' + status + ' (' + this.id + ')');
-  }
-
-  /**
-   * Initialize the iopub handlers.
-   *
-   * @function init_iopub_handlers
-   */
-  initIOPubHandlers(): void {
-    var output_msg_types = ['stream', 'display_data', 'execute_result', 'error'];
-    this._iopub_handlers = {};
-    this.registerIOPubHandler('status', this._handleStatusMessage);
-    this.registerIOPubHandler('clear_output', this._handle_clear_output);
-    this.registerIOPubHandler('execute_input', this._handleInputMessage);
-
-    for (var i = 0; i < output_msg_types.length; i++) {
-      this.registerIOPubHandler(output_msg_types[i], this._handleOutputMessage);
-    }
+    this._reconnect_limit = 7;
   }
 
   /**
@@ -158,7 +101,7 @@ class Kernel {
    * @param {function} [error] - functon executed on ajax error
    */
   list(success: Function, error: Function): void {
-    utils.ajaxProxy(this.kernel_service_url, {
+    utils.ajaxProxy(this._kernel_service_url, {
       method: "GET",
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
@@ -184,7 +127,7 @@ class Kernel {
    * @param {function} [error] - functon executed on ajax error
    */
   start(params: Object, success: Function, error: Function): string {
-    var url: string = this.kernel_service_url;
+    var url: string = this._kernel_service_url;
     var qs = utils.jsonToQueryString(params || {}); // query string for sage math stuff
     if (qs !== "") {
       url = url + "?" + qs;
@@ -194,7 +137,7 @@ class Kernel {
 
     utils.ajaxProxy(url, {
       method: "POST",
-      data: JSON.stringify({ name: this.name }),
+      data: JSON.stringify({ name: this._name }),
       contentType: 'application/json',
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
@@ -216,7 +159,7 @@ class Kernel {
    * @param {function} [error] - functon executed on ajax error
    */
   getInfo(success: Function, error: Function): void {
-    utils.ajaxProxy(this.kernel_url, {
+    utils.ajaxProxy(this._kernel_url, {
       method: "GET",
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
@@ -243,7 +186,7 @@ class Kernel {
     this._recordStatus('killed');
     emit(this, Kernel.killed, void 0);
     this._kernelDead();
-    utils.ajaxProxy(this.kernel_url, {
+    utils.ajaxProxy(this._kernel_url, {
       method: "DELETE",
       dataType: "json"
     }).then((arg: IAjaxSuccess) => {
@@ -266,7 +209,7 @@ class Kernel {
     this._recordStatus('interrupting');
     emit(this, Kernel.interrupting, void 0);
 
-    var url = utils.urlJoinEncode(this.kernel_url, 'interrupt');
+    var url = utils.urlJoinEncode(this._kernel_url, 'interrupt');
     utils.ajaxProxy(url, {
       method: "POST",
       dataType: "json"
@@ -295,7 +238,7 @@ class Kernel {
     emit(this, Kernel.restarting, void 0);
     this.stopChannels();
 
-    var url = utils.urlJoinEncode(this.kernel_url, 'restart');
+    var url = utils.urlJoinEncode(this._kernel_url, 'restart');
     utils.ajaxProxy(url, {
       method: "POST",
       dataType: "json"
@@ -327,209 +270,6 @@ class Kernel {
   }
 
   /**
-   * Handle a successful AJAX request by updating the kernel id and
-   * name from the response, and then optionally calling a provided
-   * callback.
-   *
-   * @function _onSuccess
-   * @param {IAjaxSucces} msg - Ajax Success Message
-   * @param {function} success - callback
-   */
-  private _onSuccess(msg: IAjaxSuccess, success?: Function): void {
-    if (msg.data) {
-      this.id = msg.data.id;
-      this.name = msg.data.name;
-    }
-    this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
-    if (success) {
-        success(msg.data, msg.status, msg.xhr);
-    }
-  }
-
-  /**
-   * Handle a failed AJAX request by logging the error message, and
-   * then optionally calling a provided callback.
-   *
-   * @function _onError
-   * @param {IAjaxError} msg - Ajax Error Message
-   * @param {function} error - callback
-   */
-  private _onError(msg: IAjaxError, error?: Function): void {
-    utils.logAjaxError(msg.xhr, msg.status, msg.err);
-    if (error) {
-        error(msg.xhr, msg.status, msg.err);
-    }
-  }
-
-  /**
-   * Perform necessary tasks once the kernel has been started,
-   * including actually connecting to the kernel.
-   *
-   * @function _kernel_created
-   * @param {Object} data - information about the kernel including id
-   */
-  private _kernelCreated(data: comm.IMsgData): void {
-    this._recordStatus('created');
-    emit(this, Kernel.created, void 0);
-    this.id = data.id;
-    this.kernel_url = utils.urlJoinEncode(this.kernel_service_url, this.id);
-    this.startChannels();
-  }
-
-  /**
-   * Perform necessary tasks once the connection to the kernel has
-   * been established. This includes requesting information about
-   * the kernel.
-   *
-   * @function _kernel_connected
-   */
-  private _kernelConnected(): void {
-    this._recordStatus('connected');
-    this._reconnect_attempt = 0;
-    emit(this, Kernel.connected, void 0);
-    // get kernel info so we know what state the kernel is in
-    this.kernelInfo((reply?: comm.IKernelMsg) => {
-      this.info_reply = reply.content;
-      this._recordStatus('ready');
-      this._autorestart_attempt = 0;
-      emit(this, Kernel.ready, void 0);
-    });
-  }
-
-  /**
-   * Perform necessary tasks after the kernel has died. This closing
-   * communication channels to the kernel if they are still somehow
-   * open.
-   *
-   * @function _kernel_dead
-   */
-  private _kernelDead(): void {
-    this._recordStatus('dead');
-    emit(this, Kernel.dead, void 0);
-    this.stopChannels();
-  }
-
-  /**
-   * Start the websocket channels.
-   * Will stop and restart them if they already exist.
-   *
-   * @function start_channels
-   */
-  startChannels(): void {
-    this.stopChannels();
-    var ws_host_url = this.ws_url + this.kernel_url;
-
-    console.log("Starting WebSockets:", ws_host_url);
-
-    this.ws = new WebSocket([
-      this.ws_url,
-      utils.urlJoinEncode(this.kernel_url, 'channels'),
-      "?session_id=" + this.session_id
-    ].join('')
-        );
-
-    var already_called_onclose = false; // only alert once
-    this.ws.onclose = (evt: comm.IKernelEvent) => {
-      if (already_called_onclose) {
-        return;
-      }
-      already_called_onclose = true;
-      if (!evt.wasClean) {
-        // If the websocket was closed early, that could mean
-        // that the kernel is actually dead. Try getting
-        // information about the kernel from the API call --
-        // if that fails, then assume the kernel is dead,
-        // otherwise just follow the typical websocket closed
-        // protocol.
-        this.getInfo(function() {
-            this._ws_closed(ws_host_url, false);
-        }, function() {
-            this._kernel_dead();
-        });
-      }
-    };
-    this.ws.onerror = (evt: comm.IKernelEvent) => {
-      if (already_called_onclose) {
-        return;
-      }
-      already_called_onclose = true;
-      this._wsClosed(ws_host_url, true);
-    };
-
-    this.ws.onopen = (evt: comm.IKernelEvent) => {
-      this._wsOpened(evt);
-    };
-    var ws_closed_late = (evt: comm.IKernelEvent) => {
-      if (already_called_onclose) {
-        return;
-      }
-      already_called_onclose = true;
-      if (!evt.wasClean) {
-        this._wsClosed(ws_host_url, false);
-      }
-    };
-    // switch from early-close to late-close message after 1s
-    setTimeout(() => {
-      if (this.ws !== null) {
-        this.ws.onclose = ws_closed_late;
-      }
-    }, 1000);
-    this.ws.onmessage = (evt: comm.IKernelEvent) => {
-      this._handleWSMessage(evt);
-    };
-  }
-
-  /**
-   * Handle a websocket entering the open state,
-   * signaling that the kernel is connected when websocket is open.
-   *
-   * @function _ws_opened
-   */
-  private _wsOpened(evt: comm.IKernelEvent): void {
-    if (this.isConnected()) {
-      // all events ready, trigger started event.
-      this._kernelConnected();
-    }
-  }
-
-  /**
-   * Handle a websocket entering the closed state.  If the websocket
-   * was not closed due to an error, try to reconnect to the kernel.
-   *
-   * @function _ws_closed
-   * @param {string} ws_url - the websocket url
-   * @param {bool} error - whether the connection was closed due to an error
-   */
-  private _wsClosed(ws_url: string, error: boolean): void {
-
-    this.stopChannels();
-
-    this._recordStatus('disconnected');
-    emit(this, Kernel.disconnected, void 0);
-    if (error) {
-      console.log('WebSocket connection failed: ', ws_url);
-      emit(this, Kernel.connectionFailed,
-        { ws_url: ws_url, attempt: this._reconnect_attempt });
-    }
-    this._scheduleReconnect();
-  }
-
-  /**
-   * function to call when kernel connection is lost
-   * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
-   */
-  private _scheduleReconnect(): void {
-    if (this._reconnect_attempt < this.reconnect_limit) {
-      var timeout = Math.pow(2, this._reconnect_attempt);
-      console.log("Connection lost, reconnecting in " + timeout + " seconds.");
-      setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
-    } else {
-      emit(this, Kernel.connectionDead, this._reconnect_attempt);
-      console.log("Failed to reconnect, giving up.");
-    }
-  }
-
-  /**
    * Close the websocket. After successful close, the value
    * in `this.ws` will be null.
    *
@@ -537,14 +277,14 @@ class Kernel {
    */
   stopChannels(): void {
     var close = () => {
-      if (this.ws && this.ws.readyState === WebSocket.CLOSED) {
-        this.ws = null;
+      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
+        this._ws = null;
       }
     };
-    if (this.ws !== null) {
-      if (this.ws.readyState === WebSocket.OPEN) {
-        this.ws.onclose = close;
-        this.ws.close();
+    if (this._ws !== null) {
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.onclose = close;
+        this._ws.close();
       } else {
         close();
       }
@@ -561,10 +301,10 @@ class Kernel {
    */
   isConnected(): boolean {
     // if any channel is not ready, then we're not connected
-    if (this.ws === null) {
+    if (this._ws === null) {
       return false;
     }
-    if (this.ws.readyState !== WebSocket.OPEN) {
+    if (this._ws.readyState !== WebSocket.OPEN) {
       return false;
     }
     return true;
@@ -579,7 +319,7 @@ class Kernel {
    * @returns {bool} - whether the kernel is fully disconnected
    */
   isFullyDisconnected(): boolean {
-    return (this.ws === null);
+    return (this._ws === null);
   }
 
   /**
@@ -593,7 +333,7 @@ class Kernel {
     }
     var msg = this._getMsg(msg_type, content, metadata, buffers);
     msg.channel = 'shell';
-    this.ws.send(serialize.serialize(msg));
+    this._ws.send(serialize.serialize(msg));
     this.setCallbacksForMsg(msg.header.msg_id, callbacks);
     return msg.header.msg_id;
   }
@@ -745,7 +485,7 @@ class Kernel {
     emit(this, Kernel.inputReply, content);
     var msg = this._getMsg("input_reply", content);
     msg.channel = 'stdin';
-    this.ws.send(serialize.serialize(msg));
+    this._ws.send(serialize.serialize(msg));
     return msg.header.msg_id;
   }
 
@@ -771,8 +511,8 @@ class Kernel {
    * @function get_callbacks_for_msg
    */
   getCallbacksForMsg(msg_id: string): any {
-    if (msg_id == this.last_msg_id) {
-      return this.last_msg_callbacks;
+    if (msg_id == this._last_msg_id) {
+      return this._last_msg_callbacks;
     } else {
       return this._msg_callbacks[msg_id];
     }
@@ -790,32 +530,6 @@ class Kernel {
   }
   
   /**
-   * @function _finish_shell
-   */
-  private _finishShell(msg_id: string): void {
-    var callbacks = this._msg_callbacks[msg_id];
-    if (callbacks !== undefined) {
-      callbacks.shell_done = true;
-      if (callbacks.iopub_done) {
-        this.clearCallbacksForMsg(msg_id);
-      }
-    }
-  }
-
-  /**
-   * @function _finish_iopub
-   */
-  private _finishIOPub(msg_id: string): void {
-    var callbacks = this._msg_callbacks[msg_id];
-    if (callbacks !== undefined) {
-      callbacks.iopub_done = true;
-      if (callbacks.shell_done) {
-        this.clearCallbacksForMsg(msg_id);
-      }
-    }
-  }
-  
-  /**
    * Set callbacks for a particular message.
    * Callbacks should be a struct of the following form:
    * shell : {
@@ -825,18 +539,289 @@ class Kernel {
    * @function set_callbacks_for_msg
    */
   setCallbacksForMsg(msg_id: string, callbacks: comm.IKernelCallbacks): void {
-    this.last_msg_id = msg_id;
+    this._last_msg_id = msg_id;
     if (callbacks) {
       // shallow-copy mapping, because we will modify it at the top level
-      var cbcopy: any = this._msg_callbacks[msg_id] = this.last_msg_callbacks = {};
+      var cbcopy: any = this._msg_callbacks[msg_id] = this._last_msg_callbacks = {};
       cbcopy.shell = callbacks.shell;
       cbcopy.iopub = callbacks.iopub;
       cbcopy.input = callbacks.input;
       cbcopy.shell_done = (!callbacks.shell);
       cbcopy.iopub_done = (!callbacks.iopub);
     } else {
-      this.last_msg_callbacks = {};
+      this._last_msg_callbacks = {};
     }
+  }
+
+  /**
+   * @function _get_msg
+   */
+  private _getMsg(msg_type: string, content: comm.IMsgContent,
+      metadata: comm.IMsgMetadata = {}, buffers: string[] = []): comm.IKernelMsg {
+      var msg: IKernelMsg = {
+          header: {
+              msg_id: utils.uuid(),
+              username: this._username,
+              session: this._session_id,
+              msg_type: msg_type,
+              version: "5.0"
+          },
+          metadata: metadata || {},
+          content: content,
+          buffers: buffers || [],
+          parent_header: {}
+      };
+      return msg;
+  }
+
+  private _recordStatus(status: string) {
+      console.log('Kernel: ' + status + ' (' + this._id + ')');
+  }
+
+  /**
+   * Initialize the iopub handlers.
+   *
+   * @function init_iopub_handlers
+   */
+  initIOPubHandlers(): void {
+      var output_msg_types = ['stream', 'display_data', 'execute_result', 'error'];
+      this._iopub_handlers = {};
+      this.registerIOPubHandler('status', this._handleStatusMessage);
+      this.registerIOPubHandler('clear_output', this._handle_clear_output);
+      this.registerIOPubHandler('execute_input', this._handleInputMessage);
+
+      for (var i = 0; i < output_msg_types.length; i++) {
+          this.registerIOPubHandler(output_msg_types[i], this._handleOutputMessage);
+      }
+  }
+
+  /**
+   * Handle a successful AJAX request by updating the kernel id and
+   * name from the response, and then optionally calling a provided
+   * callback.
+   *
+   * @function _onSuccess
+   * @param {IAjaxSucces} msg - Ajax Success Message
+   * @param {function} success - callback
+   */
+  private _onSuccess(msg: IAjaxSuccess, success?: Function): void {
+      if (msg.data) {
+          this._id = msg.data.id;
+          this._name = msg.data.name;
+      }
+      this._kernel_url = utils.urlJoinEncode(this._kernel_service_url, this._id);
+      if (success) {
+          success(msg.data, msg.status, msg.xhr);
+      }
+  }
+
+  /**
+   * Handle a failed AJAX request by logging the error message, and
+   * then optionally calling a provided callback.
+   *
+   * @function _onError
+   * @param {IAjaxError} msg - Ajax Error Message
+   * @param {function} error - callback
+   */
+  private _onError(msg: IAjaxError, error?: Function): void {
+      utils.logAjaxError(msg.xhr, msg.status, msg.err);
+      if (error) {
+          error(msg.xhr, msg.status, msg.err);
+      }
+  }
+
+  /**
+   * Perform necessary tasks once the kernel has been started,
+   * including actually connecting to the kernel.
+   *
+   * @function _kernel_created
+   * @param {Object} data - information about the kernel including id
+   */
+  private _kernelCreated(data: comm.IMsgData): void {
+      this._recordStatus('created');
+      emit(this, Kernel.created, void 0);
+      this._id = data.id;
+      this._kernel_url = utils.urlJoinEncode(this._kernel_service_url, this._id);
+      this.startChannels();
+  }
+
+  /**
+   * Perform necessary tasks once the connection to the kernel has
+   * been established. This includes requesting information about
+   * the kernel.
+   *
+   * @function _kernel_connected
+   */
+  private _kernelConnected(): void {
+      this._recordStatus('connected');
+      this._reconnect_attempt = 0;
+      emit(this, Kernel.connected, void 0);
+      // get kernel info so we know what state the kernel is in
+      this.kernelInfo((reply?: comm.IKernelMsg) => {
+          this._info_reply = reply.content;
+          this._recordStatus('ready');
+          this._autorestart_attempt = 0;
+          emit(this, Kernel.ready, void 0);
+      });
+  }
+
+  /**
+   * Perform necessary tasks after the kernel has died. This closing
+   * communication channels to the kernel if they are still somehow
+   * open.
+   *
+   * @function _kernel_dead
+   */
+  private _kernelDead(): void {
+      this._recordStatus('dead');
+      emit(this, Kernel.dead, void 0);
+      this.stopChannels();
+  }
+
+  /**
+   * Start the websocket channels.
+   * Will stop and restart them if they already exist.
+   *
+   * @function start_channels
+   */
+  startChannels(): void {
+      this.stopChannels();
+      var ws_host_url = this._ws_url + this._kernel_url;
+
+      console.log("Starting WebSockets:", ws_host_url);
+
+      this._ws = new WebSocket([
+          this._ws_url,
+          utils.urlJoinEncode(this._kernel_url, 'channels'),
+          "?session_id=" + this._session_id
+      ].join('')
+          );
+
+      var already_called_onclose = false; // only alert once
+      this._ws.onclose = (evt: comm.IKernelEvent) => {
+          if (already_called_onclose) {
+              return;
+          }
+          already_called_onclose = true;
+          if (!evt.wasClean) {
+              // If the websocket was closed early, that could mean
+              // that the kernel is actually dead. Try getting
+              // information about the kernel from the API call --
+              // if that fails, then assume the kernel is dead,
+              // otherwise just follow the typical websocket closed
+              // protocol.
+              this.getInfo(function() {
+                  this._ws_closed(ws_host_url, false);
+              }, function() {
+                  this._kernel_dead();
+              });
+          }
+      };
+      this._ws.onerror = (evt: comm.IKernelEvent) => {
+          if (already_called_onclose) {
+              return;
+          }
+          already_called_onclose = true;
+          this._wsClosed(ws_host_url, true);
+      };
+
+      this._ws.onopen = (evt: comm.IKernelEvent) => {
+          this._wsOpened(evt);
+      };
+      var ws_closed_late = (evt: comm.IKernelEvent) => {
+          if (already_called_onclose) {
+              return;
+          }
+          already_called_onclose = true;
+          if (!evt.wasClean) {
+              this._wsClosed(ws_host_url, false);
+          }
+      };
+      // switch from early-close to late-close message after 1s
+      setTimeout(() => {
+          if (this._ws !== null) {
+              this._ws.onclose = ws_closed_late;
+          }
+      }, 1000);
+      this._ws.onmessage = (evt: comm.IKernelEvent) => {
+          this._handleWSMessage(evt);
+      };
+  }
+
+  /**
+   * Handle a websocket entering the open state,
+   * signaling that the kernel is connected when websocket is open.
+   *
+   * @function _ws_opened
+   */
+  private _wsOpened(evt: comm.IKernelEvent): void {
+      if (this.isConnected()) {
+          // all events ready, trigger started event.
+          this._kernelConnected();
+      }
+  }
+
+  /**
+   * Handle a websocket entering the closed state.  If the websocket
+   * was not closed due to an error, try to reconnect to the kernel.
+   *
+   * @function _ws_closed
+   * @param {string} ws_url - the websocket url
+   * @param {bool} error - whether the connection was closed due to an error
+   */
+  private _wsClosed(ws_url: string, error: boolean): void {
+
+      this.stopChannels();
+
+      this._recordStatus('disconnected');
+      emit(this, Kernel.disconnected, void 0);
+      if (error) {
+          console.log('WebSocket connection failed: ', ws_url);
+          emit(this, Kernel.connectionFailed,
+              { ws_url: ws_url, attempt: this._reconnect_attempt });
+      }
+      this._scheduleReconnect();
+  }
+
+  /**
+   * function to call when kernel connection is lost
+   * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
+   */
+  private _scheduleReconnect(): void {
+      if (this._reconnect_attempt < this._reconnect_limit) {
+          var timeout = Math.pow(2, this._reconnect_attempt);
+          console.log("Connection lost, reconnecting in " + timeout + " seconds.");
+          setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
+      } else {
+          emit(this, Kernel.connectionDead, this._reconnect_attempt);
+          console.log("Failed to reconnect, giving up.");
+      }
+  }
+
+  /**
+   * @function _finish_shell
+   */
+  private _finishShell(msg_id: string): void {
+      var callbacks = this._msg_callbacks[msg_id];
+      if (callbacks !== undefined) {
+          callbacks.shell_done = true;
+          if (callbacks.iopub_done) {
+              this.clearCallbacksForMsg(msg_id);
+          }
+      }
+  }
+
+  /**
+   * @function _finish_iopub
+   */
+  private _finishIOPub(msg_id: string): void {
+      var callbacks = this._msg_callbacks[msg_id];
+      if (callbacks !== undefined) {
+          callbacks.iopub_done = true;
+          if (callbacks.shell_done) {
+              this.clearCallbacksForMsg(msg_id);
+          }
+      }
   }
 
   private _handleWSMessage(e: comm.IKernelEvent): Promise<any> {
@@ -947,7 +932,7 @@ class Kernel {
       this._recordStatus('starting');
       emit(this, Kernel.starting, void 0);
       this.kernelInfo((reply: IKernelMsg) => {
-        this.info_reply = reply.content;
+        this._info_reply = reply.content;
         this._recordStatus('ready');
         this._autorestart_attempt = 0;
         emit(this, Kernel.ready, void 0);
@@ -1051,6 +1036,20 @@ class Kernel {
     }
   }
 
+  private _id: string;
+  private _name: string;
+  private _kernel_service_url: string;
+  private _kernel_url: string;
+  private _ws_url: string;
+  private _username: string;
+  private _session_id: string;
+  private _ws: WebSocket;
+  private _info_reply: any;
+  private _WebSocket: any;
+  private _comm_manager: comm.CommManager;
+  private _last_msg_id: string;
+  private _last_msg_callbacks: any;
+  private _reconnect_limit: number;
   private _msg_callbacks: any;
   private _msg_queue: Promise<any>;
   private _autorestart_attempt: number;
