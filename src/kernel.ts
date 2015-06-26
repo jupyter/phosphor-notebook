@@ -16,7 +16,6 @@ import IAjaxError = utils.IAjaxError;
 
 
 /* TODO:
-  fix public atttibutes
   fix handler methods
   
   think about comm target registry
@@ -584,15 +583,15 @@ class Kernel {
    * @function init_iopub_handlers
    */
   initIOPubHandlers(): void {
-      var output_msg_types = ['stream', 'display_data', 'execute_result', 'error'];
       this._iopub_handlers = {};
-      this.registerIOPubHandler('status', this._handleStatusMessage);
-      this.registerIOPubHandler('clear_output', this._handle_clear_output);
-      this.registerIOPubHandler('execute_input', this._handleInputMessage);
+      this.registerIOPubHandler('status', (msg: IKernelMsg) => this._handleStatusMessage(msg));
+      this.registerIOPubHandler('clear_output', (msg: IKernelMsg) => this._handle_clear_output(msg));
+      this.registerIOPubHandler('execute_input', (msg: IKernelMsg) => this._handleInputMessage(msg));
 
-      for (var i = 0; i < output_msg_types.length; i++) {
-          this.registerIOPubHandler(output_msg_types[i], this._handleOutputMessage);
-      }
+      this.registerIOPubHandler('stream', (msg: IKernelMsg) => this._handleOutputMessage(msg));
+      this.registerIOPubHandler('display_data', (msg: IKernelMsg) => this._handleOutputMessage(msg));
+      this.registerIOPubHandler('execute_result', (msg: IKernelMsg) => this._handleOutputMessage(msg));
+      this.registerIOPubHandler('error', (msg: IKernelMsg) => this._handleOutputMessage(msg));
   }
 
   /**

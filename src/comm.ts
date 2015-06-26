@@ -196,18 +196,17 @@ class CommManager {
     
   private _commOpen(msg: IKernelMsg): Promise<Comm> {
     var content = msg.content;
-    var that = this;
     var comm_id = content.comm_id;
 
     this._comms[comm_id] = utils.loadClass(content.target_name, content.target_module,
       this._targets).then(function(target: (a: any, b: any) => Promise<any>) {
         var comm = new Comm(content.target_name, comm_id);
-        comm.kernel = that._kernel;
+        comm.kernel = this._kernel;
         try {
           var response = target(comm, msg);
         } catch (e) {
           comm.close();
-          that.unregisterComm(comm);
+          this.unregisterComm(comm);
           var wrapped_error = new utils.WrappedError("Exception opening new comm", e);
           console.error(wrapped_error);
           return Promise.reject(wrapped_error);
