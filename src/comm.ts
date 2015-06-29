@@ -4,7 +4,6 @@
 import utils = require('./utils');
 import kernel = require('./kernel');
 
-import IMsgData = kernel.IMsgData;
 import IKernelMsg = kernel.IKernelMsg;
 
 export 
@@ -19,12 +18,16 @@ class CommManager {
     this._targets = {};
     if (kernel !== undefined) {
       this._kernel = kernel;
+      /*
+      TODO: these should be connect calls
+
       kernel.registerIOPubHandler('comm_open',
         (msg: IKernelMsg) => this._commOpen(msg));
       kernel.registerIOPubHandler('comm_close',
         (msg: IKernelMsg) => this._commClose(msg));
       kernel.registerIOPubHandler('comm_msg',
         (msg: IKernelMsg) => this._commMsg(msg));
+*/
     }
   }
 
@@ -32,7 +35,7 @@ class CommManager {
   * Create a new Comm, register it, and open its Kernel-side counterpart
   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
   */
-  newComm(target_name: string, data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata): Comm {
+  newComm(target_name: string, data: any, callbacks: any, metadata = {}): Comm {
 
     var comm = new Comm(target_name);
     this.registerComm(comm);
@@ -171,29 +174,32 @@ class Comm {
   }
     
   // methods for sending messages
-  open(data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata) {
+  open(data: any, callbacks: any, metadata = {}) {
     var content = {
       comm_id: this.comm_id,
       target_name: this.target_name,
       data: data || {},
     };
-    return this.kernel.sendShellMessage("comm_open", content, callbacks, metadata);
+    // TODO: register connects for the callbacks
+    return this.kernel.sendShellMessage("comm_open", content, metadata);
   }
 
-  send(data: IMsgData, callbacks: kernel.IKernelCallbacks, metadata: kernel.IMsgMetadata, buffers: string[] = []) {
-    var content: kernel.IMsgContent = {
+  send(data: any, callbacks: any, metadata = {}, buffers: string[] = []) {
+    var content = {
       comm_id: this.comm_id,
       data: data || {},
     };
-    return this.kernel.sendShellMessage("comm_msg", content, callbacks, metadata, buffers);
+    // TODO: register connects for the callbacks
+    return this.kernel.sendShellMessage("comm_msg", content, metadata, buffers);
   }
 
-  close(data?: IMsgData, callbacks?: kernel.IKernelCallbacks, metadata?: kernel.IMsgMetadata) {
-    var content: kernel.IMsgContent = {
+  close(data?: any, callbacks?: any, metadata = {}) {
+    var content = {
       comm_id: this.comm_id,
       data: data || {},
     };
-    return this.kernel.sendShellMessage("comm_close", content, callbacks, metadata);
+    // TODO: register connects for the callbacks
+    return this.kernel.sendShellMessage("comm_close", content, metadata);
   }
 
   onMsg(callback: (msg: IKernelMsg) => void) {

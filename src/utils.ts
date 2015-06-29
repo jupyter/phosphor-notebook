@@ -142,7 +142,7 @@ var browser: string[] = (function() {
 export
 var jsonToQueryString = function(json: any) {
   return '?' +
-    Object.keys(json).map(function(key: any): any {
+    Object.keys(json).map(function(key: string): any {
       return encodeURIComponent(key) + '=' +
         encodeURIComponent(json[key]);
     }).join('&');
@@ -179,7 +179,7 @@ interface IAjaxSetttings {
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSuccess> {
+var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<any> {
 
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
@@ -188,22 +188,22 @@ var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSu
       req.overrideMimeType(settings.contentType);
     }
 
-    req.onload = function(evt: Event) {
+    req.onload = function() {
       if (req.status == 200) {
         if (settings.dataType === 'json') {
-          resolve({ data: JSON.parse(req.response), status: req.statusText, xhr: req });
+          resolve(JSON.parse(req.response));
         }
         else {
-          resolve({ data: req.response, status: req.statusText, xhr: req });
+          resolve(req.response);
         }
       }
       else {
-        reject({ xhr: req, status: req.statusText, err: evt.type });
+        reject(req.statusText);
       }
     }
 
-    req.onerror = function(evt: Event) {
-      reject({ xhr: req, status: req.statusText, err: evt.type });
+    req.onerror = function() {
+      reject(req.statusText);
     }
 
     if (settings.data) {
@@ -218,11 +218,8 @@ var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<IAjaxSu
  * log ajax failures with informative messages
  */
 export
-var logAjaxError = function(xhr: XMLHttpRequest, status: string, error: string) {
-
-  var msg = "API request failed (" + xhr.status + "): ";
-  console.log(xhr);
-  msg += xhr.statusText;
+var logAjaxError = function(status: string) {
+  var msg = "API request failed (" + status + "): ";
   console.log(msg);
 }
 
@@ -268,9 +265,9 @@ var loadClass = function(class_name: string, module_name: string, registry: { [s
  * caused the promise to reject.
  */
 export
-  var reject = function(message: string, log?: boolean): (error: any) => Promise<any> {
+  var reject = function(message: string, log?: boolean): (error: Error) => Promise<any> {
 
-  return function(error: any): Promise<any> {
+  return function(error: Error): Promise<any> {
     var wrapped_error = new WrappedError(message, error);
     if (log) console.error(wrapped_error);
     return Promise.reject(wrapped_error);
