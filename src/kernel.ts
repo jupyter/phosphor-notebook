@@ -88,7 +88,6 @@ enum KernelFutureFlag {
 
 class KernelFutureHandler extends Disposable implements IKernelFuture {
 
-
   /**
    * Dispose and unregister the future.
    */
@@ -795,35 +794,9 @@ class Kernel {
     }
     var future = this._handlerMap.get(msg.parent_header.msg_id);
     if (future) {
-      future.handleMessage(msg);
+      future.handleMsg(msg);
     }
   }
-
-  /**
- * @function _finishShell
- */
-  private _finishShell(msg_id) {
-      var callbacks = this._msg_callbacks[msg_id];
-      if (callbacks !== undefined) {
-          callbacks.shell_done = true;
-          if (callbacks.iopub_done) {
-              this.clear_callbacks_for_msg(msg_id);
-          }
-      }
-  };
-
-  /**
-   * @function _finishIopub
-   */
-  private _finishIopub(msg_id) {
-      var callbacks = this._msg_callbacks[msg_id];
-      if (callbacks !== undefined) {
-          callbacks.iopub_done = true;
-          if (callbacks.shell_done) {
-              this.clear_callbacks_for_msg(msg_id);
-          }
-      }
-  };
 
   /**
    * @function _handleStatusMessage
