@@ -239,7 +239,7 @@ class Kernel {
     this._username = "username";
     this._sessionId = utils.uuid();
     this._infoReply = {}; // kernel_info_reply stored here after starting
-    this._handlerMap = new Map<string, IKernelFuture>();
+    this._handlerMap = new Map<string, KernelFutureHandler>();
 
     if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
@@ -642,7 +642,7 @@ class Kernel {
       this._handleStatus('connected');
       this._reconnectAttempt = 0;
       // get kernel info so we know what state the kernel is in
-      this.kernelInfo().then((reply?: IKernelMsg) => {
+      this.kernelInfo().onReply((reply?: IKernelMsg) => {
           this._infoReply = reply.content;
           this._handleStatus('ready');
           this._autorestartAttempt = 0;
@@ -810,7 +810,7 @@ class Kernel {
 
     if (execution_state === 'starting') {
 
-        this.kernelInfo().then((reply: IKernelMsg) => {
+        this.kernelInfo().onReply((reply: IKernelMsg) => {
           this._infoReply = reply.content;
           this._handleStatus('ready');
           this._autorestartAttempt = 0;
