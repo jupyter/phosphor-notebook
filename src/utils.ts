@@ -138,7 +138,7 @@ interface IAjaxSetttings {
  */
 export
 function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
-  return new Promise(resolve, reject) => {
+  return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
     req.open(settings.method, url);
     if (settings.contentType) {
@@ -193,7 +193,7 @@ function require(modules: string[], success: Function, reject?: Function): void;
  */
 export
 function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
-  return new Promise(resolve, reject) => {
+  return new Promise((resolve, reject) => {
     // Try loading the view module using require.js
     if (module_name) {
       require([module_name], (module: any) => {
