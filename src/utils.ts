@@ -25,12 +25,11 @@ function extend(target: any, source: any): any {
 
 /*
  * Get a uuid as a string.
+ *
+ * http://www.ietf.org/rfc/rfc4122.txt
  */
 export
 function uuid(): string {
-  /**
-   * http://www.ietf.org/rfc/rfc4122.txt
-   */
   var s: string[] = [];
   var hexDigits = "0123456789ABCDEF";
   for (var i = 0; i < 32; i++) {
@@ -89,7 +88,7 @@ function urlJoinEncode(...args: string[]): string {
 // Properly detect the current browser.
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
-var browser: string[] = (function() {
+var browser: string[] = (() => {
   if (typeof navigator === 'undefined') {
     // navigator undefined in node
     return ['None'];
@@ -110,9 +109,9 @@ var browser: string[] = (function() {
   http://stackoverflow.com/a/30707423
  */
 export
-function jsonToQueryString(json: any) {
+function jsonToQueryString(json: any): string {
   return '?' +
-    Object.keys(json).map(function(key: string): any {
+    Object.keys(json).map((key: string): any => {
       return encodeURIComponent(key) + '=' +
         encodeURIComponent(json[key]);
     }).join('&');
@@ -138,7 +137,7 @@ interface IAjaxSetttings {
  */
 export
 function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
-  return new Promise(function(resolve, reject) {
+  return new Promise(resolve, reject) => {
     var req = new XMLHttpRequest();
     req.open(settings.method, url);
     if (settings.contentType) {
@@ -193,7 +192,7 @@ function require(modules: string[], success: Function, reject?: Function): void;
  */
 export
 function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(resolve, reject) => {
     // Try loading the view module using require.js
     if (module_name) {
       require([module_name], (module: any) => {
