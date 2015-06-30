@@ -4,6 +4,13 @@
 import moment = require('moment');
 
 
+/**
+ * Wrappable Error class.
+ *
+ * The Error class doesn't actually act on `this`.  Instead it always
+ * returns a new instance of Error.  Here we capture that instance so we
+ * can apply it's properties to `this`.
+ */
 export
 class WrappedError implements Error {
 
@@ -11,12 +18,8 @@ class WrappedError implements Error {
   name: string;
   errorStack: Error[];
 
-  /**
-   * Wrappable Error class
-   *
-   * The Error class doesn't actually act on `this`.  Instead it always
-   * returns a new instance of Error.  Here we capture that instance so we
-   * can apply it's properties to `this`.
+  /*
+   * Create a new WrappedError.
    */
   constructor(message: string, error: Error) {
 
@@ -39,10 +42,10 @@ class WrappedError implements Error {
 
 
 /*
-  Copy the contents of one object to another, recursively
-
-  http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
-*/
+ * Copy the contents of one object to another, recursively.
+ *
+ * http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
+ */
 export
 function extend(target: any, source: any): any {
   target = target || {};
@@ -57,6 +60,9 @@ function extend(target: any, source: any): any {
 };
 
 
+/*
+ * Get a uuid as a string.
+ */
 export
 function uuid(): string {
   /**
@@ -76,7 +82,7 @@ function uuid(): string {
 
 
 /**
- * join a sequence of url components with '/'
+ * Join a sequence of url components with '/'.
  */
 export
 function urlPathJoin(...paths: string[]): string {
@@ -98,8 +104,8 @@ function urlPathJoin(...paths: string[]): string {
 
 
 /**
- * encode just the components of a multi-segment uri,
- * leaving '/' separators
+ * Encode just the components of a multi-segment uri,
+ * leaving '/' separators.
  */
 export
 function encodeURIComponents(uri: string): string {
@@ -108,8 +114,8 @@ function encodeURIComponents(uri: string): string {
 
 
 /**
- * join a sequence of url components with '/',
- * encoding each component with encodeURIComponent
+ * Join a sequence of url components with '/',
+ * encoding each component with encodeURIComponent.
  */
 export
 function urlJoinEncode(...args: string[]): string {
@@ -117,6 +123,7 @@ function urlJoinEncode(...args: string[]): string {
 };
 
 
+// Properly detect the current browser.
 // http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
 export
 var browser: string[] = (function() {
@@ -135,7 +142,7 @@ var browser: string[] = (function() {
 
 
 /** 
- * Return a serialized object string suitable for a query
+ * Return a serialized object string suitable for a query.
 
   http://stackoverflow.com/a/30707423
  */
@@ -149,6 +156,9 @@ function jsonToQueryString(json: any) {
 }
 
 
+/**
+ * Input settings for an AJAX query.
+ */
 export
 interface IAjaxSetttings {
   method: string;
@@ -159,7 +169,7 @@ interface IAjaxSetttings {
 
 
 /*
- * Asynchronous XMLHTTPRequest handler
+ * Asynchronous XMLHTTPRequest handler.
  *
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
@@ -200,7 +210,7 @@ function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
 };
 
 /**
- * log ajax failures with informative messages
+ * Log ajax failures with informative messages.
  */
 export
 function logAjaxError(status: string) {
@@ -212,9 +222,9 @@ function logAjaxError(status: string) {
 declare function require(modules: string[], success: Function, reject: Function): void;
 
 /**
- * Tries to load a class
+ * Try to load a class.
  *
- * Tries to load a class from a module using require.js, if a module 
+ * Try to load a class from a module using require.js, if a module 
  * is specified, otherwise tries to load a class from the global 
  * registry, if the global registry is provided.
  */
