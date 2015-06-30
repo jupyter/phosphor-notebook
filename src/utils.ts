@@ -150,28 +150,13 @@ function jsonToQueryString(json: any) {
 
 
 export
-interface IAjaxSuccess {
-  data: any;
-  status: string;
-  xhr: XMLHttpRequest;
-};
-
-
-export
-interface IAjaxError {
-  xhr: XMLHttpRequest;
-  status: string;
-  err: string;
-};
-
-
-export
 interface IAjaxSetttings {
   method: string;
   dataType: string;
   contentType?: string;
   data?: any;
 };
+
 
 /*
  * Asynchronous XMLHTTPRequest handler
