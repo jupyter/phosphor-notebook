@@ -27,7 +27,7 @@ export
   header: IKernelMsgHeader;
   metadata: any;
   content: any;
-  parent_header: IKernelMsgHeader | {};
+  parent_header: any;
   msg_id?: string;
   msg_type?: string;
   channel?: string;
@@ -284,7 +284,7 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((data: any) => {
-        this._onSuccess(arg);
+        this._onSuccess(data);
     }, (status: string) => {
         this._onError(status);
     });
@@ -762,9 +762,11 @@ class Kernel {
     if (msg.channel === 'iopub' && msg.msg_type === 'status'){
       this._handleStatusMessage(msg);
     }
-    var future = this._handlerMap.get(msg.parent_header.msg_id);
-    if (future) {
-      future.handleMsg(msg);
+    if (msg.parent_header) {
+      var future = this._handlerMap.get(msg.parent_header.msg_id);
+      if (future) {
+        future.handleMsg(msg);
+      }
     }
   }
 
@@ -813,6 +815,6 @@ class Kernel {
   private _msgQueue: Promise<IKernelMsg>;
   private _autorestartAttempt: number;
   private _reconnectAttempt: number;
-  private _handlerMap: Map<string, KernelFutureHandler>;;
-
+  private _handlerMap: Map<string, KernelFutureHandler>;
+  private _iopubHandlers: Map<string, (msg: IKernelMsg) => void>;
 }
