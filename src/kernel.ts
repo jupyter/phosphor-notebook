@@ -52,22 +52,22 @@ interface IKernelFuture {
   dispose(): void;
 
   /**
-   * Regsiter a reply handler. Returns 'this'.
+   * Register a reply handler. Returns `this`.
    */
   onReply(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
   /**
-   * Regsiter an output handler. Returns 'this'.
+   * Register an output handler. Returns `this`.
    */
   onOutput(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
   /**
-   * Regsiter a done handler. Returns 'this'.
+   * Register a done handler. Returns `this`.
    */
   onDone(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
   /**
-   * Regsiter an input handler. Returns 'this'.
+   * Register an input handler. Returns `this`.
    */
   onInput(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
@@ -663,7 +663,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Register a reply handler. Returns 'this'.
+   * Register a reply handler. Returns `this`.
    */
   onReply(cb: (msg: IKernelMsg) => void): IKernelFuture {
     this._reply = cb;
@@ -671,7 +671,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Register an output handler. Returns 'this'.
+   * Register an output handler. Returns `this`.
    */
   onOutput(cb: (msg: IKernelMsg) => void): IKernelFuture {
     this._output = cb;
@@ -679,7 +679,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Register a done handler. Returns 'this'.
+   * Register a done handler. Returns `this`.
    */
   onDone(cb: (msg: IKernelMsg) => void): IKernelFuture {
     this._done = cb;
@@ -687,7 +687,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Register an input handler. Returns 'this'.
+   * Register an input handler. Returns `this`.
    */
   onInput(cb: (msg: IKernelMsg) => void): IKernelFuture {
     this._input = cb;

@@ -48,7 +48,6 @@ function uuid(): string {
  */
 export
 function urlPathJoin(...paths: string[]): string {
-
   var url = '';
   for (var i = 0; i < paths.length; i++) {
     if (paths[i] === '') {
@@ -85,8 +84,10 @@ function urlJoinEncode(...args: string[]): string {
 }
 
 
-// Properly detect the current browser.
-// http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
+/**
+ * Properly detect the current browser.
+ * http://stackoverflow.com/questions/2400935/browser-detection-in-javascript
+ */
 export
 var browser: string[] = (() => {
   if (typeof navigator === 'undefined') {
@@ -105,8 +106,8 @@ var browser: string[] = (() => {
 
 /** 
  * Return a serialized object string suitable for a query.
-
-  http://stackoverflow.com/a/30707423
+ *
+ * http://stackoverflow.com/a/30707423
  */
 export
 function jsonToQueryString(json: any): string {
