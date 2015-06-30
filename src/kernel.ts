@@ -719,22 +719,22 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
    */
   handleMsg(msg: IKernelMsg): void {
     if (msg.channel === 'iopub') {
+      if (this._output) {
+        this._output(msg);
+      }
       if (msg.msgType === 'status' && msg.content.execution_state === 'idle') {
         this._setFlag(KernelFutureFlag.GotIdle);
         if (this._testFlag(KernelFutureFlag.GotReply)) {
           this._handleDone(msg);
         }
       }
-      if (this._output) {
-        this._output(msg);
-      }
     } else if (msg.channel === 'shell') {
+      if (this._reply) {
+        this._reply(msg);
+      }
       this._setFlag(KernelFutureFlag.GotReply)
       if (this._testFlag(KernelFutureFlag.GotIdle)) {
         this._handleDone(msg);
-      }
-      if (this._reply) {
-        this._reply(msg);
       }
     } else if (msg.channel == 'stdin') {
       if (this._input) {
