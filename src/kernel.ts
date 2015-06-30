@@ -4,7 +4,6 @@
 "use strict";
 
 import utils = require('./utils');
-import comm = require('./comm');
 import serialize = require('./serialize');
 
 import Signal = phosphor.core.Signal;
@@ -245,8 +244,6 @@ class Kernel {
     if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
     }
-
-    this._commManager = new comm.CommManager(this);
 
     this._autorestartAttempt = 0;
     this._reconnectAttempt = 0;
@@ -810,7 +807,6 @@ class Kernel {
   private _ws: WebSocket;
   private _infoReply: any;
   private _WebSocket: any;
-  private _commManager: comm.CommManager;
   private _reconnectLimit: number;
   private _msgQueue: Promise<IKernelMsg>;
   private _autorestartAttempt: number;
