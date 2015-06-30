@@ -44,7 +44,7 @@ class WrappedError implements Error {
   http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
 */
 export
-var extend = function(target: any, source: any): any {
+function extend(target: any, source: any): any {
   target = target || {};
   for (var prop in source) {
     if (typeof source[prop] === 'object') {
@@ -58,7 +58,7 @@ var extend = function(target: any, source: any): any {
 
 
 export
-var uuid = function(): string {
+function uuid(): string {
   /**
    * http://www.ietf.org/rfc/rfc4122.txt
    */
@@ -79,7 +79,7 @@ var uuid = function(): string {
  * join a sequence of url components with '/'
  */
 export
-var urlPathJoin = function(...paths: string[]): string {
+function urlPathJoin(...paths: string[]): string {
 
   var url = '';
   for (var i = 0; i < paths.length; i++) {
@@ -102,7 +102,7 @@ var urlPathJoin = function(...paths: string[]): string {
  * leaving '/' separators
  */
 export
-var encodeURIComponents = function(uri: string): string {
+function encodeURIComponents(uri: string): string {
   return uri.split('/').map(encodeURIComponent).join('/');
 };
 
@@ -112,7 +112,7 @@ var encodeURIComponents = function(uri: string): string {
  * encoding each component with encodeURIComponent
  */
 export
-var urlJoinEncode = function(...args: string[]): string {
+function urlJoinEncode(...args: string[]): string {
   return encodeURIComponents(urlPathJoin.apply(null, args));
 };
 
@@ -140,7 +140,7 @@ var browser: string[] = (function() {
   http://stackoverflow.com/a/30707423
  */
 export
-var jsonToQueryString = function(json: any) {
+function jsonToQueryString(json: any) {
   return '?' +
     Object.keys(json).map(function(key: string): any {
       return encodeURIComponent(key) + '=' +
@@ -179,7 +179,7 @@ interface IAjaxSetttings {
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<any> {
+function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
 
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
@@ -218,7 +218,7 @@ var ajaxProxy = function(url: string, settings: IAjaxSetttings): Promise<any> {
  * log ajax failures with informative messages
  */
 export
-var logAjaxError = function(status: string) {
+function logAjaxError(status: string) {
   var msg = "API request failed (" + status + "): ";
   console.log(msg);
 }
@@ -234,7 +234,7 @@ declare function require(modules: string[], success: Function, reject: Function)
  * registry, if the global registry is provided.
  */
 export
-var loadClass = function(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
+function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
   return new Promise(function(resolve, reject) {
 
     // Try loading the view module using require.js
@@ -265,7 +265,7 @@ var loadClass = function(class_name: string, module_name: string, registry: { [s
  * caused the promise to reject.
  */
 export
-  var reject = function(message: string, log?: boolean): (error: Error) => Promise<any> {
+function reject(message: string, log?: boolean): (error: Error) => Promise<any> {
 
   return function(error: Error): Promise<any> {
     var wrapped_error = new WrappedError(message, error);
