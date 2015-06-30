@@ -19,8 +19,7 @@ var tsSources = [
     "mathjaxutils",
     "kernel",
     "utils",
-    "serialize",
-    "comm"
+    "serialize"
 ].map(function(name) {return "./src/" + name + ".ts"; });
 
 
