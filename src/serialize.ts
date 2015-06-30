@@ -11,7 +11,7 @@ import IKernelMsg = kernel.IKernelMsg;
 
 
 /**
- * Deserialize an ArrayBuffer to a Kernel Message
+ * Deserialize an ArrayBuffer to a Kernel Message.
  */
 function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
   var data = new DataView(buf);

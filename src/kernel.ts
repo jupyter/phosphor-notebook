@@ -11,42 +11,48 @@ import emit = phosphor.core.emit;
 import Disposable = phosphor.utility.Disposable;
 
 
+/*
+ * Header content information for a Kernel message.
+ *
+ * Also applies to parentHeader, if provided
+ */
 export
 interface IKernelMsgHeader {
   username: string;
   version: string;
   session: string;
-  msg_id: string;
-  msg_type: string;
+  msgId: string;
+  msgType: string;
 };
 
-
+/*
+ * Kernel Message specification.
+ */
 export
   interface IKernelMsg {
   header: IKernelMsgHeader;
   metadata: any;
   content: any;
-  parent_header: any;
-  msg_id?: string;
-  msg_type?: string;
+  parentHeader: any;
+  msgId?: string;
+  msgType?: string;
   channel?: string;
   buffers?: string[]| ArrayBuffer[];
 };
 
 
-interface IKernelCommMsg {
-  comm_id: string;
-  data: any;
-  target_name?: string;
-};
-
-
+/**
+ * Web socket error object.
+ */
 interface IWebSocketEvent extends Event {
   wasClean: boolean;
   data: string | ArrayBuffer | Blob;
 };
 
 
+/**
+ * Object providing a Future interface for message callbacks.
+ */
 export
 interface IKernelFuture {
   /**
@@ -79,13 +85,20 @@ interface IKernelFuture {
 }
 
 
+/**
+ * Bit flags for the Kernel future state.
+ */
 enum KernelFutureFlag {
   GotReply = 0x1,
   GotIdle = 0x2,
-  AutoDispose = 0x4
+  AutoDispose = 0x4,
+  IsDone = 0x8
 }
 
 
+/**
+ * Implementation of a Kernel Future.
+ */
 class KernelFutureHandler extends Disposable implements IKernelFuture {
 
   /**
@@ -131,10 +144,18 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
     return this;
   }
 
+  /**
+   * Get the current autoDispose status.
+   */
   get autoDispose(): boolean {
     return this._testFlag(KernelFutureFlag.AutoDispose);
   }
 
+  /**
+   * Set the current autoDispose behavior of the Feature.
+   *
+   * If True, it will self-dispose() after onDone() is called.
+   */
   set autoDispose(value: boolean) {
     if (value) {
       this._setFlag(KernelFutureFlag.AutoDispose);
@@ -143,9 +164,12 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
     }
   }
 
+  /**
+   * Handle an incoming message from the kernel belonging to this Future.
+   */
   handleMsg(msg: IKernelMsg): void {
     if (msg.channel === 'iopub') {
-      if (msg.msg_type === 'status' && msg.content.execution_state === 'idle') {
+      if (msg.msgType === 'status' && msg.content.execution_state === 'idle') {
         this._setFlag(KernelFutureFlag.GotIdle);
         if (this._testFlag(KernelFutureFlag.GotReply)) {
           this._handleDone(msg);
@@ -169,10 +193,14 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
     }
   }
 
+  /**
+   * Handle a message done status.
+   */
   private _handleDone(msg: IKernelMsg) : void {
     if (this._done) {
       this._done(msg);
     }
+    this._setFlag(KernelFutureFlag.IsDone);
     if (this._testFlag(KernelFutureFlag.AutoDispose)) {
       this.dispose();
     }
@@ -212,11 +240,6 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
  * should generally not be constructed directly, but be created
  * by.  the `Session` object. Once created, this object should be
  * used to communicate with the kernel.
- * 
- * @class Kernel
- * @param {string} kernel_service_url - the URL to access the kernel REST api
- * @param {string} ws_url - the websockets URL
- * @param {string} name - the kernel type (e.g. python3)
  */
 export
 class Kernel {
@@ -254,8 +277,6 @@ class Kernel {
    * GET /api/kernels
    *
    * Get the list of running kernels.
-   *
-   * @function list
    */
   list(): Promise<any> {
     return utils.ajaxProxy(this._kernelServiceUrl, {
@@ -273,8 +294,6 @@ class Kernel {
    * GET /api/kernels/[:kernel_id]
    *
    * Get information about the kernel.
-   *
-   * @function get_info
    */
   getInfo(): Promise<any> {
     return utils.ajaxProxy(this._kernelUrl, {
@@ -291,8 +310,6 @@ class Kernel {
    * POST /api/kernels/[:kernel_id]/interrupt
    *
    * Interrupt the kernel.
-   *
-   * @function interrupt
    */
   interrupt(): Promise<any> {
     this._handleStatus('interrupting');
@@ -316,8 +333,6 @@ class Kernel {
    * POST /api/kernels/[:kernel_id]/restart
    *
    * Restart the kernel.
-   *
-   * @function restart
    */
   restart(): Promise<any> {
     this._handleStatus('restarting');
@@ -340,8 +355,6 @@ class Kernel {
    * Reconnect to a disconnected kernel. This is not actually a
    * standard HTTP request, but useful function nonetheless for
    * reconnecting to the kernel if the connection is somehow lost.
-   *
-   * @function reconnect
    */
   reconnect(): void {
     if (this.isConnected()) {
@@ -355,8 +368,6 @@ class Kernel {
   /**
    * Close the websocket. After successful close, the value
    * in `this.ws` will be null.
-   *
-   * @function stopChannels
    */
   stopChannels(): void {
     var close = () => {
@@ -378,9 +389,6 @@ class Kernel {
    * Check whether there is a connection to the kernel. This
    * function only returns true if websocket has been
    * created and has a state of WebSocket.OPEN.
-   *
-   * @function isConnected
-   * @returns {bool} - whether there is a connection
    */
   isConnected(): boolean {
     // if any channel is not ready, then we're not connected
@@ -397,19 +405,13 @@ class Kernel {
    * Check whether the connection to the kernel has been completely
    * severed. This function only returns true if all channel objects
    * are null.
-   *
-   * @function isFullyDisconnected
-   * @returns {bool} - whether the kernel is fully disconnected
    */
   isFullyDisconnected(): boolean {
     return (this._ws === null);
   }
 
   /**
-   * Send a message on the Kernel's shell channel
-   *
-   * @function sendShellMessage
-   * @returns {KernelFuture} - Kernel Future callback handler
+   * Send a message on the Kernel's shell channel.
    */
   sendShellMessage(msg_type: string, content: any, metadata = {}, buffers: string[] = []): IKernelFuture {
     if (!this.isConnected()) {
@@ -421,18 +423,16 @@ class Kernel {
     this._ws.send(serialize.serialize(msg));
 
     var future = new KernelFutureHandler(() => {
-      this._handlerMap.delete(msg.header.msg_id);
+      this._handlerMap.delete(msg.header.msgId);
     });
 
-    this._handlerMap.set(msg.header.msg_id, future);
+    this._handlerMap.set(msg.header.msgId, future);
 
     return future;
   }
 
   /**
-   * Get kernel info
-   *
-   * @function kernelInfo
+   * Get kernel info.
    *
    * Returns a KernelFuture that will resolve to a `kernel_info_reply` message documented
    * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info)
@@ -442,14 +442,10 @@ class Kernel {
   }
 
   /**
-   * Get info on an object
+   * Get info on an object.
    *
    * Returns a KernelFuture that will resolve to a `inspect_reply` message documented
    * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#object-information)
-   *
-   * @function inspect
-   * @param code {string}
-   * @param cursor_pos {integer}
    */
   inspect(code: string, cursor_pos: number): IKernelFuture {
     var content = {
@@ -463,13 +459,6 @@ class Kernel {
   /**
    * Execute given code into kernel, returning a KernelFuture.
    *
-   * @async
-   * @function execute
-   * @param {string} code
-   * @param {object} [options]
-   *      @param [options.silent=false] {Boolean}
-   *      @param [options.user_expressions=empty_dict] {Dict}
-   *      @param [options.allow_stdin=false] {Boolean} true|false
    * @example
    *
    * The options object should contain the options for the execute
@@ -482,7 +471,7 @@ class Kernel {
    *      }
    *
    */
-  execute(code: string, options?: any): IKernelFuture {
+  execute(code: string, options?: { silent?: boolean, user_expressions?: any, allow_stdin?: boolean}): IKernelFuture {
     var content = {
       code: code,
       silent: true,
@@ -495,12 +484,10 @@ class Kernel {
   }
 
   /**
+   * Request a code completion from the kernel.
+   *
    * Returns a KernelFuture with will resolve to a `complete_reply` documented
    * [here](http://ipython.org/ipython-doc/dev/development/messaging.html#complete)
-   *
-   * @function complete
-   * @param code {string}
-   * @param cursor_pos {integer}
    */
   complete(code: string, cursor_pos: number): IKernelFuture {
     var content = {
@@ -511,8 +498,8 @@ class Kernel {
   }
 
   /**
-   * @function sendInputReply
-
+   * Send an input reply message to the kernel.
+   *
    * TODO: how to handle this?  Right now called by
    * ./static/notebook/js/outputarea.js:827:        this.events.trigger('send_input_reply.Kernel', value);
    *
@@ -528,30 +515,33 @@ class Kernel {
     var msg = this._getMsg("input_reply", content);
     msg.channel = 'stdin';
     this._ws.send(serialize.serialize(msg));
-    return msg.header.msg_id;
+    return msg.header.msgId;
   }
 
   /**
-   * @function _getMsg
+   * Create a Kernel Message given input attributes.
    */
   private _getMsg(msg_type: string, content: any,
     metadata = {}, buffers: string[] = []): IKernelMsg {
     var msg: IKernelMsg = {
       header: {
-        msg_id: utils.uuid(),
+        msgId: utils.uuid(),
         username: this._username,
         session: this._sessionId,
-        msg_type: msg_type,
+        msgType: msg_type,
         version: "5.0"
       },
       metadata: metadata || {},
       content: content,
       buffers: buffers || [],
-      parent_header: {}
+      parentHeader: {}
     };
     return msg;
   }
 
+  /**
+   * Handle a kernel status change message.
+   */
   private _handleStatus(status: string) {
     emit(this, Kernel.statusChange, status);
     if (status === 'idle' || status === 'busy') {
@@ -563,9 +553,6 @@ class Kernel {
   /**
    * Handle a successful AJAX request by updating the kernel id and
    * name from the response.
-   *
-   * @function _onSuccess
-   * @param {Object} data - AJAX request data
    */
   private _onSuccess(data: any): void {
     if (data) {
@@ -576,11 +563,8 @@ class Kernel {
   }
 
   /**
-   * Handle a failed AJAX request by logging the error message, and
-   * then optionally calling a provided callback.
-   *
-   * @function _onError
-   * @param {string} status - Ajax Error Message
+   * Handle a failed AJAX request by logging the error message, and throwing
+   * another error.
    */
   private _onError(status: string): void {
     utils.logAjaxError(status);
@@ -590,11 +574,8 @@ class Kernel {
   /**
    * Perform necessary tasks once the kernel has been started,
    * including actually connecting to the kernel.
-   *
-   * @function _kernelCreated
-   * @param {Object} data - information about the kernel including id
    */
-  private _kernelCreated(data: any): void {
+  private _kernelCreated(data: {id: string}): void {
     this._handleStatus('created');
     this._id = data.id;
     this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
@@ -605,8 +586,6 @@ class Kernel {
    * Perform necessary tasks once the connection to the kernel has
    * been established. This includes requesting information about
    * the kernel.
-   *
-   * @function _kernelConnected
    */
   private _kernelConnected(): void {
     this._handleStatus('connected');
@@ -623,8 +602,6 @@ class Kernel {
    * Perform necessary tasks after the kernel has died. This closing
    * communication channels to the kernel if they are still somehow
    * open.
-   *
-   * @function _kernelDead
    */
   private _kernelDead(): void {
     this._handleStatus('dead');
@@ -634,8 +611,6 @@ class Kernel {
   /**
    * Start the websocket channels.
    * Will stop and restart them if they already exist.
-   *
-   * @function startChannels
    */
   startChannels(): void {
     this.stopChannels();
@@ -704,8 +679,6 @@ class Kernel {
   /**
    * Handle a websocket entering the open state,
    * signaling that the kernel is connected when websocket is open.
-   *
-   * @function _wsOpened
    */
   private _wsOpened(evt: IWebSocketEvent): void {
     if (this.isConnected()) {
@@ -718,7 +691,6 @@ class Kernel {
    * Handle a websocket entering the closed state.  If the websocket
    * was not closed due to an error, try to reconnect to the kernel.
    *
-   * @function _wsClosed
    * @param {string} ws_url - the websocket url
    * @param {bool} error - whether the connection was closed due to an error
    */
@@ -733,7 +705,7 @@ class Kernel {
   }
 
   /**
-   * function to call when kernel connection is lost
+   * Function to call when kernel connection is lost.
    * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
    */
   private _scheduleReconnect(): void {
@@ -747,6 +719,9 @@ class Kernel {
     }
   }
 
+  /**
+   * Handle an incoming Websocket message
+   */
   private _handleWSMessage(e: MessageEvent): Promise<IKernelMsg> {
     this._msgQueue = this._msgQueue.then(() => {
       return serialize.deserialize(e.data);
@@ -755,12 +730,15 @@ class Kernel {
     return;
   }
 
+  /**
+    * Process deserialized Kernel Message from the websocket.
+    */
   private _finishWSMessage(msg: IKernelMsg): void {
-    if (msg.channel === 'iopub' && msg.msg_type === 'status'){
+    if (msg.channel === 'iopub' && msg.msgType === 'status'){
       this._handleStatusMessage(msg);
     }
-    if (msg.parent_header) {
-      var future = this._handlerMap.get(msg.parent_header.msg_id);
+    if (msg.parentHeader) {
+      var future = this._handlerMap.get(msg.parentHeader.msg_id);
       if (future) {
         future.handleMsg(msg);
       }
@@ -768,7 +746,7 @@ class Kernel {
   }
 
   /**
-   * @function _handleStatusMessage
+   * Handle status iopub messages from the kernel.
    */
   private _handleStatusMessage(msg: IKernelMsg): void {
     var execution_state = msg.content.execution_state;
