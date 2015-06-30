@@ -10,16 +10,16 @@ import IKernelMsg = kernel.IKernelMsg;
  * Deserialize a message and return a promise for the unpacked message.
  */
 export
-function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
-  var promise: Promise<IKernelMsg>;
+function deserialize(data: ArrayBuffer | string): IKernelMsg {
+  var value: IKernelMsg;
   if (typeof data === "string") {
     // text JSON message
-    promise = Promise.resolve(JSON.parse(data));
+    value = JSON.parse(data);
   } else {
     // binary message
-    promise = deserializeBinary(data);
+    value = deserializeArrayBuffer(data);
   }
-  return promise;
+  return value;
 }
 
 
@@ -59,32 +59,6 @@ function deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
       msg.buffers.push(new DataView(buf.slice(start, stop)));
   }
   return msg;
-}
-
-
-/**
- * Deserialize the binary message format.
- * callback will be called with a message whose buffers attribute
- * will be an array of DataViews.
- */
-function deserializeBinary(data: Blob | ArrayBuffer): Promise<IKernelMsg> {
-  var promise: Promise<IKernelMsg>;
-  if (data instanceof Blob) {
-      // data is Blob, have to deserialize from ArrayBuffer in reader callback
-      var reader = new FileReader();
-      promise = new Promise(function(resolve, reject) {
-          reader.onload = function() {
-              var msg = deserializeArrayBuffer((<ArrayBuffer>this.result));
-              resolve(msg);
-          };
-      });
-      reader.readAsArrayBuffer(data);
-  } else {
-      // data is ArrayBuffer, can deserialize directly
-      var msg = deserializeArrayBuffer(<ArrayBuffer>data);
-      promise = Promise.resolve(msg);
-  }
-  return promise;
 }
 
 

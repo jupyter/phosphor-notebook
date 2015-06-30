@@ -466,6 +466,8 @@ class Kernel {
     ].join('')
         );
 
+    this._ws.binaryType = 'arraybuffer';
+
     var already_called_onclose = false; // only alert once
     this._ws.onclose = (evt: CloseEvent) => {
       if (already_called_onclose) {
