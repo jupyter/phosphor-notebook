@@ -4,43 +4,6 @@
 import moment = require('moment');
 
 
-/**
- * Wrappable Error class.
- *
- * The Error class doesn't actually act on `this`.  Instead it always
- * returns a new instance of Error.  Here we capture that instance so we
- * can apply it's properties to `this`.
- */
-export
-class WrappedError implements Error {
-
-  message: string;
-  name: string;
-  errorStack: Error[];
-
-  /*
-   * Create a new WrappedError.
-   */
-  constructor(message: string, error: Error) {
-
-    var tmp = Error.call(this, message)
-
-    // Copy the properties of the error over to this.
-    this.message = error.message;
-    this.name = error.name;
-
-    // Keep a stack of the original error messages.
-    if (error instanceof WrappedError) {
-      this.errorStack = error.errorStack.slice();
-    } else {
-      this.errorStack = [error];
-    }
-    this.errorStack.push(tmp);
-
-  }
-}
-
-
 /*
  * Copy the contents of one object to another, recursively.
  *
@@ -248,22 +211,4 @@ function loadClass(class_name: string, module_name: string, registry: { [string:
       }
     }
   });
-}
-
-
-/**
- * Creates a wrappable Promise rejection function.
- * 
- * Creates a function that returns a Promise.reject with a new WrappedError
- * that has the provided message and wraps the original error that 
- * caused the promise to reject.
- */
-export
-function reject(message: string, log?: boolean): (error: Error) => Promise<any> {
-
-  return function(error: Error): Promise<any> {
-    var wrapped_error = new WrappedError(message, error);
-    if (log) console.error(wrapped_error);
-    return Promise.resolve(wrapped_error);
-  };
 }

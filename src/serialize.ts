@@ -4,7 +4,6 @@
 
 "use strict";
 
-import utils = require("./utils");
 import kernel = require("./kernel");
 
 import IKernelMsg = kernel.IKernelMsg;
@@ -98,10 +97,10 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
     var offsets: number[] = [];
     var buffers: ArrayBuffer[] = [];
     for (var i = 0; i < msg.buffers.length; i++) {
-        // msg.buffers elements could be either views or ArrayBuffers
-        // buffers elements are ArrayBuffers
-        var b: any = msg.buffers[i];
-        buffers.push(b instanceof ArrayBuffer ? b : b.buffer);
+      // msg.buffers elements could be either views or ArrayBuffers
+      // buffers elements are ArrayBuffers
+      var b: any = msg.buffers[i];
+      buffers.push(b instanceof ArrayBuffer ? b : b.buffer);
     }
     msg.buffers = void 0;
     var json_utf8 = (new TextEncoder('utf8')).encode(JSON.stringify(msg));

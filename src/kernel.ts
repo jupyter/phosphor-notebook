@@ -566,8 +566,7 @@ class Kernel {
   private _handleWSMessage(e: MessageEvent): Promise<IKernelMsg> {
     this._msgQueue = this._msgQueue.then(() => {
       return serialize.deserialize(e.data);
-    }).then(function(msg) { return this._finishWSMessage(msg); })
-      .catch(utils.reject("Couldn't process kernel message", true));
+    }).then(function(msg) { return this._finishWSMessage(msg); });
     return;
   }
 
