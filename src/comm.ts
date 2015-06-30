@@ -5,6 +5,8 @@ import utils = require('./utils');
 import kernel = require('./kernel');
 
 import IKernelMsg = kernel.IKernelMsg;
+import IKernelFuture = kernel.IKernelFuture;
+
 
 export 
 class CommManager {
@@ -16,30 +18,18 @@ class CommManager {
   constructor(kernel: kernel.Kernel) {
     this._comms = {};
     this._targets = {};
-    if (kernel !== undefined) {
-      this._kernel = kernel;
-      /*
-      TODO: these should be connect calls
-
-      kernel.registerIOPubHandler('comm_open',
-        (msg: IKernelMsg) => this._commOpen(msg));
-      kernel.registerIOPubHandler('comm_close',
-        (msg: IKernelMsg) => this._commClose(msg));
-      kernel.registerIOPubHandler('comm_msg',
-        (msg: IKernelMsg) => this._commMsg(msg));
-*/
-    }
+    this._kernel = kernel;
   }
 
   /**
   * Create a new Comm, register it, and open its Kernel-side counterpart
   * Mimics the auto-registration in `Comm.__init__` in the Jupyter Comm
   */
-  newComm(target_name: string, data: any, callbacks: any, metadata = {}): Comm {
+  newComm(target_name: string, data: any, metadata = {}): Comm {
 
     var comm = new Comm(target_name);
     this.registerComm(comm);
-    comm.open(data, callbacks, metadata);
+    comm.open(data, metadata);
     return comm;
   }
 
@@ -109,7 +99,7 @@ class CommManager {
     this._comms[content.comm_id].then((comm) => {
       this.unregisterComm(comm);
       try {
-        comm.handleClose(msg);
+        //comm.handleClose(msg);
       } catch (e) {
         console.log("Exception closing comm: ", e, e.stack, msg);
       }
@@ -129,7 +119,7 @@ class CommManager {
 
     this._comms[content.comm_id] = this._comms[content.comm_id].then(function(comm) {
       try {
-        comm.handleMsg(msg);
+        //comm.handleMsg(msg);
       } catch (e) {
         console.log("Exception handling comm msg: ", e, e.stack, msg);
       }
@@ -153,8 +143,6 @@ class Comm {
   constructor(target_name: string, comm_id?: string) {
     this._target_name = target_name;
     this._comm_id = comm_id || <string>utils.uuid();
-    this._msg_callback = null;
-    this._close_callback = null;
   }
 
   get comm_id(): string {
@@ -174,62 +162,31 @@ class Comm {
   }
     
   // methods for sending messages
-  open(data: any, callbacks: any, metadata = {}) {
+  open(data: any, metadata = {}) {
     var content = {
       comm_id: this.comm_id,
       target_name: this.target_name,
       data: data || {},
     };
-    // TODO: register connects for the callbacks
     return this.kernel.sendShellMessage("comm_open", content, metadata);
   }
 
-  send(data: any, callbacks: any, metadata = {}, buffers: string[] = []) {
+  send(data: any, metadata = {}, buffers: string[] = []): IKernelFuture {
     var content = {
       comm_id: this.comm_id,
       data: data || {},
     };
-    // TODO: register connects for the callbacks
     return this.kernel.sendShellMessage("comm_msg", content, metadata, buffers);
   }
 
-  close(data?: any, callbacks?: any, metadata = {}) {
+  close(data?: any, metadata = {}): IKernelFuture {
     var content = {
       comm_id: this.comm_id,
       data: data || {},
     };
-    // TODO: register connects for the callbacks
     return this.kernel.sendShellMessage("comm_close", content, metadata);
   }
 
-  onMsg(callback: (msg: IKernelMsg) => void) {
-    this._msg_callback = callback;
-  }
-
-  onClose(callback: (msg: IKernelMsg) => void) {
-    this._close_callback = callback;
-  }
-    
-  // methods for handling incoming messages
-
-  handleMsg(msg: IKernelMsg) {
-    this._callback(this._msg_callback, msg);
-  }
-
-  handleClose(msg: IKernelMsg) {
-    this._callback(this._close_callback, msg);
-  }
-
-  private _callback(callback: Function, msg: IKernelMsg) {
-    try {
-      callback(msg);
-    } catch (e) {
-      console.log("Exception in Comm callback", e, e.stack, msg);
-    }
-  }
-
-  private _msg_callback: (msg: IKernelMsg) => void;
-  private _close_callback: (msg: IKernelMsg) => void;
   private _kernel: kernel.Kernel;
   private _target_name: string;
   private _comm_id: string;
