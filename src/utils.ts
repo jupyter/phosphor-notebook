@@ -28,7 +28,7 @@ class WrappedError implements Error {
 
     // Keep a stack of the original error messages.
     if (error instanceof WrappedError) {
-      this.errorStack = error.errorStack;
+      this.errorStack = error.errorStack.slice();
     } else {
       this.errorStack = [error];
     }
