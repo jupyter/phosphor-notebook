@@ -30,11 +30,13 @@ function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
  */
 export
 function serialize(msg: IKernelMsg): string | ArrayBuffer {
+  var value: string | ArrayBuffer;
   if (msg.buffers && msg.buffers.length) {
-    return serializeBinary(msg);
+    value = serializeBinary(msg);
   } else {
-    return JSON.stringify(msg);
+    value = JSON.stringify(msg);
   }
+  return value;
 }
 
 
