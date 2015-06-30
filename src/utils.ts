@@ -23,7 +23,7 @@ class WrappedError implements Error {
    */
   constructor(message: string, error: Error) {
 
-    var tmp = Error.apply(this, [message]);
+    var tmp = Error.call(this, message)
 
     // Copy the properties of the error over to this.
     this.message = error.message;
@@ -57,7 +57,7 @@ function extend(target: any, source: any): any {
     }
   }
   return target;
-};
+}
 
 
 /*
@@ -78,7 +78,7 @@ function uuid(): string {
 
   var uuid = s.join("");
   return uuid;
-};
+}
 
 
 /**
@@ -100,7 +100,7 @@ function urlPathJoin(...paths: string[]): string {
   }
   url = url.replace(/\/\/+/, '/');
   return url;
-};
+}
 
 
 /**
@@ -110,7 +110,7 @@ function urlPathJoin(...paths: string[]): string {
 export
 function encodeURIComponents(uri: string): string {
   return uri.split('/').map(encodeURIComponent).join('/');
-};
+}
 
 
 /**
@@ -120,7 +120,7 @@ function encodeURIComponents(uri: string): string {
 export
 function urlJoinEncode(...args: string[]): string {
   return encodeURIComponents(urlPathJoin.apply(null, args));
-};
+}
 
 
 // Properly detect the current browser.
@@ -165,7 +165,7 @@ interface IAjaxSetttings {
   dataType: string;
   contentType?: string;
   data?: any;
-};
+}
 
 
 /*
@@ -175,7 +175,6 @@ interface IAjaxSetttings {
  */
 export
 function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
-
   return new Promise(function(resolve, reject) {
     var req = new XMLHttpRequest();
     req.open(settings.method, url);
@@ -183,21 +182,19 @@ function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
       req.overrideMimeType(settings.contentType);
     }
 
-    req.onload = function() {
+    req.onload = () => {
       if (req.status == 200) {
         if (settings.dataType === 'json') {
           resolve(JSON.parse(req.response));
-        }
-        else {
+        } else {
           resolve(req.response);
         }
-      }
-      else {
+      } else {
         reject(req.statusText);
       }
     }
 
-    req.onerror = function() {
+    req.onerror = () => {
       reject(req.statusText);
     }
 
@@ -207,7 +204,8 @@ function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
       req.send();
     }
   });
-};
+}
+
 
 /**
  * Log ajax failures with informative messages.
@@ -219,7 +217,9 @@ function logAjaxError(status: string) {
 }
 
 
-declare function require(modules: string[], success: Function, reject: Function): void;
+declare
+function require(modules: string[], success: Function, reject?: Function): void;
+
 
 /**
  * Try to load a class.
@@ -231,16 +231,15 @@ declare function require(modules: string[], success: Function, reject: Function)
 export
 function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
   return new Promise(function(resolve, reject) {
-
     // Try loading the view module using require.js
     if (module_name) {
-      require([module_name], function(module: any) {
+      require([module_name], (module: any) => {
         if (module[class_name] === undefined) {
           reject(new Error('Class ' + class_name + ' not found in module ' + module_name));
         } else {
           resolve(module[class_name]);
         }
-      }, reject);
+      });
     } else {
       if (registry && registry[class_name]) {
         resolve(registry[class_name]);
@@ -249,7 +248,7 @@ function loadClass(class_name: string, module_name: string, registry: { [string:
       }
     }
   });
-};
+}
 
 
 /**
@@ -265,6 +264,6 @@ function reject(message: string, log?: boolean): (error: Error) => Promise<any> 
   return function(error: Error): Promise<any> {
     var wrapped_error = new WrappedError(message, error);
     if (log) console.error(wrapped_error);
-    return Promise.reject(wrapped_error);
+    return Promise.resolve(wrapped_error);
   };
-};
+}

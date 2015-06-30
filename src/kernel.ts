@@ -23,7 +23,7 @@ interface IKernelMsgHeader {
   session: string;
   msgId: string;
   msgType: string;
-};
+}
 
 /*
  * Kernel Message specification.
@@ -37,17 +37,8 @@ export
   msgId?: string;
   msgType?: string;
   channel?: string;
-  buffers?: string[]| ArrayBuffer[];
-};
-
-
-/**
- * Web socket error object.
- */
-interface IWebSocketEvent extends Event {
-  wasClean: boolean;
-  data: string | ArrayBuffer | Blob;
-};
+  buffers?: string[] | ArrayBuffer[];
+}
 
 
 /**
@@ -82,156 +73,6 @@ interface IKernelFuture {
 
   autoDispose: boolean;
 
-}
-
-
-/**
- * Bit flags for the Kernel future state.
- */
-enum KernelFutureFlag {
-  GotReply = 0x1,
-  GotIdle = 0x2,
-  AutoDispose = 0x4,
-  IsDone = 0x8
-}
-
-
-/**
- * Implementation of a Kernel Future.
- */
-class KernelFutureHandler extends Disposable implements IKernelFuture {
-
-  /**
-   * Dispose and unregister the future.
-   */
-  dispose(): void {
-    super.dispose();
-    this._input = null;
-    this._output = null;
-    this._reply = null;
-    this._done = null;
-  }
-
-  /**
-   * Register a reply handler. Returns 'this'.
-   */
-  onReply(cb: (msg: IKernelMsg) => void): IKernelFuture {
-    this._reply = cb;
-    return this;
-  }
-
-  /**
-   * Register an output handler. Returns 'this'.
-   */
-  onOutput(cb: (msg: IKernelMsg) => void): IKernelFuture {
-    this._output = cb;
-    return this;
-  }
-
-  /**
-   * Register a done handler. Returns 'this'.
-   */
-  onDone(cb: (msg: IKernelMsg) => void): IKernelFuture {
-    this._done = cb;
-    return this;
-  }
-
-  /**
-   * Register an input handler. Returns 'this'.
-   */
-  onInput(cb: (msg: IKernelMsg) => void): IKernelFuture {
-    this._input = cb;
-    return this;
-  }
-
-  /**
-   * Get the current autoDispose status.
-   */
-  get autoDispose(): boolean {
-    return this._testFlag(KernelFutureFlag.AutoDispose);
-  }
-
-  /**
-   * Set the current autoDispose behavior of the Feature.
-   *
-   * If True, it will self-dispose() after onDone() is called.
-   */
-  set autoDispose(value: boolean) {
-    if (value) {
-      this._setFlag(KernelFutureFlag.AutoDispose);
-    } else {
-      this._clearFlag(KernelFutureFlag.AutoDispose);
-    }
-  }
-
-  /**
-   * Handle an incoming message from the kernel belonging to this Future.
-   */
-  handleMsg(msg: IKernelMsg): void {
-    if (msg.channel === 'iopub') {
-      if (msg.msgType === 'status' && msg.content.execution_state === 'idle') {
-        this._setFlag(KernelFutureFlag.GotIdle);
-        if (this._testFlag(KernelFutureFlag.GotReply)) {
-          this._handleDone(msg);
-        }
-      }
-      if (this._output) {
-        this._output(msg);
-      }
-    } else if (msg.channel === 'shell') {
-      this._setFlag(KernelFutureFlag.GotReply)
-      if (this._testFlag(KernelFutureFlag.GotIdle)) {
-        this._handleDone(msg);
-      }
-      if (this._reply) {
-        this._reply(msg);
-      }
-    } else if (msg.channel == 'stdin') {
-      if (this._input) {
-        this._input(msg);
-      }
-    }
-  }
-
-  /**
-   * Handle a message done status.
-   */
-  private _handleDone(msg: IKernelMsg) : void {
-    if (this._done) {
-      this._done(msg);
-    }
-    this._setFlag(KernelFutureFlag.IsDone);
-    if (this._testFlag(KernelFutureFlag.AutoDispose)) {
-      this.dispose();
-    }
-  }
-
-  /**
-   * Test whether the given future flag is set.
-   */
-  private _testFlag(flag: KernelFutureFlag): boolean {
-    return (this._status & flag) !== 0;
-  }
-
-  /**
-   * Set the given future flag.
-   */
-  private _setFlag(flag: KernelFutureFlag): void {
-    this._status |= flag;
-  }
-
-  /**
-   * Clear the given future flag.
-   */
-  private _clearFlag(flag: KernelFutureFlag): void {
-    this._status &= ~flag;
-  }
-
-  private _status: number;
-  private _input: (msg: IKernelMsg) => void = null;
-  private _output: (msg: IKernelMsg) => void = null;
-  private _reply: (msg: IKernelMsg) => void = null;
-  private _done: (msg: IKernelMsg) => void = null;
 }
 
 
@@ -471,7 +312,7 @@ class Kernel {
    *      }
    *
    */
-  execute(code: string, options?: { silent?: boolean, user_expressions?: any, allow_stdin?: boolean}): IKernelFuture {
+  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean;}): IKernelFuture {
     var content = {
       code: code,
       silent: true,
@@ -792,3 +633,164 @@ class Kernel {
   private _handlerMap: Map<string, KernelFutureHandler>;
   private _iopubHandlers: Map<string, (msg: IKernelMsg) => void>;
 }
+
+
+
+/**
+ * Bit flags for the Kernel future state.
+ */
+enum KernelFutureFlag {
+  GotReply = 0x1,
+  GotIdle = 0x2,
+  AutoDispose = 0x4,
+  IsDone = 0x8
+}
+
+
+/**
+ * Implementation of a Kernel Future.
+ */
+class KernelFutureHandler extends Disposable implements IKernelFuture {
+
+  /**
+   * Dispose and unregister the future.
+   */
+  dispose(): void {
+    super.dispose();
+    this._input = null;
+    this._output = null;
+    this._reply = null;
+    this._done = null;
+  }
+
+  /**
+   * Register a reply handler. Returns 'this'.
+   */
+  onReply(cb: (msg: IKernelMsg) => void): IKernelFuture {
+    this._reply = cb;
+    return this;
+  }
+
+  /**
+   * Register an output handler. Returns 'this'.
+   */
+  onOutput(cb: (msg: IKernelMsg) => void): IKernelFuture {
+    this._output = cb;
+    return this;
+  }
+
+  /**
+   * Register a done handler. Returns 'this'.
+   */
+  onDone(cb: (msg: IKernelMsg) => void): IKernelFuture {
+    this._done = cb;
+    return this;
+  }
+
+  /**
+   * Register an input handler. Returns 'this'.
+   */
+  onInput(cb: (msg: IKernelMsg) => void): IKernelFuture {
+    this._input = cb;
+    return this;
+  }
+
+  /**
+   * Get the current autoDispose status.
+   */
+  get autoDispose(): boolean {
+    return this._testFlag(KernelFutureFlag.AutoDispose);
+  }
+
+  /**
+   * Set the current autoDispose behavior of the Feature.
+   *
+   * If True, it will self-dispose() after onDone() is called.
+   */
+  set autoDispose(value: boolean) {
+    if (value) {
+      this._setFlag(KernelFutureFlag.AutoDispose);
+    } else {
+      this._clearFlag(KernelFutureFlag.AutoDispose);
+    }
+  }
+
+  /**
+   * Handle an incoming message from the kernel belonging to this Future.
+   */
+  handleMsg(msg: IKernelMsg): void {
+    if (msg.channel === 'iopub') {
+      if (msg.msgType === 'status' && msg.content.execution_state === 'idle') {
+        this._setFlag(KernelFutureFlag.GotIdle);
+        if (this._testFlag(KernelFutureFlag.GotReply)) {
+          this._handleDone(msg);
+        }
+      }
+      if (this._output) {
+        this._output(msg);
+      }
+    } else if (msg.channel === 'shell') {
+      this._setFlag(KernelFutureFlag.GotReply)
+      if (this._testFlag(KernelFutureFlag.GotIdle)) {
+        this._handleDone(msg);
+      }
+      if (this._reply) {
+        this._reply(msg);
+      }
+    } else if (msg.channel == 'stdin') {
+      if (this._input) {
+        this._input(msg);
+      }
+    }
+  }
+
+  /**
+   * Handle a message done status.
+   */
+  private _handleDone(msg: IKernelMsg): void {
+    if (this._done) {
+      this._done(msg);
+    }
+    this._setFlag(KernelFutureFlag.IsDone);
+    if (this._testFlag(KernelFutureFlag.AutoDispose)) {
+      this.dispose();
+    }
+  }
+
+  /**
+   * Test whether the given future flag is set.
+   */
+  private _testFlag(flag: KernelFutureFlag): boolean {
+    return (this._status & flag) !== 0;
+  }
+
+  /**
+   * Set the given future flag.
+   */
+  private _setFlag(flag: KernelFutureFlag): void {
+    this._status |= flag;
+  }
+
+  /**
+   * Clear the given future flag.
+   */
+  private _clearFlag(flag: KernelFutureFlag): void {
+    this._status &= ~flag;
+  }
+
+  private _status: number;
+  private _input: (msg: IKernelMsg) => void = null;
+  private _output: (msg: IKernelMsg) => void = null;
+  private _reply: (msg: IKernelMsg) => void = null;
+  private _done: (msg: IKernelMsg) => void = null;
+}
+
+
+/**
+ * Web socket error object.
+ */
+interface IWebSocketEvent extends Event {
+  wasClean: boolean;
+  data: string | ArrayBuffer | Blob;
+}
+
