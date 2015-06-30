@@ -10,6 +10,9 @@ import kernel = require("./kernel");
 import IKernelMsg = kernel.IKernelMsg;
 
 
+/**
+ * Deserialize an ArrayBuffer to a Kernel Message
+ */
 function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
   var data = new DataView(buf);
   // read the header: 1 + nbufs 32b integers
@@ -36,11 +39,11 @@ function _deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
 
 
 /**
- * deserialize the binary message format
+ * Deserialize the binary message format.
  * callback will be called with a message whose buffers attribute
  * will be an array of DataViews.
  */
-function _deserializeBinary(data: Blob | ArrayBuffer): IKernelMsg | Promise<IKernelMsg> {
+function _deserializeBinary(data: Blob | ArrayBuffer): Promise<IKernelMsg> {
 
   if (data instanceof Blob) {
     // data is Blob, have to deserialize from ArrayBuffer in reader callback
@@ -56,13 +59,13 @@ function _deserializeBinary(data: Blob | ArrayBuffer): IKernelMsg | Promise<IKer
   } else {
     // data is ArrayBuffer, can deserialize directly
     var msg = _deserializeArrayBuffer((<ArrayBuffer>data));
-    return msg;
+    return Promise.resolve(msg);
   }
 };
 
 
 /**
- * deserialize a message and return a promise for the unpacked message
+ * Deserialize a message and return a promise for the unpacked message.
  */
 export
 function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
@@ -77,8 +80,8 @@ function deserialize(data: Blob | ArrayBuffer | string): Promise<IKernelMsg> {
 
 
 /**
- * implement the binary serialization protocol
- * serializes JSON message to ArrayBuffer
+ * Implement the binary serialization protocol.
+ * Serialize JSON message to ArrayBuffer.
  */
 function _serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];
@@ -121,7 +124,7 @@ function _serializeBinary(msg: IKernelMsg): ArrayBuffer {
 
 
 /**
- * implement the serialization protocol
+ * Serialize a kernel message for transport.
  */
 export
 function serialize(msg: IKernelMsg): string | ArrayBuffer {
