@@ -79,7 +79,7 @@ interface IKernelFuture {
 /**
  * A Kernel class to communicate with the Python kernel. This
  * should generally not be constructed directly, but be created
- * by.  the `Session` object. Once created, this object should be
+ * by the `Session` object. Once created, this object should be
  * used to communicate with the kernel.
  */
 export

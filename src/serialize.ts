@@ -53,10 +53,9 @@ function deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
   var msg = JSON.parse((new TextDecoder('utf8')).decode(json_bytes));
   // the remaining chunks are stored as DataViews in msg.buffers
   msg.buffers = [];
-  var start: number, stop: number;
   for (var i = 1; i < nbufs; i++) {
-      start = offsets[i];
-      stop = offsets[i + 1] || buf.byteLength;
+      var start = offsets[i];
+      var stop = offsets[i + 1] || buf.byteLength;
       msg.buffers.push(new DataView(buf.slice(start, stop)));
   }
   return msg;
