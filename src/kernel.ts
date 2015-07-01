@@ -13,8 +13,6 @@ import Disposable = phosphor.utility.Disposable;
 
 /*
  * Header content information for a Kernel message.
- *
- * Also applies to parentHeader, if provided
  */
 export
 interface IKernelMsgHeader {
@@ -73,7 +71,7 @@ interface IKernelFuture {
   onInput(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
   /**
-   * The autoDispose behavior of the Feature.
+   * The autoDispose behavior of the future.
    *
    * If True, it will self-dispose() after onDone() is called.
    */
@@ -693,14 +691,14 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Get the current autoDispose status.
+   * Get the current autoDispose status of the future..
    */
   get autoDispose(): boolean {
     return this._testFlag(KernelFutureFlag.AutoDispose);
   }
 
   /**
-   * Set the current autoDispose behavior of the Feature.
+   * Set the current autoDispose behavior of the future.
    *
    * If True, it will self-dispose() after onDone() is called.
    */
@@ -713,7 +711,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Handle an incoming message from the kernel belonging to this Future.
+   * Handle an incoming message from the kernel belonging to this future.
    */
   handleMsg(msg: IKernelMsg): void {
     if (msg.channel === 'iopub') {
