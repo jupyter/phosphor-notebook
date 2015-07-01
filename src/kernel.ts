@@ -9,7 +9,7 @@ import Disposable = phosphor.utility.Disposable;
 
 
 /*
- * Header content information for a Kernel message.
+ * Kernel message header content.
  */
 export
 interface IKernelMsgHeader {
@@ -22,7 +22,7 @@ interface IKernelMsgHeader {
 
 
 /*
- * Kernel Message specification.
+ * Kernel message specification.
  */
 export
 interface IKernelMsg {
@@ -411,6 +411,7 @@ class Kernel {
     ].join('')
       );
 
+    // Ensure incoming binary messages are not Blobs
     this._ws.binaryType = 'arraybuffer';
 
     var already_called_onclose = false; // only alert once
