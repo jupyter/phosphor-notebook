@@ -1,10 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-"use strict";
-
-import utils = require('./utils');
-import serialize = require('./serialize');
+module jupyter.kernel {
 
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
@@ -28,7 +25,7 @@ interface IKernelMsgHeader {
  * Kernel Message specification.
  */
 export
-  interface IKernelMsg {
+interface IKernelMsg {
   header: IKernelMsgHeader;
   metadata: any;
   content: any;
@@ -47,7 +44,7 @@ export
 interface IKernelFuture {
   /**
    * Dispose and unregister the future.
-   */   
+     
   dispose(): void;
 
   /**
@@ -128,9 +125,9 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((data: any) => {
-        this._onSuccess(data);
+      this._onSuccess(data);
     }, (status: string) => {
-        this._onError(status);
+      this._onError(status);
     });
   }
 
@@ -145,9 +142,9 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((data: any) => {
-        this._onSuccess(data);
+      this._onSuccess(data);
     }, (status: string) => {
-        this._onError(status);
+      this._onError(status);
     });
   }
 
@@ -260,7 +257,7 @@ class Kernel {
    */
   sendShellMessage(msg_type: string, content: any, metadata = {}, buffers: string[] = []): IKernelFuture {
     if (!this.isConnected()) {
-        throw new Error("kernel is not connected");
+      throw new Error("kernel is not connected");
     }
     var msg = this._getMsg(msg_type, content, metadata, buffers);
     msg.channel = 'shell';
@@ -316,7 +313,7 @@ class Kernel {
    *      }
    *
    */
-  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean;}): IKernelFuture {
+  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean; }): IKernelFuture {
     var content = {
       code: code,
       silent: true,
@@ -420,7 +417,7 @@ class Kernel {
    * Perform necessary tasks once the kernel has been started,
    * including actually connecting to the kernel.
    */
-  private _kernelCreated(data: {id: string}): void {
+  private _kernelCreated(data: { id: string }): void {
     this._handleStatus('created');
     this._id = data.id;
     this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
@@ -464,11 +461,11 @@ class Kernel {
     console.log("Starting WebSockets:", ws_host_url);
 
     this._ws = new WebSocket([
-        this._wsUrl,
-        utils.urlJoinEncode(this._kernelUrl, 'channels'),
-        "?session_id=" + this._sessionId
+      this._wsUrl,
+      utils.urlJoinEncode(this._kernelUrl, 'channels'),
+      "?session_id=" + this._sessionId
     ].join('')
-        );
+      );
 
     this._ws.binaryType = 'arraybuffer';
 
@@ -561,8 +558,8 @@ class Kernel {
       console.log("Connection lost, reconnecting in " + timeout + " seconds.");
       setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
     } else {
-       this._handleStatus('connectionDead');
-       console.log("Failed to reconnect, giving up.");
+      this._handleStatus('connectionDead');
+      console.log("Failed to reconnect, giving up.");
     }
   }
 
@@ -571,7 +568,7 @@ class Kernel {
    */
   private _handleWSMessage(e: MessageEvent): void {
     var msg = serialize.deserialize(e.data);
-    if (msg.channel === 'iopub' && msg.msgType === 'status'){
+    if (msg.channel === 'iopub' && msg.msgType === 'status') {
       this._handleStatusMessage(msg);
     }
     if (msg.parentHeader) {
@@ -590,7 +587,7 @@ class Kernel {
     var execution_state = msg.content.execution_state;
 
     if (execution_state !== 'dead') {
-        this._handleStatus(execution_state);
+      this._handleStatus(execution_state);
     }
 
     if (execution_state === 'starting') {
@@ -779,3 +776,5 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   private _reply: (msg: IKernelMsg) => void = null;
   private _done: (msg: IKernelMsg) => void = null;
 }
+
+}  // module jupyter.kernel

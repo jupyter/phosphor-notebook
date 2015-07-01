@@ -1,8 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-import moment = require('moment');
-
+module jupyter.utils {
 
 /*
  * Copy the contents of one object to another, recursively.
@@ -212,3 +211,5 @@ function loadClass(class_name: string, module_name: string, registry: { [string:
     }
   });
 }
+
+} // module jupyter.utils
