@@ -178,7 +178,7 @@ class Kernel {
    */
   restart(): Promise<any> {
     this._handleStatus('restarting');
-    this.stopChannels();
+    this._stopChannels();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxProxy(url, {
@@ -204,27 +204,7 @@ class Kernel {
     }
     this._reconnectAttempt = this._reconnectAttempt + 1;
     this._handleStatus('reconnecting');
-    this.startChannels();
-  }
-
-  /**
-   * Close the websocket. After successful close, the value
-   * in `this.ws` will be null.
-   */
-  stopChannels(): void {
-    var close = () => {
-      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
-        this._ws = null;
-      }
-    };
-    if (this._ws !== null) {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = close;
-        this._ws.close();
-      } else {
-        close();
-      }
-    }
+    this._startChannels();
   }
 
   /**
@@ -414,49 +394,13 @@ class Kernel {
     throw status;
   }
 
-  /**
-   * Perform necessary tasks once the kernel has been started,
-   * including actually connecting to the kernel.
-   */
-  private _kernelCreated(data: { id: string }): void {
-    this._handleStatus('created');
-    this._id = data.id;
-    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
-    this.startChannels();
-  }
-
-  /**
-   * Perform necessary tasks once the connection to the kernel has
-   * been established. This includes requesting information about
-   * the kernel.
-   */
-  private _kernelConnected(): void {
-    this._handleStatus('connected');
-    this._reconnectAttempt = 0;
-    // get kernel info so we know what state the kernel is in
-    this.kernelInfo().onReply((reply?: IKernelMsg) => {
-      this._infoReply = reply.content;
-      this._handleStatus('ready');
-      this._autorestartAttempt = 0;
-    });
-  }
-
-  /**
-   * Perform necessary tasks after the kernel has died. This closing
-   * communication channels to the kernel if they are still somehow
-   * open.
-   */
-  private _kernelDead(): void {
-    this._handleStatus('dead');
-    this.stopChannels();
-  }
 
   /**
    * Start the websocket channels.
    * Will stop and restart them if they already exist.
    */
-  startChannels(): void {
-    this.stopChannels();
+  private _startChannels(): void {
+    this._stopChannels();
     var ws_host_url = this._wsUrl + this._kernelUrl;
 
     console.log("Starting WebSockets:", ws_host_url);
@@ -522,6 +466,62 @@ class Kernel {
   }
 
   /**
+   * Close the websocket. After successful close, the value
+   * in `this.ws` will be null.
+   */
+  private _stopChannels(): void {
+    var close = () => {
+      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
+        this._ws = null;
+      }
+    };
+    if (this._ws !== null) {
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.onclose = close;
+        this._ws.close();
+      } else {
+        close();
+      }
+    }
+  }
+  /**
+   * Perform necessary tasks once the kernel has been started,
+   * including actually connecting to the kernel.
+   */
+  private _kernelCreated(data: { id: string }): void {
+    this._handleStatus('created');
+    this._id = data.id;
+    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
+    this._startChannels();
+  }
+
+  /**
+   * Perform necessary tasks once the connection to the kernel has
+   * been established. This includes requesting information about
+   * the kernel.
+   */
+  private _kernelConnected(): void {
+    this._handleStatus('connected');
+    this._reconnectAttempt = 0;
+    // get kernel info so we know what state the kernel is in
+    this.kernelInfo().onReply((reply?: IKernelMsg) => {
+      this._infoReply = reply.content;
+      this._handleStatus('ready');
+      this._autorestartAttempt = 0;
+    });
+  }
+
+  /**
+   * Perform necessary tasks after the kernel has died. This closing
+   * communication channels to the kernel if they are still somehow
+   * open.
+   */
+  private _kernelDead(): void {
+    this._handleStatus('dead');
+    this._stopChannels();
+  }
+
+  /**
    * Handle a websocket entering the open state,
    * signaling that the kernel is connected when websocket is open.
    */
@@ -540,7 +540,7 @@ class Kernel {
    * @param {bool} error - whether the connection was closed due to an error
    */
   private _wsClosed(ws_url: string, error: boolean): void {
-    this.stopChannels();
+    this._stopChannels();
     this._handleStatus('disconnected');
     if (error) {
       console.log('WebSocket connection failed: ', ws_url);
