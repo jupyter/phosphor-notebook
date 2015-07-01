@@ -399,7 +399,7 @@ class Kernel {
   }
 
   /**
-   * Start the websocket channels.
+   * Start the Websocket channels.
    * Will stop and restart them if they already exist.
    */
   private _startChannels(): void {
@@ -470,8 +470,7 @@ class Kernel {
   }
 
   /**
-   * Close the websocket. After successful close, the value
-   * in `this.ws` will be null.
+   * Close the Websocket.
    */
   private _stopChannels(): void {
     var close = () => {
