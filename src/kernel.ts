@@ -96,6 +96,18 @@ class Kernel {
 
   static statusChange = new Signal<Kernel, string>();
 
+  /**
+   * GET /api/kernels
+   *
+   * Get the list of running kernels.
+   */
+  static list(kernelServiceUrl: string): Promise<any> {
+    return utils.ajaxRequest(kernelServiceUrl, {
+      method: "GET",
+      dataType: "json"
+    });
+  }
+
   constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
     this._id = null;
     this._name = name;
@@ -124,6 +136,13 @@ class Kernel {
   }
 
   /**
+   * Get the Url for the Kernel service.
+   */
+  get kernelServiceUrl() : string {
+    return this._kernelServiceUrl;
+  }
+
+  /**
    * Check whether there is a connection to the kernel. This
    * function only returns true if websocket has been
    * created and has a state of WebSocket.OPEN.
@@ -147,23 +166,6 @@ class Kernel {
   get isFullyDisconnected(): boolean {
     return (this._ws === null);
   }
-
-  /**
-   * GET /api/kernels
-   *
-   * Get the list of running kernels.
-   */
-  list(): Promise<any> {
-    return utils.ajaxRequest(this._kernelServiceUrl, {
-      method: "GET",
-      dataType: "json"
-    }).then((data: any) => {
-      this._onSuccess(data);
-    }, (status: string) => {
-      this._onError(status);
-    });
-  }
-
 
   /**
    * GET /api/kernels/[:kernel_id]
