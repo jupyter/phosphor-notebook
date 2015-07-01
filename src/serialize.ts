@@ -16,7 +16,7 @@ function deserialize(data: ArrayBuffer | string): IKernelMsg {
     value = JSON.parse(data);
   } else {
     // binary message
-    value = deserializeArrayBuffer(data);
+    value = deserializeBinary(data);
   }
   return value;
 }
@@ -40,7 +40,7 @@ function serialize(msg: IKernelMsg): string | ArrayBuffer {
 /**
  * Deserialize an ArrayBuffer to a Kernel Message.
  */
-function deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
+function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
   var data = new DataView(buf);
   // read the header: 1 + nbufs 32b integers
   var nbufs = data.getUint32(0);
