@@ -50,14 +50,13 @@ function urlPathJoin(...paths: string[]): string {
     if (paths[i] === '') {
       continue;
     }
-    if (url.length > 0 && url[url.length - 1] != '/') {
+    if (url.length > 0 && url.charAt(url.length - 1) != '/') {
       url = url + '/' + paths[i];
     } else {
       url = url + paths[i];
     }
   }
-  url = url.replace(/\/\/+/, '/');
-  return url;
+  return url.replace(/\/\/+/, '/');
 }
 
 
