@@ -25,6 +25,7 @@ interface IKernelMsgHeader {
   msgType: string;
 }
 
+
 /*
  * Kernel Message specification.
  */
@@ -33,7 +34,7 @@ export
   header: IKernelMsgHeader;
   metadata: any;
   content: any;
-  parentHeader: any;
+  parentHeader: {} | IKernelMsgHeader;
   msgId?: string;
   msgType?: string;
   channel?: string;
@@ -549,7 +550,7 @@ class Kernel {
 
   /**
    * Function to call when kernel connection is lost.
-   * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit
+   * schedules reconnect, or fires 'connection_dead' if reconnect limit is hit.
    */
   private _scheduleReconnect(): void {
     if (this._reconnectAttempt < this._reconnectLimit) {
@@ -563,7 +564,7 @@ class Kernel {
   }
 
   /**
-   * Handle an incoming Websocket message
+   * Handle an incoming Websocket message.
    */
   private _handleWSMessage(e: MessageEvent): void {
     var msg = serialize.deserialize(e.data);
@@ -571,7 +572,8 @@ class Kernel {
       this._handleStatusMessage(msg);
     }
     if (msg.parentHeader) {
-      var future = this._handlerMap.get(msg.parentHeader.msg_id);
+      var header = (<IKernelMsgHeader>msg.parentHeader);
+      var future = this._handlerMap.get(header.msgId);
       if (future) {
         future.handleMsg(msg);
       }
