@@ -1,9 +1,11 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-module jupyter.serialize {
+import utils = require('./utils');
+import kernel = require('./kernel');
 
 import IKernelMsg = kernel.IKernelMsg;
+
 
 /**
  * Deserialize and return the unpacked message.
@@ -108,5 +110,3 @@ var replacer = (key: string, value: any) => {
   }
   return value;
 }
-
-}  // module jupyter.serialize

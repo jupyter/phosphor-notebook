@@ -1,7 +1,8 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-module jupyter.kernel {
+import serialize = require('./serialize');
+import utils = require('./utils');
 
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
@@ -799,5 +800,3 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   private _reply: (msg: IKernelMsg) => void = null;
   private _done: (msg: IKernelMsg) => void = null;
 }
-
-}  // module jupyter.kernel
