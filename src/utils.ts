@@ -167,6 +167,9 @@ function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
 }
 
 
+/**
+ * Stub for require.js module loader.
+ */
 declare
 function require(modules: string[], success: Function, reject?: Function): void;
 
@@ -179,7 +182,7 @@ function require(modules: string[], success: Function, reject?: Function): void;
  * registry, if the global registry is provided.
  */
 export
-function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) {
+function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) : Promise<string> {
   return new Promise((resolve, reject) => {
     // Try loading the view module using require.js
     if (module_name) {
