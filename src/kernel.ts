@@ -101,7 +101,7 @@ class Kernel {
    *
    * Get the list of running kernels.
    */
-  static list(kernelServiceUrl: string): Promise<any> {
+  static list(kernelServiceUrl: string): Promise<string []> {
     return utils.ajaxRequest(kernelServiceUrl, {
       method: "GET",
       dataType: "json"
@@ -148,7 +148,6 @@ class Kernel {
    * created and has a state of WebSocket.OPEN.
    */
   get isConnected(): boolean {
-    // if any channel is not ready, then we're not connected
     if (this._ws === null) {
       return false;
     }
@@ -160,11 +159,17 @@ class Kernel {
 
   /**
    * Check whether the connection to the kernel has been completely
-   * severed. This function only returns true if all channel objects
-   * are null.
+   * severed. This function only returns true if the websocket is null.
    */
   get isFullyDisconnected(): boolean {
     return (this._ws === null);
+  }
+
+  /**
+   * Get the Info Reply Message from the Kernel.
+   */
+  get infoReply(): any {
+    return this._infoReply
   }
 
   /**
@@ -178,8 +183,8 @@ class Kernel {
       dataType: "json"
     }).then((data: any) => {
       this._onSuccess(data);
-    }, (status: string) => {
-      this._onError(status);
+    }, (error) => {
+      this._onError(error.status, error.error);
     });
   }
 
@@ -194,11 +199,12 @@ class Kernel {
     var url = utils.urlJoinEncode(this._kernelUrl, 'interrupt');
     return utils.ajaxRequest(url, {
       method: "POST",
-      dataType: "json"
+      dataType: "json",
+      successCode: 204
     }).then((data: any) => {
       this._onSuccess(data);
-    }, (status: string) => {
-      this._onError(status);
+    }, (error) => {
+      this._onError(error.status, error.error);
     });
   }
 
@@ -214,13 +220,14 @@ class Kernel {
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxRequest(url, {
       method: "POST",
-      dataType: "json"
+      dataType: "json",
+      useHeader: 'Location'
     }).then((data: any) => {
       this._kernelCreated(data);
       this._onSuccess(data);
-    }, (status: string) => {
+    }, (error) => {
       this._kernelDead();
-      this._onError(status);
+      this._onError(error.status, error.error);
     });
   }
 
@@ -348,13 +355,6 @@ class Kernel {
   }
 
   /**
-   * Get the Info Reply Message from the Kernel.
-   */
-  get infoReply(): any {
-    return this._infoReply()
-  }
-
-  /**
    * Create a Kernel Message given input attributes.
    */
   private _getMsg(msg_type: string, content: any,
@@ -402,8 +402,8 @@ class Kernel {
    * Handle a failed AJAX request by logging the error message, and throwing
    * another error.
    */
-  private _onError(status: string): void {
-    var msg = "API request failed (" + status + "): ";
+  private _onError(status: number, error: string): void {
+    var msg = "API request failed (" + error + "): ";
     console.log(msg);
     throw status;
   }
@@ -584,7 +584,7 @@ class Kernel {
     try {
       var msg = serialize.deserialize(e.data);
     } catch (error) {
-      this._onError(error.message);
+      console.log(error.message);
       return;
     }
     if (msg.channel === 'iopub' && msg.msgType === 'status') {

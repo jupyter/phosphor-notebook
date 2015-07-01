@@ -123,6 +123,8 @@ interface IAjaxSetttings {
   dataType: string;
   contentType?: string;
   data?: any;
+  successCode?: number;
+  useHeader?: string;
 }
 
 
@@ -135,25 +137,31 @@ export
 function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
+    if (!settings.successCode) {
+      settings.successCode = 200;
+    }
     req.open(settings.method, url);
     if (settings.contentType) {
       req.overrideMimeType(settings.contentType);
     }
-
     req.onload = () => {
-      if (req.status == 200) {
+      if (req.status == settings.successCode) {
+        var resp = req.response;
+        if (settings.useHeader) {
+          resp = req.getResponseHeader(settings.useHeader);
+        }
         if (settings.dataType === 'json') {
-          resolve(JSON.parse(req.response));
+          resolve(JSON.parse(resp));
         } else {
-          resolve(req.response);
+          resolve(resp);
         }
       } else {
-        reject(req.statusText);
+        reject({status: req.status, error: req.statusText});
       }
     }
 
     req.onerror = () => {
-      reject(req.statusText);
+      reject({status: req.status, error: req.statusText});
     }
 
     if (settings.data) {
