@@ -41,8 +41,8 @@ interface IKernelMsg {
  * Object providing a Future interface for message callbacks.
  *
  * Only one callback can be registered per type.
- * If `autoDispose` is set, the future will self-dispose `isDone` is
- * set and the registered `onDone` handler is set.
+ * If `autoDispose` is set, the future will self-dispose after `isDone` is
+ * set and the registered `onDone` handler is called.
  *
  * The Future is considered done when a `reply` message and a
  * an `idle` iopub status message have been received.
@@ -763,10 +763,10 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
    * Handle a message done status.
    */
   private _handleDone(msg: IKernelMsg): void {
+    this._setFlag(KernelFutureFlag.IsDone);
     if (this._done) {
       this._done(msg);
     }
-    this._setFlag(KernelFutureFlag.IsDone);
     if (this._testFlag(KernelFutureFlag.AutoDispose)) {
       this.dispose();
     }
