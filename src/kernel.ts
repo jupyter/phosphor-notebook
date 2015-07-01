@@ -208,7 +208,7 @@ class Kernel {
    * function only returns true if websocket has been
    * created and has a state of WebSocket.OPEN.
    */
-  isConnected(): boolean {
+  get isConnected(): boolean {
     // if any channel is not ready, then we're not connected
     if (this._ws === null) {
       return false;
@@ -224,7 +224,7 @@ class Kernel {
    * severed. This function only returns true if all channel objects
    * are null.
    */
-  isFullyDisconnected(): boolean {
+  get isFullyDisconnected(): boolean {
     return (this._ws === null);
   }
 
