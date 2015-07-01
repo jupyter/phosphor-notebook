@@ -69,16 +69,21 @@ function deserializeArrayBuffer(buf: ArrayBuffer): IKernelMsg {
 function serializeBinary(msg: IKernelMsg): ArrayBuffer {
     var offsets: number[] = [];
     var buffers: ArrayBuffer[] = [];
+    // define a filter function for JSON.stringify
+    function replacer(key: string, value: any) {
+      if (key === "buffers") {
+        return undefined;
+      }
+      return value;
+    }
+    var json_utf8 = (new TextEncoder('utf8')).encode(JSON.stringify(msg, replacer));
+    buffers.push(Array.prototype.slice.call(json_utf8));
     for (var i = 0; i < msg.buffers.length; i++) {
       // msg.buffers elements could be either views or ArrayBuffers
       // buffers elements are ArrayBuffers
       var b: any = msg.buffers[i];
       buffers.push(b instanceof ArrayBuffer ? b : b.buffer);
     }
-    msg.buffers = void 0;
-    var json_utf8 = (new TextEncoder('utf8')).encode(JSON.stringify(msg));
-    msg.buffers = buffers;
-    buffers.unshift(Array.prototype.slice.call(json_utf8));
     var nbufs = buffers.length;
     offsets.push(4 * (nbufs + 1));
     for (i = 0; i + 1 < buffers.length; i++) {
