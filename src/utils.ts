@@ -72,7 +72,7 @@ function encodeURIComponents(uri: string): string {
 
 
 /**
- * Get a url-encoded item from body.data and decode it.
+ * Get a url-encoded item from document body and decode it.
  * We should never have any encoded URLs anywhere else in code
  * until we are building an actual request.
  */
