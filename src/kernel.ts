@@ -101,14 +101,14 @@ class Kernel {
 
   static statusChange = new Signal<Kernel, string>();
 
-  constructor(kernel_service_url: string, ws_url: string, name: string) {
+  constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
     this._id = null;
     this._name = name;
     this._ws = null;
 
-    this._kernelServiceUrl = kernel_service_url;
+    this._kernelServiceUrl = kernelServiceUrl;
     this._kernelUrl = null;
-    this._wsUrl = ws_url || utils.getBodyData('wsUrl');
+    this._wsUrl = wsUrl || utils.getBodyData('wsUrl');
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
       this._wsUrl = location.protocol.replace('http', 'ws') + "//" + location.host;
