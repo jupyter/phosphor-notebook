@@ -107,7 +107,7 @@ class Kernel {
 
     this._kernelServiceUrl = kernel_service_url;
     this._kernelUrl = null;
-    this._wsUrl = ws_url;
+    this._wsUrl = ws_url || utils.getBodyData('wsUrl');
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
       this._wsUrl = location.protocol.replace('http', 'ws') + "//" + location.host;

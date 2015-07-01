@@ -72,6 +72,21 @@ function encodeURIComponents(uri: string): string {
 
 
 /**
+ * Get a url-encoded item from body.data and decode it.
+ * We should never have any encoded URLs anywhere else in code
+ * until we are building an actual request.
+ */
+export 
+function getBodyData(key: string): string {
+  var val = document.body.getAttribute(key);
+  if (val) {
+    return decodeURIComponent(val);
+  }
+  return null;
+}
+
+
+/**
  * Join a sequence of url components with '/',
  * encoding each component with encodeURIComponent.
  */
