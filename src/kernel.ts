@@ -51,7 +51,7 @@ export
 interface IKernelFuture {
   /**
    * Dispose and unregister the future.
-     
+   */  
   dispose(): void;
 
   /**
