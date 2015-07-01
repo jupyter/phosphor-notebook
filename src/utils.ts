@@ -36,9 +36,7 @@ function uuid(): string {
   }
   s[12] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
   s[16] = hexDigits.substr((Number(s[16]) & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
-
-  var uuid = s.join("");
-  return uuid;
+  return s.join("");
 }
 
 
