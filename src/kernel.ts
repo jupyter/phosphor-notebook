@@ -72,6 +72,11 @@ interface IKernelFuture {
    */
   onInput(cb: (msg: IKernelMsg) => void): IKernelFuture;
 
+  /**
+   * The autoDispose behavior of the Feature.
+   *
+   * If True, it will self-dispose() after onDone() is called.
+   */
   autoDispose: boolean;
 
 }
@@ -497,7 +502,7 @@ class Kernel {
       this._wsClosed(ws_host_url, true);
     };
 
-    this._ws.onopen = (evt: IWebSocketEvent) => {
+    this._ws.onopen = (evt: Event) => {
       this._wsOpened(evt);
     };
     var ws_closed_late = (evt: CloseEvent) => {
@@ -524,7 +529,7 @@ class Kernel {
    * Handle a websocket entering the open state,
    * signaling that the kernel is connected when websocket is open.
    */
-  private _wsOpened(evt: IWebSocketEvent): void {
+  private _wsOpened(evt: Event): void {
     if (this.isConnected()) {
       // all events ready, trigger started event.
       this._kernelConnected();
@@ -626,7 +631,6 @@ class Kernel {
   private _handlerMap: Map<string, KernelFutureHandler>;
   private _iopubHandlers: Map<string, (msg: IKernelMsg) => void>;
 }
-
 
 
 /**
@@ -777,13 +781,3 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   private _reply: (msg: IKernelMsg) => void = null;
   private _done: (msg: IKernelMsg) => void = null;
 }
-
-
-/**
- * Web socket error object.
- */
-interface IWebSocketEvent extends Event {
-  wasClean: boolean;
-  data: string | ArrayBuffer | Blob;
-}
-
