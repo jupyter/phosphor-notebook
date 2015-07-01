@@ -6,6 +6,7 @@ var header = require('gulp-header');
 var stream = require('event-stream');
 var rename = require('gulp-rename');
 var del = require('del');
+var typedoc = require('gulp-typedoc');
 
 
 var typings = ["./typings/tsd.d.ts", "./components/phosphor/dist/phosphor.d.ts"];
@@ -67,3 +68,15 @@ gulp.task('watch', function() {
 
 
 gulp.task('default', ['dist']);
+
+
+gulp.task('docs', function() {
+  return gulp.src(typings.concat(tsSources))
+    .pipe(typedoc({
+      out: './build/docs',
+      name: 'Phosphor-notebook',
+      target: 'ES5',
+      mode: 'modules',
+      module: 'amd',
+      includeDeclarations: false }));
+});
