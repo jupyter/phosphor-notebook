@@ -6,7 +6,7 @@ module jupyter.serialize {
 import IKernelMsg = kernel.IKernelMsg;
 
 /**
- * Deserialize a message and return a promise for the unpacked message.
+ * Deserialize a message and return the unpacked message.
  */
 export
 function deserialize(data: ArrayBuffer | string): IKernelMsg {
