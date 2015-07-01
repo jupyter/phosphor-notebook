@@ -161,10 +161,6 @@ class Kernel {
       method: "POST",
       dataType: "json"
     }).then((data: any) => {
-      /**
-       * get kernel info so we know what state the kernel is in
-       */
-      this.kernelInfo();
       this._onSuccess(data);
     }, (status: string) => {
       this._onError(status);
@@ -338,6 +334,13 @@ class Kernel {
     msg.channel = 'stdin';
     this._ws.send(serialize.serialize(msg));
     return msg.header.msgId;
+  }
+
+  /**
+   * Get the Info Reply Message from the Kernel.
+   */
+  get infoReply(): any {
+    return this._infoReply()
   }
 
   /**
