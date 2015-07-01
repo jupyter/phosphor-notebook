@@ -75,7 +75,8 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
     }
     return value;
   }
-  var json_utf8 = (new TextEncoder('utf8')).encode(JSON.stringify(msg, replacer));
+  var encoder = new TextEncoder('utf8')
+  var json_utf8 = encoder.encode(JSON.stringify(msg, replacer));
   buffers.push(Array.prototype.slice.call(json_utf8));
   for (var i = 0; i < msg.buffers.length; i++) {
     // msg.buffers elements could be either views or ArrayBuffers
