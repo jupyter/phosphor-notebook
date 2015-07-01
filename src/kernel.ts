@@ -10,7 +10,7 @@ import IDisposable = phosphor.utility.IDisposable;
 import Disposable = phosphor.utility.Disposable;
 
 
-/*
+/**
  * Kernel message header content.
  */
 export
@@ -23,7 +23,7 @@ interface IKernelMsgHeader {
 }
 
 
-/*
+/**
  * Kernel message specification.
  */
 export
@@ -581,7 +581,12 @@ class Kernel {
    * Handle an incoming Websocket message.
    */
   private _handleWSMessage(e: MessageEvent): void {
-    var msg = serialize.deserialize(e.data);
+    try {
+      var msg = serialize.deserialize(e.data);
+    } catch (error) {
+      this._onError(error.message);
+      return;
+    }
     if (msg.channel === 'iopub' && msg.msgType === 'status') {
       this._handleStatusMessage(msg);
     }

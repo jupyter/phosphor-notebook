@@ -46,7 +46,7 @@ function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
   var nbufs = data.getUint32(0);
   var offsets: number[] = [];
   if (nbufs < 2) {
-    throw "Invalid incoming Kernel Message";
+    throw new Error("Invalid incoming Kernel Message");
   }
   for (var i = 1; i <= nbufs; i++) {
     offsets.push(data.getUint32(i * 4));
