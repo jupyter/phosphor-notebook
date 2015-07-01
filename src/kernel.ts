@@ -195,7 +195,7 @@ class Kernel {
    * reconnecting to the kernel if the connection is somehow lost.
    */
   reconnect(): void {
-    if (this.isConnected()) {
+    if (this.isConnected) {
       return;
     }
     this._reconnectAttempt = this._reconnectAttempt + 1;
@@ -232,7 +232,7 @@ class Kernel {
    * Send a message on the Kernel's shell channel.
    */
   sendShellMessage(msg_type: string, content: any, metadata = {}, buffers: string[] = []): IKernelFuture {
-    if (!this.isConnected()) {
+    if (!this.isConnected) {
       throw new Error("kernel is not connected");
     }
     var msg = this._getMsg(msg_type, content, metadata, buffers);
@@ -285,11 +285,12 @@ class Kernel {
    *      options = {
    *        silent : true,
    *        user_expressions : {},
-   *        allow_stdin : false
+   *        allow_stdin : false,
+            store_history: false
    *      }
    *
    */
-  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean; }): IKernelFuture {
+  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean; store_history?: boolean; }): IKernelFuture {
     var content = {
       code: code,
       silent: true,
@@ -324,7 +325,7 @@ class Kernel {
    * which has no referense to the session or the kernel
    */
   sendInputReply(input: any): string {
-    if (!this.isConnected()) {
+    if (!this.isConnected) {
       throw new Error("kernel is not connected");
     }
     var content = {
@@ -529,7 +530,7 @@ class Kernel {
    * signaling that the kernel is connected when websocket is open.
    */
   private _wsOpened(evt: Event): void {
-    if (this.isConnected()) {
+    if (this.isConnected) {
       // all events ready, trigger started event.
       this._kernelConnected();
     }
