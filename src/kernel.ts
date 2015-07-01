@@ -6,6 +6,7 @@ import utils = require('./utils');
 
 import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
+import IDisposable = phosphor.utility.IDisposable;
 import Disposable = phosphor.utility.Disposable;
 
 
@@ -49,11 +50,18 @@ interface IKernelMsg {
  * an `idle` iopub status message have been received.
  */
 export
-interface IKernelFuture {
+interface IKernelFuture extends IDisposable {
   /**
-   * Dispose and unregister the future.
-   */  
-  dispose(): void;
+   * The autoDispose behavior of the future.
+   *
+   * If True, it will self-dispose() after onDone() is called.
+   */
+  autoDispose: boolean;
+
+  /**
+   * Set when the message is done.  
+   */
+  isDone: boolean;
 
   /**
    * Register a reply handler. Returns `this`.
@@ -74,19 +82,6 @@ interface IKernelFuture {
    * Register an input handler. Returns `this`.
    */
   onInput(cb: (msg: IKernelMsg) => void): IKernelFuture;
-
-  /**
-   * The autoDispose behavior of the future.
-   *
-   * If True, it will self-dispose() after onDone() is called.
-   */
-  autoDispose: boolean;
-
-  /**
-   * Set when the message is done.  
-   */
-  isDone: boolean;
-
 }
 
 
@@ -126,6 +121,31 @@ class Kernel {
     this._autorestartAttempt = 0;
     this._reconnectAttempt = 0;
     this._reconnectLimit = 7;
+  }
+
+  /**
+   * Check whether there is a connection to the kernel. This
+   * function only returns true if websocket has been
+   * created and has a state of WebSocket.OPEN.
+   */
+  get isConnected(): boolean {
+    // if any channel is not ready, then we're not connected
+    if (this._ws === null) {
+      return false;
+    }
+    if (this._ws.readyState !== WebSocket.OPEN) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Check whether the connection to the kernel has been completely
+   * severed. This function only returns true if all channel objects
+   * are null.
+   */
+  get isFullyDisconnected(): boolean {
+    return (this._ws === null);
   }
 
   /**
@@ -214,31 +234,6 @@ class Kernel {
     this._reconnectAttempt = this._reconnectAttempt + 1;
     this._handleStatus('reconnecting');
     this._startChannels();
-  }
-
-  /**
-   * Check whether there is a connection to the kernel. This
-   * function only returns true if websocket has been
-   * created and has a state of WebSocket.OPEN.
-   */
-  get isConnected(): boolean {
-    // if any channel is not ready, then we're not connected
-    if (this._ws === null) {
-      return false;
-    }
-    if (this._ws.readyState !== WebSocket.OPEN) {
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Check whether the connection to the kernel has been completely
-   * severed. This function only returns true if all channel objects
-   * are null.
-   */
-  get isFullyDisconnected(): boolean {
-    return (this._ws === null);
   }
 
   /**
@@ -660,16 +655,31 @@ enum KernelFutureFlag {
  * Implementation of a Kernel Future.
  */
 class KernelFutureHandler extends Disposable implements IKernelFuture {
+  /**
+   * Get the current autoDispose status of the future..
+   */
+  get autoDispose(): boolean {
+    return this._testFlag(KernelFutureFlag.AutoDispose);
+  }
 
   /**
-   * Dispose and unregister the future.
+   * Set the current autoDispose behavior of the future.
+   *
+   * If True, it will self-dispose() after onDone() is called.
    */
-  dispose(): void {
-    super.dispose();
-    this._input = null;
-    this._output = null;
-    this._reply = null;
-    this._done = null;
+  set autoDispose(value: boolean) {
+    if (value) {
+      this._setFlag(KernelFutureFlag.AutoDispose);
+    } else {
+      this._clearFlag(KernelFutureFlag.AutoDispose);
+    }
+  }
+
+  /**
+   * Check for message done state.
+   */
+  get isDone(): boolean {
+    return this._testFlag(KernelFutureFlag.IsDone);
   }
 
   /**
@@ -705,40 +715,12 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   }
 
   /**
-   * Get the current autoDispose status of the future..
-   */
-  get autoDispose(): boolean {
-    return this._testFlag(KernelFutureFlag.AutoDispose);
-  }
-
-  /**
-   * Set the current autoDispose behavior of the future.
-   *
-   * If True, it will self-dispose() after onDone() is called.
-   */
-  set autoDispose(value: boolean) {
-    if (value) {
-      this._setFlag(KernelFutureFlag.AutoDispose);
-    } else {
-      this._clearFlag(KernelFutureFlag.AutoDispose);
-    }
-  }
-
-  /**
-   * Check for message done state.
-   */
-  get isDone(): boolean {
-    return this._testFlag(KernelFutureFlag.IsDone);
-  }
-
-  /**
    * Handle an incoming message from the kernel belonging to this future.
    */
   handleMsg(msg: IKernelMsg): void {
     if (msg.channel === 'iopub') {
-      if (this._output) {
-        this._output(msg);
-      }
+      var output = this._output;
+      if (output) output(msg);
       if (msg.msgType === 'status' && msg.content.execution_state === 'idle') {
         this._setFlag(KernelFutureFlag.GotIdle);
         if (this._testFlag(KernelFutureFlag.GotReply)) {
@@ -746,18 +728,27 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
         }
       }
     } else if (msg.channel === 'shell') {
-      if (this._reply) {
-        this._reply(msg);
-      }
+      var reply = this._output;
+      if (reply) reply(msg);
       this._setFlag(KernelFutureFlag.GotReply)
       if (this._testFlag(KernelFutureFlag.GotIdle)) {
         this._handleDone(msg);
       }
     } else if (msg.channel == 'stdin') {
-      if (this._input) {
-        this._input(msg);
-      }
+      var input = this._input;
+      if (input) input(msg);
     }
+  }
+
+  /**
+   * Dispose and unregister the future.
+   */
+  dispose(): void {
+    this._input = null;
+    this._output = null;
+    this._reply = null;
+    this._done = null;
+    super.dispose();
   }
 
   /**
@@ -765,9 +756,12 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
    */
   private _handleDone(msg: IKernelMsg): void {
     this._setFlag(KernelFutureFlag.IsDone);
-    if (this._done) {
-      this._done(msg);
-    }
+    var done = this._done;
+    if (done) done(msg);
+    // clear the other callbacks
+    this._reply = null;
+    this._done = null;
+    this._input = null;
     if (this._testFlag(KernelFutureFlag.AutoDispose)) {
       this.dispose();
     }
@@ -794,7 +788,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
     this._status &= ~flag;
   }
 
-  private _status: number;
+  private _status = 0;
   private _input: (msg: IKernelMsg) => void = null;
   private _output: (msg: IKernelMsg) => void = null;
   private _reply: (msg: IKernelMsg) => void = null;

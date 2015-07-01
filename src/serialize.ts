@@ -45,6 +45,9 @@ function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
   // read the header: 1 + nbufs 32b integers
   var nbufs = data.getUint32(0);
   var offsets: number[] = [];
+  if (nbufs < 2) {
+    throw "Invalid incoming Kernel Message";
+  }
   for (var i = 1; i <= nbufs; i++) {
     offsets.push(data.getUint32(i * 4));
   }
@@ -69,7 +72,7 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
   var encoder = new TextEncoder('utf8');
-  var json_utf8 = encoder.encode(JSON.stringify(msg, replacer));
+  var json_utf8 = encoder.encode(JSON.stringify(msg, replace_buffers));
   buffers.push(Array.prototype.slice.call(json_utf8));
   for (var i = 0; i < msg.buffers.length; i++) {
     // msg.buffers elements could be either views or ArrayBuffers
@@ -104,7 +107,7 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
 /**
  * Filter "buffers" key for JSON.stringify
  */
-var replacer = (key: string, value: any) => {
+function replace_buffers(key: string, value: any) {
   if (key === "buffers") {
     return undefined;
   }
