@@ -61,7 +61,7 @@ function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
 
 /**
  * Implement the binary serialization protocol.
- * Serialize JSON message to ArrayBuffer.
+ * Serialize Kernel message to ArrayBuffer.
  */
 function serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];

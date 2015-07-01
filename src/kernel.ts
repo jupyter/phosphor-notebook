@@ -121,7 +121,7 @@ class Kernel {
    * Get the list of running kernels.
    */
   list(): Promise<any> {
-    return utils.ajaxProxy(this._kernelServiceUrl, {
+    return utils.ajaxRequest(this._kernelServiceUrl, {
       method: "GET",
       dataType: "json"
     }).then((data: any) => {
@@ -138,7 +138,7 @@ class Kernel {
    * Get information about the kernel.
    */
   getInfo(): Promise<any> {
-    return utils.ajaxProxy(this._kernelUrl, {
+    return utils.ajaxRequest(this._kernelUrl, {
       method: "GET",
       dataType: "json"
     }).then((data: any) => {
@@ -157,7 +157,7 @@ class Kernel {
     this._handleStatus('interrupting');
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'interrupt');
-    return utils.ajaxProxy(url, {
+    return utils.ajaxRequest(url, {
       method: "POST",
       dataType: "json"
     }).then((data: any) => {
@@ -181,7 +181,7 @@ class Kernel {
     this._stopChannels();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
-    return utils.ajaxProxy(url, {
+    return utils.ajaxRequest(url, {
       method: "POST",
       dataType: "json"
     }).then((data: any) => {

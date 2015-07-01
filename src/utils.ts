@@ -117,7 +117,7 @@ function jsonToQueryString(json: any): string {
 
 
 /**
- * Input settings for an AJAX query.
+ * Input settings for an AJAX request.
  */
 export
 interface IAjaxSetttings {
@@ -134,7 +134,7 @@ interface IAjaxSetttings {
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
  */
 export
-function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
+function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
   return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
     req.open(settings.method, url);
