@@ -9,7 +9,7 @@ import IKernelMsg = kernel.IKernelMsg;
  * Deserialize a message and return a promise for the unpacked message.
  */
 export
-  function deserialize(data: ArrayBuffer | string): IKernelMsg {
+function deserialize(data: ArrayBuffer | string): IKernelMsg {
   var value: IKernelMsg;
   if (typeof data === "string") {
     // text JSON message
@@ -26,7 +26,7 @@ export
  * Serialize a kernel message for transport.
  */
 export
-  function serialize(msg: IKernelMsg): string | ArrayBuffer {
+function serialize(msg: IKernelMsg): string | ArrayBuffer {
   var value: string | ArrayBuffer;
   if (msg.buffers && msg.buffers.length) {
     value = serializeBinary(msg);
@@ -75,7 +75,7 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
     }
     return value;
   }
-  var encoder = new TextEncoder('utf8')
+  var encoder = new TextEncoder('utf8');
   var json_utf8 = encoder.encode(JSON.stringify(msg, replacer));
   buffers.push(Array.prototype.slice.call(json_utf8));
   for (var i = 0; i < msg.buffers.length; i++) {
