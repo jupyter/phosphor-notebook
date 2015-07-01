@@ -69,7 +69,7 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
   // define a filter function for JSON.stringify
-  function replacer(key: string, value: any) {
+  var replacer = (key: string, value: any) => {
     if (key === "buffers") {
       return undefined;
     }
