@@ -394,7 +394,6 @@ class Kernel {
     throw status;
   }
 
-
   /**
    * Start the websocket channels.
    * Will stop and restart them if they already exist.
