@@ -1,6 +1,9 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+import utils = require('./utils');
+
+
 export var init = function () {
 // MathJax loaded
     MathJax.Hub.Config({
@@ -50,11 +53,9 @@ var process_math = function (i: number, j: number, pre_process: (x: string)=>str
     .replace(/</g, "&lt;") // use HTML entity for <
     .replace(/>/g, "&gt;") // use HTML entity for >
     ;
-    /*
     if (utils.browser === 'msie') {
         block = block.replace(/(%[^\n]*)\n/g, "$1<br/>\n");
     }
-    */
     while (j > i) {
         blocks[j] = "";
         j--;
