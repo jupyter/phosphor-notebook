@@ -565,17 +565,8 @@ class Kernel {
   /**
    * Handle an incoming Websocket message
    */
-  private _handleWSMessage(e: MessageEvent): Promise<IKernelMsg> {
-    this._msgQueue = this._msgQueue.then(() => {
-      return serialize.deserialize(e.data);
-    }).then(function(msg) { return this._finishWSMessage(msg); });
-    return;
-  }
-
-  /**
-    * Process deserialized Kernel Message from the websocket.
-    */
-  private _finishWSMessage(msg: IKernelMsg): void {
+  private _handleWSMessage(e: MessageEvent): void {
+    var msg = serialize.deserialize(e.data);
     if (msg.channel === 'iopub' && msg.msgType === 'status'){
       this._handleStatusMessage(msg);
     }
@@ -628,7 +619,6 @@ class Kernel {
   private _infoReply: any;
   private _WebSocket: any;
   private _reconnectLimit: number;
-  private _msgQueue: Promise<IKernelMsg>;
   private _autorestartAttempt: number;
   private _reconnectAttempt: number;
   private _handlerMap: Map<string, KernelFutureHandler>;
