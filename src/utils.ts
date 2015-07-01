@@ -1,6 +1,7 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
+
 /**
  * Copy the contents of one object to another, recursively.
  *
@@ -174,36 +175,6 @@ function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
       req.send(settings.data);
     } else {
       req.send();
-    }
-  });
-}
-
-
-/**
- * Try to load a class.
- *
- * Try to load a class from a module using require.js, if a module 
- * is specified, otherwise tries to load a class from the global 
- * registry, if the global registry is provided.
- */
-export
-function loadClass(class_name: string, module_name: string, registry: { [string: string]: Function; }) : Promise<string> {
-  return new Promise((resolve, reject) => {
-    // Try loading the view module using require.js
-    if (module_name) {
-      require([module_name], (module: any) => {
-        if (module[class_name] === undefined) {
-          reject(new Error('Class ' + class_name + ' not found in module ' + module_name));
-        } else {
-          resolve(module[class_name]);
-        }
-      });
-    } else {
-      if (registry && registry[class_name]) {
-        resolve(registry[class_name]);
-      } else {
-        reject(new Error('Class ' + class_name + ' not found in registry '));
-      }
     }
   });
 }
