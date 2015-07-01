@@ -409,7 +409,8 @@ class Kernel {
    * another error.
    */
   private _onError(status: string): void {
-    utils.logAjaxError(status);
+    var msg = "API request failed (" + status + "): ";
+    console.log(msg);
     throw status;
   }
 

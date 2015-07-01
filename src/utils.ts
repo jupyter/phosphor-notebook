@@ -167,16 +167,6 @@ function ajaxProxy(url: string, settings: IAjaxSetttings): Promise<any> {
 }
 
 
-/**
- * Log ajax failures with informative messages.
- */
-export
-function logAjaxError(status: string) {
-  var msg = "API request failed (" + status + "): ";
-  console.log(msg);
-}
-
-
 declare
 function require(modules: string[], success: Function, reject?: Function): void;
 
