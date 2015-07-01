@@ -6,16 +6,14 @@ module jupyter.serialize {
 import IKernelMsg = kernel.IKernelMsg;
 
 /**
- * Deserialize a message and return the unpacked message.
+ * Deserialize and return the unpacked message.
  */
 export
 function deserialize(data: ArrayBuffer | string): IKernelMsg {
   var value: IKernelMsg;
   if (typeof data === "string") {
-    // text JSON message
     value = JSON.parse(data);
   } else {
-    // binary message
     value = deserializeBinary(data);
   }
   return value;
@@ -38,7 +36,7 @@ function serialize(msg: IKernelMsg): string | ArrayBuffer {
 
 
 /**
- * Deserialize an ArrayBuffer to a Kernel Message.
+ * Deserialize a binary message to a Kernel Message.
  */
 function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
   var data = new DataView(buf);
