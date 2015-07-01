@@ -3,7 +3,7 @@
 
 module jupyter.utils {
 
-/*
+/**
  * Copy the contents of one object to another, recursively.
  *
  * http://stackoverflow.com/questions/12317003/something-like-jquery-extend-but-standalone
@@ -22,7 +22,7 @@ function extend(target: any, source: any): any {
 }
 
 
-/*
+/**
  * Get a uuid as a string.
  *
  * http://www.ietf.org/rfc/rfc4122.txt
@@ -32,7 +32,7 @@ function uuid(): string {
   var s: string[] = [];
   var hexDigits = "0123456789ABCDEF";
   for (var i = 0; i < 32; i++) {
-    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+    s[i] = hexDigits.charAt(Math.floor(Math.random() * 0x10));
   }
   s[12] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
   s[16] = hexDigits.substr((Number(s[16]) & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
@@ -143,7 +143,7 @@ interface IAjaxSetttings {
 }
 
 
-/*
+/**
  * Asynchronous XMLHTTPRequest handler.
  *
  * http://www.html5rocks.com/en/tutorials/es6/promises/#toc-promisifying-xmlhttprequest
@@ -180,13 +180,6 @@ function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
     }
   });
 }
-
-
-/**
- * Stub for require.js module loader.
- */
-declare
-function require(modules: string[], success: Function, reject?: Function): void;
 
 
 /**
