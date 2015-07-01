@@ -66,13 +66,6 @@ function deserializeBinary(buf: ArrayBuffer): IKernelMsg {
 function serializeBinary(msg: IKernelMsg): ArrayBuffer {
   var offsets: number[] = [];
   var buffers: ArrayBuffer[] = [];
-  // define a filter function for JSON.stringify
-  var replacer = (key: string, value: any) => {
-    if (key === "buffers") {
-      return undefined;
-    }
-    return value;
-  }
   var encoder = new TextEncoder('utf8');
   var json_utf8 = encoder.encode(JSON.stringify(msg, replacer));
   buffers.push(Array.prototype.slice.call(json_utf8));
@@ -103,6 +96,17 @@ function serializeBinary(msg: IKernelMsg): ArrayBuffer {
     msg_buf.set(new Uint8Array(buffers[i]), offsets[i]);
   }
   return msg_buf.buffer;
+}
+
+
+/**
+ * Filter "buffers" key for JSON.stringify
+ */
+var replacer = (key: string, value: any) => {
+  if (key === "buffers") {
+    return undefined;
+  }
+  return value;
 }
 
 }  // module jupyter.serialize
