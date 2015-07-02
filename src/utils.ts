@@ -123,8 +123,24 @@ interface IAjaxSetttings {
   dataType: string;
   contentType?: string;
   data?: any;
-  successCode?: number;
-  useHeader?: string;
+}
+
+
+/**
+ * Success handler for AJAX request.
+ */
+export
+interface IAjaxSuccess {
+  (data: any, status: number, xhr: XMLHttpRequest): void;
+}
+
+
+/**
+ * Error handler for AJAX request.
+ */
+export 
+interface IAjaxError {
+  (xhr: XMLHttpRequest, status: number, error: string) : void;
 }
 
 
@@ -135,35 +151,22 @@ interface IAjaxSetttings {
  */
 export
 function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve: IAjaxSuccess, reject: IAjaxError) => {
     var req = new XMLHttpRequest();
-    if (!settings.successCode) {
-      settings.successCode = 200;
-    }
     req.open(settings.method, url);
     if (settings.contentType) {
       req.overrideMimeType(settings.contentType);
     }
     req.onload = () => {
-      if (req.status == settings.successCode) {
-        var resp = req.response;
-        if (settings.useHeader) {
-          resp = req.getResponseHeader(settings.useHeader);
-        }
-        if (settings.dataType === 'json') {
-          resolve(JSON.parse(resp));
-        } else {
-          resolve(resp);
-        }
-      } else {
-        reject({status: req.status, error: req.statusText});
+      var response = req.response;
+      if (settings.dataType === 'json') {
+        response = JSON.parse(req.response);
       }
+      resolve(response, req.status, req);
     }
-
-    req.onerror = () => {
-      reject({status: req.status, error: req.statusText});
+    req.onerror = (err: ErrorEvent) => {
+      reject(req, req.status, err.message);
     }
-
     if (settings.data) {
       req.send(settings.data);
     } else {

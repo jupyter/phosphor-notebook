@@ -101,7 +101,7 @@ class Kernel {
    *
    * Get the list of running kernels.
    */
-  static list(kernelServiceUrl: string): Promise<string []> {
+  static list(kernelServiceUrl: string): Promise<any> {
     return utils.ajaxRequest(kernelServiceUrl, {
       method: "GET",
       dataType: "json"
