@@ -230,6 +230,13 @@ class Kernel {
   }
 
   /**
+   * Get the current status of the kernel.
+   */
+  get status() : string {
+    return this._status;
+  }
+
+  /**
    * GET /api/kernels/[:kernel_id]
    *
    * Get information about the kernel.
@@ -240,7 +247,6 @@ class Kernel {
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
       if (success.xhr.status == 200) {
-        this._onSuccess(success.data);
         return success.data;
       }
       throw Error('Invalid Status: ' + success.xhr.status);
@@ -262,9 +268,7 @@ class Kernel {
       method: "POST",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status == 204) {
-        this._onSuccess(success.data);
-      } else {
+      if (success.xhr.status !== 204) {
         throw Error('Invalid Status: ' + success.xhr.status);
       }
     }, (error: IAjaxError) => {
@@ -287,13 +291,25 @@ class Kernel {
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
       if (success.xhr.status == 200) {
-        this._kernelCreated(success.data);
-        this._onSuccess(success.data);
+        this.start(success.data);
       }
       throw Error('Invalid Status: ' + success.xhr.status);
     }, (error: IAjaxError) => {
       this._onError(error);
     });
+  }
+
+  /**
+   * Start the kernel connnection.
+   *
+   * This should only be called by a session.
+   */
+  start(id: IKernelId) : void {
+    this._id = id.id;
+    this._name = id.name;
+    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
+    this._startChannels();
+    this._handleStatus('created');
   }
 
   /**
@@ -445,22 +461,11 @@ class Kernel {
    */
   private _handleStatus(status: string) {
     emit(this, Kernel.statusChanged, status);
+    this._status = status;
     if (status === 'idle' || status === 'busy') {
       return;
     }
     console.log('Kernel: ' + status + ' (' + this._id + ')');
-  }
-
-  /**
-   * Handle a successful AJAX request by updating the kernel id and
-   * name from the response.
-   */
-  private _onSuccess(data: any): void {
-    if (data) {
-      this._id = data.id;
-      this._name = data.name;
-    }
-    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
   }
 
   /**
@@ -562,16 +567,7 @@ class Kernel {
       }
     }
   }
-  /**
-   * Perform necessary tasks once the kernel has been started,
-   * including actually connecting to the kernel.
-   */
-  private _kernelCreated(data: { id: string }): void {
-    this._handleStatus('created');
-    this._id = data.id;
-    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
-    this._startChannels();
-  }
+
 
   /**
    * Perform necessary tasks once the connection to the kernel has
@@ -708,6 +704,7 @@ class Kernel {
   private _reconnectAttempt: number;
   private _handlerMap: Map<string, KernelFutureHandler>;
   private _iopubHandlers: Map<string, (msg: IKernelMsg) => void>;
+  private _status: string;
 }
 
 
