@@ -131,7 +131,9 @@ interface IAjaxSetttings {
  */
 export
 interface IAjaxSuccess {
-  (data: any, status: number, xhr: XMLHttpRequest): void;
+  data: any;
+  statusText: string;
+  xhr: XMLHttpRequest;
 }
 
 
@@ -140,7 +142,9 @@ interface IAjaxSuccess {
  */
 export 
 interface IAjaxError {
-  (xhr: XMLHttpRequest, status: number, error: string) : void;
+  xhr: XMLHttpRequest;
+  statusText: string;
+  error: ErrorEvent;
 }
 
 
@@ -151,7 +155,7 @@ interface IAjaxError {
  */
 export
 function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
-  return new Promise((resolve: IAjaxSuccess, reject: IAjaxError) => {
+  return new Promise((resolve, reject) => {
     var req = new XMLHttpRequest();
     req.open(settings.method, url);
     if (settings.contentType) {
@@ -162,10 +166,10 @@ function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
       if (settings.dataType === 'json') {
         response = JSON.parse(req.response);
       }
-      resolve(response, req.status, req);
+      resolve({data: response, statusText: req.statusText, xhr: req});
     }
     req.onerror = (err: ErrorEvent) => {
-      reject(req, req.status, err.message);
+      reject({xhr:req, statusText: req.statusText, erorr:err});
     }
     if (settings.data) {
       req.send(settings.data);

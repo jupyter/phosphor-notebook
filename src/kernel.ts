@@ -8,7 +8,8 @@ import Signal = phosphor.core.Signal;
 import emit = phosphor.core.emit;
 import IDisposable = phosphor.utility.IDisposable;
 import Disposable = phosphor.utility.Disposable;
-
+import IAjaxSuccess = utils.IAjaxSuccess;
+import IAjaxError = utils.IAjaxError;
 
 /**
  * Kernel message header content.
@@ -36,6 +37,58 @@ interface IKernelMsg {
   msgType?: string;
   channel?: string;
   buffers?: string[] | ArrayBuffer[];
+}
+
+
+/**
+ * Settings for a Kernel Execute command.
+ */
+export
+interface IKernelExecute {
+  silent?: boolean; 
+  user_expressions?: any; 
+  allow_stdin?: boolean; 
+  store_history?: boolean;
+}
+
+
+/**
+ * Kernel Identification specification.
+ */
+export 
+interface IKernelId {
+    id: string;
+    name: string;
+}
+
+
+/**
+ * Kernel Information Specification.
+ * http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info
+ */
+export
+interface IKernelInfo {
+  protocol_version: string;
+  implementation: string;
+  implementation_version: string;
+  language_info: IKernelLanguageInfo;
+  banner: string;
+  help_links: { [key: string]: string; };
+}
+
+
+/**
+ * Kernel Language Information Specification.
+ */
+export
+interface IKernelLanguageInfo {
+  name: string;
+  version: string;
+  mimetype: string;
+  file_extension: string;
+  pygments_lexer: string;
+  codemirror_mode: string | {};
+  nbconverter_exporter: string;
 }
 
 
@@ -94,17 +147,22 @@ interface IKernelFuture extends IDisposable {
 export
 class Kernel {
 
-  static statusChange = new Signal<Kernel, string>();
+  static statusChanged = new Signal<Kernel, string>();
 
   /**
    * GET /api/kernels
    *
    * Get the list of running kernels.
    */
-  static list(kernelServiceUrl: string): Promise<any> {
+  static list(kernelServiceUrl: string): Promise<IKernelId[]> {
     return utils.ajaxRequest(kernelServiceUrl, {
       method: "GET",
       dataType: "json"
+    }).then((success: IAjaxSuccess): IKernelId[] => {
+      if (success.xhr.status == 200) {
+        return success.data;
+      }
+      throw Error('Invalid Status: ' + success.xhr.status);
     });
   }
 
@@ -123,7 +181,6 @@ class Kernel {
 
     this._username = "username";
     this._sessionId = utils.uuid();
-    this._infoReply = {}; // kernel_info_reply stored here after starting
     this._handlerMap = new Map<string, KernelFutureHandler>();
 
     if (typeof WebSocket === 'undefined') {
@@ -168,7 +225,7 @@ class Kernel {
   /**
    * Get the Info Reply Message from the Kernel.
    */
-  get infoReply(): any {
+  get infoReply(): IKernelInfo {
     return this._infoReply
   }
 
@@ -177,14 +234,18 @@ class Kernel {
    *
    * Get information about the kernel.
    */
-  getInfo(): Promise<any> {
+  getInfo(): Promise<IKernelId> {
     return utils.ajaxRequest(this._kernelUrl, {
       method: "GET",
       dataType: "json"
-    }).then((data: any) => {
-      this._onSuccess(data);
-    }, (error) => {
-      this._onError(error.status, error.error);
+    }).then((success: IAjaxSuccess) => {
+      if (success.xhr.status == 200) {
+        this._onSuccess(success.data);
+        return success.data;
+      }
+      throw Error('Invalid Status: ' + success.xhr.status);
+    }, (error: IAjaxError) => {
+      this._onError(error);
     });
   }
 
@@ -193,18 +254,21 @@ class Kernel {
    *
    * Interrupt the kernel.
    */
-  interrupt(): Promise<any> {
+  interrupt(): Promise<void> {
     this._handleStatus('interrupting');
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'interrupt');
     return utils.ajaxRequest(url, {
       method: "POST",
-      dataType: "json",
-      successCode: 204
-    }).then((data: any) => {
-      this._onSuccess(data);
-    }, (error) => {
-      this._onError(error.status, error.error);
+      dataType: "json"
+    }).then((success: IAjaxSuccess) => {
+      if (success.xhr.status == 204) {
+        this._onSuccess(success.data);
+      } else {
+        throw Error('Invalid Status: ' + success.xhr.status);
+      }
+    }, (error: IAjaxError) => {
+      this._onError(error);
     });
   }
 
@@ -213,21 +277,22 @@ class Kernel {
    *
    * Restart the kernel.
    */
-  restart(): Promise<any> {
+  restart(): Promise<void> {
     this._handleStatus('restarting');
     this._stopChannels();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxRequest(url, {
       method: "POST",
-      dataType: "json",
-      useHeader: 'Location'
-    }).then((data: any) => {
-      this._kernelCreated(data);
-      this._onSuccess(data);
-    }, (error) => {
-      this._kernelDead();
-      this._onError(error.status, error.error);
+      dataType: "json"
+    }).then((success: IAjaxSuccess) => {
+      if (success.xhr.status == 200) {
+        this._kernelCreated(success.data);
+        this._onSuccess(success.data);
+      }
+      throw Error('Invalid Status: ' + success.xhr.status);
+    }, (error: IAjaxError) => {
+      this._onError(error);
     });
   }
 
@@ -252,7 +317,7 @@ class Kernel {
     if (!this.isConnected) {
       throw new Error("kernel is not connected");
     }
-    var msg = this._getMsg(msg_type, content, metadata, buffers);
+    var msg = this._createMsg(msg_type, content, metadata, buffers);
     msg.channel = 'shell';
 
     this._ws.send(serialize.serialize(msg));
@@ -307,7 +372,7 @@ class Kernel {
    *      }
    *
    */
-  execute(code: string, options?: { silent?: boolean; user_expressions?: any; allow_stdin?: boolean; store_history?: boolean; }): IKernelFuture {
+  execute(code: string, options?: IKernelExecute): IKernelFuture {
     var content = {
       code: code,
       silent: true,
@@ -348,7 +413,7 @@ class Kernel {
     var content = {
       value: input
     };
-    var msg = this._getMsg("input_reply", content);
+    var msg = this._createMsg("input_reply", content);
     msg.channel = 'stdin';
     this._ws.send(serialize.serialize(msg));
     return msg.header.msgId;
@@ -357,7 +422,7 @@ class Kernel {
   /**
    * Create a Kernel Message given input attributes.
    */
-  private _getMsg(msg_type: string, content: any,
+  private _createMsg(msg_type: string, content: any,
     metadata = {}, buffers: string[] = []): IKernelMsg {
     var msg: IKernelMsg = {
       header: {
@@ -379,7 +444,7 @@ class Kernel {
    * Handle a kernel status change message.
    */
   private _handleStatus(status: string) {
-    emit(this, Kernel.statusChange, status);
+    emit(this, Kernel.statusChanged, status);
     if (status === 'idle' || status === 'busy') {
       return;
     }
@@ -402,10 +467,10 @@ class Kernel {
    * Handle a failed AJAX request by logging the error message, and throwing
    * another error.
    */
-  private _onError(status: number, error: string): void {
-    var msg = "API request failed (" + error + "): ";
+  private _onError(error: IAjaxError): void {
+    var msg = "API request failed (" + error.statusText + "): ";
     console.log(msg);
-    throw status;
+    throw Error(error.statusText);
   }
 
   /**
@@ -637,8 +702,7 @@ class Kernel {
   private _username: string;
   private _sessionId: string;
   private _ws: WebSocket;
-  private _infoReply: any;
-  private _WebSocket: any;
+  private _infoReply: IKernelInfo;
   private _reconnectLimit: number;
   private _autorestartAttempt: number;
   private _reconnectAttempt: number;
