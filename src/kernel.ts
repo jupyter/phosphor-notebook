@@ -160,6 +160,12 @@ class Kernel {
       dataType: "json"
     }).then((success: IAjaxSuccess): IKernelId[] => {
       if (success.xhr.status == 200) {
+        if (!Array.isArray(success.data)) {
+          throw Error('Invalid kernel list');
+        }
+        for (var i = 0; i < success.data.length(); i++) {
+          validateKernelId(success.data[i]);
+        }
         return success.data;
       }
       throw Error('Invalid Status: ' + success.xhr.status);
@@ -247,7 +253,7 @@ class Kernel {
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
       if (success.xhr.status == 200) {
-        return success.data;
+        return validateKernelId(success.data);
       }
       throw Error('Invalid Status: ' + success.xhr.status);
     }, (error: IAjaxError) => {
@@ -861,4 +867,15 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
   private _output: (msg: IKernelMsg) => void = null;
   private _reply: (msg: IKernelMsg) => void = null;
   private _done: (msg: IKernelMsg) => void = null;
+}
+
+
+function validateKernelId(info: any) : IKernelId {
+   if (!info.hasOwnProperty('name') || !info.hasOwnProperty('id')) {
+     throw Error('Invalid Kernel Id');
+   }
+   if ((typeof info.id !== 'string') || (typeof info.name !=== 'string')) {
+     throw Error('Invalid Kernel Id');
+   }
+   return info;
 }
