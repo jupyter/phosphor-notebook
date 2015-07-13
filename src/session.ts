@@ -90,7 +90,8 @@ class Session {
 
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
-    this._sessionServiceUrl = utils.urlJoinEncode(this._baseUrl, 'api/sessions');
+    this._sessionServiceUrl = utils.urlJoinEncode(this._baseUrl, 
+                                                  'api/sessions');
   }
 
   /**
@@ -122,7 +123,8 @@ class Session {
         this._kernel.name = this._kernelModel.name;
       } else {
         var kernelServiceUrl = utils.urlPathJoin(this._baseUrl, "api/kernels");
-        this._kernel = new kernel.Kernel(kernelServiceUrl, this._wsUrl, this._kernelModel.name);
+        this._kernel = new kernel.Kernel(kernelServiceUrl, this._wsUrl,
+                                         this._kernelModel.name);
       }
       this._kernel.start(success.data.kernel);
       this._handleStatus('kernelCreated');
@@ -234,7 +236,8 @@ class Session {
   private _updateModel(data: ISessionId): void {
     if (data && data.id) {
       this._id = data.id;
-      this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl, this._id);
+      this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl,
+                                             this._id);
     }
     if (data && data.notebook) {
       this._notebookModel.path = data.notebook.path;
