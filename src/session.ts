@@ -10,16 +10,6 @@ import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
 
-/**
- * Error type indicating that the session is already starting.
- */ 
-export
-class SessionAlreadyStarting implements Error {
-  public name: string = "SessionAlreadyStarting";
-  public message: string = "";
-};
-
-
 export
 interface INotebookModel {
   path: string;
