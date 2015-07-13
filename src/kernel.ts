@@ -173,29 +173,20 @@ class Kernel {
   }
 
   constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
-    this._id = null;
     this._name = name;
-    this._ws = null;
-
     this._kernelServiceUrl = kernelServiceUrl;
-    this._kernelUrl = null;
     this._wsUrl = wsUrl;
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
       this._wsUrl = location.protocol.replace('http', 'ws') + "//" + location.host;
     }
 
-    this._username = "username";
     this._sessionId = utils.uuid();
     this._handlerMap = new Map<string, KernelFutureHandler>();
 
     if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
     }
-
-    this._autorestartAttempt = 0;
-    this._reconnectAttempt = 0;
-    this._reconnectLimit = 7;
   }
 
   /**
@@ -697,21 +688,21 @@ class Kernel {
     }
   }
 
-  private _id: string;
-  private _name: string;
-  private _kernelServiceUrl: string;
-  private _kernelUrl: string;
-  private _wsUrl: string;
-  private _username: string;
-  private _sessionId: string;
-  private _ws: WebSocket;
-  private _infoReply: IKernelInfo;
-  private _reconnectLimit: number;
-  private _autorestartAttempt: number;
-  private _reconnectAttempt: number;
-  private _handlerMap: Map<string, KernelFutureHandler>;
-  private _iopubHandlers: Map<string, (msg: IKernelMsg) => void>;
-  private _status: string;
+  private _id = 'unknown';
+  private _name = 'unknown';
+  private _kernelServiceUrl = 'unknown';
+  private _kernelUrl = 'unknown';
+  private _wsUrl = 'unknown';
+  private _username = 'unknown';
+  private _sessionId = 'unknown';
+  private _ws: WebSocket = null;
+  private _infoReply: IKernelInfo = null;
+  private _reconnectLimit = 7;
+  private _autorestartAttempt = 0;
+  private _reconnectAttempt = 0;
+  private _handlerMap: Map<string, KernelFutureHandler> = null;
+  private _iopubHandlers: Map<string, (msg: IKernelMsg) => void> = null;
+  private _status = 'unknown';
 }
 
 
