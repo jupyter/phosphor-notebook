@@ -10,12 +10,18 @@ import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
 
+/**
+ * Notebook Identification specification.
+ */
 export
 interface INotebookId {
   path: string;
 };
 
 
+/**
+ * Session Identification specification.
+ */
 export
 interface ISessionId {
   id: string;
@@ -24,6 +30,9 @@ interface ISessionId {
 };
 
 
+/**
+ * Session initialization options.
+ */
 export
 interface ISessionOptions {
   notebookPath: string;
@@ -188,15 +197,7 @@ class Session {
   }
 
   /**
-   * Restart the session by deleting it and the starting it
-   * fresh. If options are given, they can include any of the
-   * following:
-   *
-   * - notebook_path - the path to the notebook
-   * - kernel_name - the name (type) of the kernel
-   *
-   * @function restart
-   * @param {Object} [options] - options for the new kernel
+   * Restart the session by deleting it and the starting it fresh.
    */
   restart(options: ISessionOptions): Promise<void> {
     return this.delete().then(this.start).catch(this.start).then(() => {
