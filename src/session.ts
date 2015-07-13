@@ -54,6 +54,30 @@ class Session {
 
   static statusChanged = new Signal<Session, string>();
 
+  /**
+   * GET /api/sessions
+   *
+   * Get a list of the current sessions.
+   *
+   */
+  static list(sessionServiceUrl: string): Promise<ISessionModel[]> {
+    return utils.ajaxRequest(sessionServiceUrl, {
+      method: "GET",
+      dataType: "json"
+    }).then((success: IAjaxSuccess): ISessionModel[] => {
+      if (success.xhr.status == 200) {
+        if (!Array.isArray(success.data)) {
+          throw Error('Invalid Session list');
+        }
+        for (var i = 0; i < success.data.length(); i++) {
+          validateSessionModel(success.data[i]);
+        }
+        return success.data;
+      }
+      throw Error('Invalid Status: ' + success.xhr.status);
+    });
+  }
+
   constructor(options: ISessionOptions){
     this._notebookModel = {
       path: options.notebookPath
@@ -78,30 +102,6 @@ class Session {
   }
 
   /**
-   * GET /api/sessions
-   *
-   * Get a list of the current sessions.
-   *
-   */
-  list(): Promise<ISessionModel[]> {
-    return utils.ajaxRequest(this._sessionServiceUrl, {
-      method: "GET",
-      dataType: "json"
-    }).then((success: IAjaxSuccess): ISessionModel[] => {
-      if (success.xhr.status == 200) {
-        if (!Array.isArray(success.data)) {
-          throw Error('Invalid Session list');
-        }
-        for (var i = 0; i < success.data.length(); i++) {
-          validateSessionModel(success.data[i]);
-        }
-        return success.data;
-      }
-      throw Error('Invalid Status: ' + success.xhr.status);
-    });
-  }
-
-  /**
    * POST /api/sessions
    *
    * Start a new session. This function can only executed once.
@@ -114,7 +114,7 @@ class Session {
       data: JSON.stringify(this._model),
       contentType: 'application/json'
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status !== 200) {
+      if (success.xhr.status !== 201) {
         throw Error('Invalid response');
       }
       validateSessionModel(success.data);
@@ -190,7 +190,7 @@ class Session {
       method: "DELETE",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status !== 200) {
+      if (success.xhr.status !== 204) {
         throw Error('Invalid response');
       }
       validateSessionModel(success.data);
