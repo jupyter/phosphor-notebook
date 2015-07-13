@@ -172,6 +172,9 @@ class Kernel {
     });
   }
 
+  /**
+   * Construct a new kernel.
+   */
   constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
     this._name = name;
     this._kernelServiceUrl = kernelServiceUrl;
