@@ -19,6 +19,7 @@ var tsSources = [
     "demodata",
     "mathjaxutils",
     "kernel",
+    "session",
     "utils",
     "serialize"
 ].map(function(name) {return "./src/" + name + ".ts"; });

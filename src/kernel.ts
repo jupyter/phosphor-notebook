@@ -190,6 +190,13 @@ class Kernel {
   }
 
   /**
+   * Get the name of the Kernel.
+   */
+  get name() : string {
+    return this._name;
+  }
+
+  /**
    * Get the Url for the Kernel service.
    */
   get kernelServiceUrl() : string {
@@ -281,7 +288,7 @@ class Kernel {
    */
   restart(): Promise<void> {
     this._handleStatus('restarting');
-    this._stopChannels();
+    this.close();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxRequest(url, {
@@ -322,6 +329,25 @@ class Kernel {
     this._reconnectAttempt = this._reconnectAttempt + 1;
     this._handleStatus('reconnecting');
     this._startChannels();
+  }
+
+  /**
+   * Close the Websocket.
+   */
+  close(): void {
+    var inner_close = () => {
+      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
+        this._ws = null;
+      }
+    };
+    if (this._ws !== null) {
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.onclose = close;
+        this._ws.close();
+      } else {
+        inner_close();
+      }
+    }
   }
 
   /**
@@ -481,7 +507,7 @@ class Kernel {
    * Will stop and restart them if they already exist.
    */
   private _startChannels(): void {
-    this._stopChannels();
+    this.close();
     var ws_host_url = this._wsUrl + this._kernelUrl;
 
     console.log("Starting WebSockets:", ws_host_url);
@@ -547,25 +573,6 @@ class Kernel {
     };
   }
 
-  /**
-   * Close the Websocket.
-   */
-  private _stopChannels(): void {
-    var close = () => {
-      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
-        this._ws = null;
-      }
-    };
-    if (this._ws !== null) {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = close;
-        this._ws.close();
-      } else {
-        close();
-      }
-    }
-  }
-
 
   /**
    * Perform necessary tasks once the connection to the kernel has
@@ -590,7 +597,7 @@ class Kernel {
    */
   private _kernelDead(): void {
     this._handleStatus('dead');
-    this._stopChannels();
+    this.close();
   }
 
   /**
@@ -612,7 +619,7 @@ class Kernel {
    * @param {bool} error - whether the connection was closed due to an error
    */
   private _wsClosed(ws_url: string, error: boolean): void {
-    this._stopChannels();
+    this.close();
     this._handleStatus('disconnected');
     if (error) {
       console.log('WebSocket connection failed: ', ws_url);
@@ -865,6 +872,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
 /**
  * Validate an object as being of IKernelID type
  */
+export
 function validateKernelId(info: IKernelId) : void {
    if (!info.hasOwnProperty('name') || !info.hasOwnProperty('id')) {
      throw Error('Invalid Kernel Id');
