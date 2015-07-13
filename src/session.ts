@@ -11,15 +11,15 @@ import IAjaxError = utils.IAjaxError;
 
 
 export
-interface INotebookModel {
+interface INotebookId {
   path: string;
 };
 
 
 export
-interface ISessionModel {
+interface ISessionId {
   id: string;
-  notebook: INotebookModel;
+  notebook: INotebookId;
   kernel: kernel.IKernelId;
 };
 
@@ -49,17 +49,17 @@ class Session {
    * Get a list of the current sessions.
    *
    */
-  static list(sessionServiceUrl: string): Promise<ISessionModel[]> {
+  static list(sessionServiceUrl: string): Promise<ISessionId[]> {
     return utils.ajaxRequest(sessionServiceUrl, {
       method: "GET",
       dataType: "json"
-    }).then((success: IAjaxSuccess): ISessionModel[] => {
+    }).then((success: IAjaxSuccess): ISessionId[] => {
       if (success.xhr.status == 200) {
         if (!Array.isArray(success.data)) {
           throw Error('Invalid Session list');
         }
         for (var i = 0; i < success.data.length(); i++) {
-          validateSessionModel(success.data[i]);
+          validateSessionId(success.data[i]);
         }
         return success.data;
       }
@@ -107,7 +107,7 @@ class Session {
       if (success.xhr.status !== 201) {
         throw Error('Invalid response');
       }
-      validateSessionModel(success.data);
+      validateSessionId(success.data);
       this._updateModel(success.data);
       if (this._kernel) {
         this._kernel.name = this._kernelModel.name;
@@ -128,15 +128,15 @@ class Session {
    * Get information about a session.
    *
    */
-  getInfo(): Promise<ISessionModel> {
+  getInfo(): Promise<ISessionId> {
     return utils.ajaxRequest(this._sessionUrl, {
       method: "GET",
       dataType: "json"
-    }).then((success: IAjaxSuccess): ISessionModel => {
+    }).then((success: IAjaxSuccess): ISessionId => {
       if (success.xhr.status !== 200) {
         throw Error('Invalid response');
       }
-      validateSessionModel(success.data);
+      validateSessionId(success.data);
       return success.data;
     });
   }
@@ -161,7 +161,7 @@ class Session {
       if (success.xhr.status !== 200) {
         throw Error('Invalid response');
       }
-      validateSessionModel(success.data);
+      validateSessionId(success.data);
     });
   }
 
@@ -183,7 +183,7 @@ class Session {
       if (success.xhr.status !== 204) {
         throw Error('Invalid response');
       }
-      validateSessionModel(success.data);
+      validateSessionId(success.data);
     });
   }
 
@@ -215,7 +215,7 @@ class Session {
    * and kernel (name and id).
    *
    */
-  private get _model(): ISessionModel {
+  private get _model(): ISessionId {
     return {
       id: this._id,
       notebook: this._notebookModel,
@@ -230,7 +230,7 @@ class Session {
    * kernel data must include name and id.
    *
    */
-  private _updateModel(data: ISessionModel): void {
+  private _updateModel(data: ISessionId): void {
     if (data && data.id) {
       this._id = data.id;
       this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl, this._id);
@@ -253,7 +253,7 @@ class Session {
   }
 
   private _id = "unknown";
-  private _notebookModel: INotebookModel = null;
+  private _notebookModel: INotebookId = null;
   private _kernelModel: kernel.IKernelId = null;
   private _baseUrl = "unknown";
   private _wsUrl = "unknown";
@@ -265,9 +265,9 @@ class Session {
 
 
 /**
- * Validate an object as being of ISessionModel type.
+ * Validate an object as being of ISessionId type.
  */
-function validateSessionModel(info: ISessionModel): void {
+function validateSessionId(info: ISessionId): void {
   if (!info.hasOwnProperty('id') || !info.hasOwnProperty('notebook') ||
       !info.hasOwnProperty('kernel')) {
     throw Error('Invalid Session Model');
@@ -276,14 +276,14 @@ function validateSessionModel(info: ISessionModel): void {
   if (typeof info.id !== 'string') {
     throw Error('Invalid Session Model');
   }
-  validateNotebookModel(info.notebook);
+  validateNotebookId(info.notebook);
 }
 
 
 /**
- * Validate an object as being of INotebookModel type.
+ * Validate an object as being of INotebookId type.
  */
-function validateNotebookModel(model: INotebookModel): void {
+function validateNotebookId(model: INotebookId): void {
    if ((!model.hasOwnProperty('path')) || (typeof model.path !== 'string')) {
      throw Error('Invalid Notebook Model');
    }
