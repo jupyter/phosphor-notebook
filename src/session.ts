@@ -30,7 +30,6 @@ interface ISessionOptions {
   kernelName: string;
   baseUrl: string;
   wsUrl: string;
-  notebook: any;
 };
 
 
@@ -83,8 +82,6 @@ class Session {
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
     this._sessionServiceUrl = utils.urlJoinEncode(this._baseUrl, 'api/sessions');
-
-    this._notebook = options.notebook;
   }
 
   /**
@@ -262,7 +259,6 @@ class Session {
   private _wsUrl = "unknown";
   private _sessionServiceUrl = "unknown";
   private _sessionUrl = "unknown";
-  private _notebook: any = null;
   private _kernel: kernel.Kernel = null;
 
 }
@@ -285,7 +281,7 @@ function validateSessionModel(info: ISessionModel): void {
 
 
 /**
- * Validate an object as being of INotebookModel type
+ * Validate an object as being of INotebookModel type.
  */
 function validateNotebookModel(model: INotebookModel): void {
    if ((!model.hasOwnProperty('path')) || (typeof model.path !== 'string')) {
