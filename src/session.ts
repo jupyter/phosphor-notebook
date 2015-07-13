@@ -163,7 +163,7 @@ class Session {
     this._notebookModel.path = path;
     }
     return utils.ajaxRequest(this._sessionUrl, {
-      method: "PATH",
+      method: "PATCH",
       dataType: "json",
       contentType: 'application/json',
       data: JSON.stringify(this._model)
