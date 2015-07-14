@@ -63,11 +63,11 @@ class Session {
       method: "GET",
       dataType: "json"
     }).then((success: IAjaxSuccess): ISessionId[] => {
-      if (success.xhr.status == 200) {
+      if (success.xhr.status === 200) {
         if (!Array.isArray(success.data)) {
           throw Error('Invalid Session list');
         }
-        for (var i = 0; i < success.data.length(); i++) {
+        for (var i = 0; i < success.data.length; i++) {
           validateSessionId(success.data[i]);
         }
         return success.data;
