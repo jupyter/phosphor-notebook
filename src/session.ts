@@ -185,7 +185,7 @@ class Session {
   delete(): Promise<void> {
     if (this._kernel) {
       this._handleStatus('kernelKilled');
-      this._kernel.close();
+      this._kernel.kill();
     }
     return utils.ajaxRequest(this._sessionUrl, {
       method: "DELETE",
