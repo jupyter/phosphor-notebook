@@ -291,7 +291,7 @@ class Kernel {
    */
   restart(): Promise<void> {
     this._handleStatus('restarting');
-    this.kill();
+    this.disconnect();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxRequest(url, {
@@ -335,9 +335,9 @@ class Kernel {
   }
 
   /**
-   * Kill the kernel.
+   * Disconnect the kernel.
    */
-  kill(): void {
+  disconnect(): void {
     var inner_close = () => {
       if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
         this._ws = null;
@@ -510,7 +510,7 @@ class Kernel {
    * Will stop and restart them if they already exist.
    */
   private _startChannels(): void {
-    this.kill();
+    this.disconnect();
     var ws_host_url = this._wsUrl + this._kernelUrl;
 
     console.log("Starting WebSockets:", ws_host_url);
@@ -600,7 +600,7 @@ class Kernel {
    */
   private _kernelDead(): void {
     this._handleStatus('dead');
-    this.kill();
+    this.disconnect();
   }
 
   /**
@@ -622,7 +622,7 @@ class Kernel {
    * @param {bool} error - whether the connection was closed due to an error
    */
   private _wsClosed(ws_url: string, error: boolean): void {
-    this.kill();
+    this.disconnect();
     this._handleStatus('disconnected');
     if (error) {
       console.log('WebSocket connection failed: ', ws_url);
