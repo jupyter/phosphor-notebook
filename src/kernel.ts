@@ -345,7 +345,7 @@ class Kernel {
     };
     if (this._ws !== null) {
       if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = close;
+        this._ws.onclose = inner_close;
         this._ws.close();
       } else {
         inner_close();
