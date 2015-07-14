@@ -234,7 +234,6 @@ class Session {
     this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl,
                                            this._id);
     this._notebookModel.path = data.notebook.path;
-    }
     this._kernelModel.name = data.kernel.name;
     this._kernelModel.id = data.kernel.id;
   }
