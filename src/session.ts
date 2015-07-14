@@ -56,7 +56,6 @@ class Session {
    * GET /api/sessions
    *
    * Get a list of the current sessions.
-   *
    */
   static list(sessionServiceUrl: string): Promise<ISessionId[]> {
     return utils.ajaxRequest(sessionServiceUrl, {
@@ -105,7 +104,6 @@ class Session {
    * POST /api/sessions
    *
    * Start a new session. This function can only executed once.
-   *
    */
   start(): Promise<void> {
     return utils.ajaxRequest(this._sessionServiceUrl, {
@@ -137,7 +135,6 @@ class Session {
    * GET /api/sessions/[:session_id]
    *
    * Get information about a session.
-   *
    */
   getInfo(): Promise<ISessionId> {
     return utils.ajaxRequest(this._sessionUrl, {
@@ -157,7 +154,6 @@ class Session {
    *
    * Rename or move a notebook. If the given name or path are
    * undefined, then they will not be changed.
-   *
    */
   renameNotebook(path: string): Promise<void> {
     if (path !== undefined) {
@@ -180,7 +176,6 @@ class Session {
    * DELETE /api/sessions/[:session_id]
    *
    * Kill the kernel and shutdown the session.
-   *
    */
   delete(): Promise<void> {
     if (this._kernel) {
@@ -216,7 +211,6 @@ class Session {
   /**
    * Get the data model for the session, which includes the notebook path
    * and kernel (name and id).
-   *
    */
   private get _model(): ISessionId {
     return {
