@@ -227,25 +227,16 @@ class Session {
   }
 
   /**
-   * Update the data model from the given JSON object, which should
-   * have attributes of `id`, `notebook`, and/or `kernel`. If
-   * provided, the notebook data must include name and path, and the
-   * kernel data must include name and id.
-   *
+   * Update the data model a validated Session ID object.
    */
   private _updateModel(data: ISessionId): void {
-    if (data && data.id) {
-      this._id = data.id;
-      this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl,
-                                             this._id);
+    this._id = data.id;
+    this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl,
+                                           this._id);
+    this._notebookModel.path = data.notebook.path;
     }
-    if (data && data.notebook) {
-      this._notebookModel.path = data.notebook.path;
-    }
-    if (data && data.kernel) {
-      this._kernelModel.name = data.kernel.name;
-      this._kernelModel.id = data.kernel.id;
-    }
+    this._kernelModel.name = data.kernel.name;
+    this._kernelModel.id = data.kernel.id;
   }
 
   /**
