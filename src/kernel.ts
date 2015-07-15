@@ -185,7 +185,7 @@ class Kernel {
    */
   constructor(baseUrl: string, wsUrl: string, name: string) {
     this._name = name;
-    this._kernelServiceUrl = utils.urlJoinEncode(baseUrl, KERNEL_SERVICE_URL);
+    this._baseUrl = baseUrl;
     this._wsUrl = wsUrl;
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
@@ -201,17 +201,17 @@ class Kernel {
   }
 
   /**
-   * Get the name of the Kernel.
+   * Get the name of the kernel.
    */
   get name() : string {
     return this._name;
   }
 
   /**
-   * Get the Url for the Kernel service.
+   * Set the name of the kernel.
    */
-  get kernelServiceUrl() : string {
-    return this._kernelServiceUrl;
+  set name(value: string) {
+    this._name = value;
   }
 
   /**
@@ -249,6 +249,13 @@ class Kernel {
    */
   get status() : string {
     return this._status;
+  }
+
+  /**
+   * Get the current id of the kernel
+   */
+  get id(): string {
+    return this._id;
   }
 
   /**
@@ -323,7 +330,6 @@ class Kernel {
   start(id: IKernelId) : void {
     this._id = id.id;
     this._name = id.name;
-    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
     this._startChannels();
     this._handleStatus('created');
   }
@@ -470,6 +476,10 @@ class Kernel {
     return msg.header.msgId;
   }
 
+  private get _kernelUrl(): string {
+    return utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, this._id);
+  }
+
   /**
    * Create a Kernel Message given input attributes.
    */
@@ -583,7 +593,6 @@ class Kernel {
       this._handleWSMessage(evt);
     };
   }
-
 
   /**
    * Perform necessary tasks once the connection to the kernel has
@@ -708,8 +717,7 @@ class Kernel {
 
   private _id = 'unknown';
   private _name = 'unknown';
-  private _kernelServiceUrl = 'unknown';
-  private _kernelUrl = 'unknown';
+  private _baseUrl = 'unknown';
   private _wsUrl = 'unknown';
   private _username = 'unknown';
   private _sessionId = 'unknown';

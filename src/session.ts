@@ -85,16 +85,11 @@ class Session {
    * Construct a new session.
    */
   constructor(options: ISessionOptions) {
-    this._notebookModel = {
-      path: options.notebookPath
-    };
-    this._kernelModel = {
-      id: null,
-      name: options.kernelName
-    };
-
+    this._notebookPath = options.notebookPath;
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
+    this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl,
+                                     options.kernelName);
   }
 
   /**
@@ -107,7 +102,7 @@ class Session {
   /**
    * POST /api/sessions
    *
-   * Start a new session. This function can only executed once.
+   * Start a new session. This function can only successfully executed once.
    */
   start(): Promise<void> {
     var url = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL);
@@ -121,13 +116,6 @@ class Session {
         throw Error('Invalid response');
       }
       validateSessionId(success.data);
-      this._updateModel(success.data);
-      if (this._kernel) {
-        this._kernel.name = this._kernelModel.name;
-      } else {
-        this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl,
-                                         this._kernelModel.name);
-      }
       this._kernel.start(success.data.kernel);
       this._handleStatus('kernelCreated');
     }, (error: IAjaxError) => {
@@ -161,7 +149,7 @@ class Session {
    */
   renameNotebook(path: string): Promise<void> {
     if (path !== undefined) {
-    this._notebookModel.path = path;
+      this._notebookPath = path;
     }
     return utils.ajaxRequest(this._sessionUrl, {
       method: "PATCH",
@@ -200,15 +188,14 @@ class Session {
   /**
    * Restart the session by deleting it and the starting it fresh.
    */
-  restart(options: ISessionOptions): Promise<void> {
+  restart(options?: ISessionOptions): Promise<void> {
     return this.delete().then(this.start).catch(this.start).then(() => {
       if (options && options.notebookPath) {
-        this._notebookModel.path = options.notebookPath;
+        this._notebookPath = options.notebookPath;
       }
       if (options && options.kernelName) {
-        this._kernelModel.name = options.kernelName;
+        this._kernel.name = options.kernelName;
       }
-      this._kernelModel.id = null;
     })
   }
 
@@ -219,8 +206,9 @@ class Session {
   private get _model(): ISessionId {
     return {
       id: this._id,
-      notebook: this._notebookModel,
-      kernel: this._kernelModel
+      notebook: {path: this._notebookPath},
+      kernel: {name: this._kernel.name,
+               id: this._kernel.id}
     };
   }
 
@@ -232,16 +220,6 @@ class Session {
   }
 
   /**
-   * Update the data model a validated Session ID object.
-   */
-  private _updateModel(data: ISessionId): void {
-    this._id = data.id;
-    this._notebookModel.path = data.notebook.path;
-    this._kernelModel.name = data.kernel.name;
-    this._kernelModel.id = data.kernel.id;
-  }
-
-  /**
    * Handle a Session status change.
    */
   private _handleStatus(status: string) {
@@ -250,8 +228,7 @@ class Session {
   }
 
   private _id = "unknown";
-  private _notebookModel: INotebookId = null;
-  private _kernelModel: kernel.IKernelId = null;
+  private _notebookPath = "unknown";
   private _baseUrl = "unknown";
   private _wsUrl = "unknown";
   private _kernel: kernel.Kernel = null;
