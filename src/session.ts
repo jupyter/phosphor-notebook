@@ -85,11 +85,14 @@ class Session {
    * Construct a new session.
    */
   constructor(options: ISessionOptions) {
+    this._id = utils.uuid();
     this._notebookPath = options.notebookPath;
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
     this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl,
                                      options.kernelName);
+    this._sessionUrl = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL,
+                                           this._id);
   }
 
   /**
@@ -189,7 +192,7 @@ class Session {
    * Restart the session by deleting it and the starting it fresh.
    */
   restart(options?: ISessionOptions): Promise<void> {
-    return this.delete().then(this.start).catch(this.start).then(() => {
+    return this.delete().then(() => this.start()).catch(() => this.start()).then(() => {
       if (options && options.notebookPath) {
         this._notebookPath = options.notebookPath;
       }
@@ -213,13 +216,6 @@ class Session {
   }
 
   /**
-   * Get the url for the session.
-   */
-  private get _sessionUrl(): string {
-    return utils.urlPathJoin(this._baseUrl, SESSION_SERVICE_URL, this._id);
-  }
-
-  /**
    * Handle a session status change.
    */
   private _handleStatus(status: string) {
@@ -230,6 +226,7 @@ class Session {
   private _id = "unknown";
   private _notebookPath = "unknown";
   private _baseUrl = "unknown";
+  private _sessionUrl = "unknown";
   private _wsUrl = "unknown";
   private _kernel: kernel.Kernel = null;
 

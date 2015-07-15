@@ -192,7 +192,7 @@ class Kernel {
       this._wsUrl = location.protocol.replace('http', 'ws') + "//" + location.host;
     }
 
-    this._sessionId = utils.uuid();
+    this._staticId = utils.uuid();
     this._handlerMap = new Map<string, KernelFutureHandler>();
 
     if (typeof WebSocket === 'undefined') {
@@ -241,7 +241,7 @@ class Kernel {
    * Get the Info Reply Message from the kernel.
    */
   get infoReply(): IKernelInfo {
-    return this._infoReply
+    return this._infoReply;
   }
 
   /**
@@ -329,6 +329,8 @@ class Kernel {
    */
   start(id: IKernelId) : void {
     this._id = id.id;
+    this._kernelUrl = utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, 
+                                          this._id);
     this._name = id.name;
     this._startChannels();
     this._handleStatus('created');
@@ -352,17 +354,12 @@ class Kernel {
    * Disconnect the kernel.
    */
   disconnect(): void {
-    var innerClose = () => {
-      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
-        this._ws = null;
-      }
-    };
     if (this._ws !== null) {
       if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = innerClose;
+        this._ws.onclose = () => { this._clearSocket(); };
         this._ws.close();
       } else {
-        innerClose();
+        this._clearSocket();
       }
     }
   }
@@ -477,13 +474,6 @@ class Kernel {
   }
 
   /**
-   * Get the current kernel url.
-   */
-  private get _kernelUrl(): string {
-    return utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, this._id);
-  }
-
-  /**
    * Create a kernel message given input attributes.
    */
   private _createMsg(msg_type: string, content: any,
@@ -492,7 +482,7 @@ class Kernel {
       header: {
         msgId: utils.uuid(),
         username: this._username,
-        session: this._sessionId,
+        session: this._staticId,
         msgType: msg_type,
         version: "5.0"
       },
@@ -539,7 +529,7 @@ class Kernel {
     this._ws = new WebSocket([
       this._wsUrl,
       utils.urlJoinEncode(this._kernelUrl, 'channels'),
-      "?session_id=" + this._sessionId
+      "?session_id=" + this._staticId
     ].join('')
       );
 
@@ -595,6 +585,15 @@ class Kernel {
     this._ws.onmessage = (evt: MessageEvent) => {
       this._handleWSMessage(evt);
     };
+  }
+
+  /**
+   * Clear the websocket if necessary.
+   */
+  private _clearSocket(): void {
+    if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
+      this._ws = null;
+    }
   }
 
   /**
@@ -721,9 +720,10 @@ class Kernel {
   private _id = 'unknown';
   private _name = 'unknown';
   private _baseUrl = 'unknown';
+  private _kernelUrl = 'unknown';
   private _wsUrl = 'unknown';
   private _username = 'unknown';
-  private _sessionId = 'unknown';
+  private _staticId = 'unknown';
   private _ws: WebSocket = null;
   private _infoReply: IKernelInfo = null;
   private _reconnectLimit = 7;
