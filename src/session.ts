@@ -220,7 +220,7 @@ class Session {
   }
 
   /**
-   * Handle a Session status change.
+   * Handle a session status change.
    */
   private _handleStatus(status: string) {
     emit(this, Session.statusChanged, status);

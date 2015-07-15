@@ -352,17 +352,17 @@ class Kernel {
    * Disconnect the kernel.
    */
   disconnect(): void {
-    var inner_close = () => {
+    var innerClose = () => {
       if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
         this._ws = null;
       }
     };
     if (this._ws !== null) {
       if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = inner_close;
+        this._ws.onclose = innerClose;
         this._ws.close();
       } else {
-        inner_close();
+        innerClose();
       }
     }
   }
