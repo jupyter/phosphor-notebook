@@ -78,7 +78,7 @@ class Session {
   /**
    * Construct a new session.
    */
-  constructor(options: ISessionOptions){
+  constructor(options: ISessionOptions) {
     this._notebookModel = {
       path: options.notebookPath
     };
