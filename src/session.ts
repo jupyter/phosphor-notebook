@@ -9,6 +9,11 @@ import emit = phosphor.core.emit;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
+/**
+ * The url for the session service.
+ */
+var SESSION_SERVICE_URL = 'api/sessions';
+
 
 /**
  * Notebook Identification specification.
@@ -41,7 +46,6 @@ interface ISessionOptions {
   wsUrl: string;
 };
 
-
 /**
  * Session object for accessing the session REST api. The session
  * should be used to start kernels and then shut them down -- for
@@ -57,8 +61,9 @@ class Session {
    *
    * Get a list of the current sessions.
    */
-  static list(sessionServiceUrl: string): Promise<ISessionId[]> {
-    return utils.ajaxRequest(sessionServiceUrl, {
+  static list(baseUrl: string): Promise<ISessionId[]> {
+    var sessionUrl = utils.urlJoinEncode(baseUrl, SESSION_SERVICE_URL);
+    return utils.ajaxRequest(sessionUrl, {
       method: "GET",
       dataType: "json"
     }).then((success: IAjaxSuccess): ISessionId[] => {
@@ -89,8 +94,6 @@ class Session {
 
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
-    this._sessionServiceUrl = utils.urlJoinEncode(this._baseUrl, 
-                                                  'api/sessions');
   }
 
   /**
@@ -106,7 +109,8 @@ class Session {
    * Start a new session. This function can only executed once.
    */
   start(): Promise<void> {
-    return utils.ajaxRequest(this._sessionServiceUrl, {
+    var url = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL);
+    return utils.ajaxRequest(url, {
       method: "POST",
       dataType: "json",
       data: JSON.stringify(this._model),
@@ -120,8 +124,7 @@ class Session {
       if (this._kernel) {
         this._kernel.name = this._kernelModel.name;
       } else {
-        var kernelServiceUrl = utils.urlPathJoin(this._baseUrl, "api/kernels");
-        this._kernel = new kernel.Kernel(kernelServiceUrl, this._wsUrl,
+        this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl,
                                          this._kernelModel.name);
       }
       this._kernel.start(success.data.kernel);
@@ -221,12 +224,17 @@ class Session {
   }
 
   /**
+   * Get the url for the session.
+   */
+  private get _sessionUrl(): string {
+    return utils.urlPathJoin(this._baseUrl, SESSION_SERVICE_URL, this._id);
+  }
+
+  /**
    * Update the data model a validated Session ID object.
    */
   private _updateModel(data: ISessionId): void {
     this._id = data.id;
-    this._sessionUrl = utils.urlJoinEncode(this._sessionServiceUrl,
-                                           this._id);
     this._notebookModel.path = data.notebook.path;
     this._kernelModel.name = data.kernel.name;
     this._kernelModel.id = data.kernel.id;
@@ -245,8 +253,6 @@ class Session {
   private _kernelModel: kernel.IKernelId = null;
   private _baseUrl = "unknown";
   private _wsUrl = "unknown";
-  private _sessionServiceUrl = "unknown";
-  private _sessionUrl = "unknown";
   private _kernel: kernel.Kernel = null;
 
 }

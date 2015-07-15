@@ -11,6 +11,13 @@ import Disposable = phosphor.utility.Disposable;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
+
+/**
+ * The url for the kernel service.
+ */
+var KERNEL_SERVICE_URL = 'api/kernel';
+
+
 /**
  * Kernel message header content.
  */
@@ -154,7 +161,8 @@ class Kernel {
    *
    * Get the list of running kernels.
    */
-  static list(kernelServiceUrl: string): Promise<IKernelId[]> {
+  static list(baseUrl: string): Promise<IKernelId[]> {
+    var kernelServiceUrl = utils.urlJoinEncode(baseUrl, KERNEL_SERVICE_URL)
     return utils.ajaxRequest(kernelServiceUrl, {
       method: "GET",
       dataType: "json"
@@ -175,9 +183,9 @@ class Kernel {
   /**
    * Construct a new kernel.
    */
-  constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
+  constructor(baseUrl: string, wsUrl: string, name: string) {
     this._name = name;
-    this._kernelServiceUrl = kernelServiceUrl;
+    this._kernelServiceUrl = utils.urlJoinEncode(baseUrl, KERNEL_SERVICE_URL);
     this._wsUrl = wsUrl;
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
