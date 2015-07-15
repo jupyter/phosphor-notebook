@@ -48,7 +48,7 @@ interface IKernelMsg {
 
 
 /**
- * Settings for a Kernel Execute command.
+ * Settings for a kernel execute command.
  */
 export
 interface IKernelExecute {
@@ -60,7 +60,7 @@ interface IKernelExecute {
 
 
 /**
- * Kernel Identification specification.
+ * Kernel identification specification.
  */
 export 
 interface IKernelId {
@@ -70,7 +70,7 @@ interface IKernelId {
 
 
 /**
- * Kernel Information Specification.
+ * Kernel information specification.
  * http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info
  */
 export
@@ -85,7 +85,7 @@ interface IKernelInfo {
 
 
 /**
- * Kernel Language Information Specification.
+ * Kernel language information specification.
  */
 export
 interface IKernelLanguageInfo {
@@ -146,7 +146,7 @@ interface IKernelFuture extends IDisposable {
 
 
 /**
- * A Kernel class to communicate with the Python kernel. This
+ * A class to communicate with the Python kernel. This
  * should generally not be constructed directly, but be created
  * by the `Session` object. Once created, this object should be
  * used to communicate with the kernel.
@@ -238,7 +238,7 @@ class Kernel {
   }
 
   /**
-   * Get the Info Reply Message from the Kernel.
+   * Get the Info Reply Message from the kernel.
    */
   get infoReply(): IKernelInfo {
     return this._infoReply
@@ -368,7 +368,7 @@ class Kernel {
   }
 
   /**
-   * Send a message on the Kernel's shell channel.
+   * Send a message on the kernel's shell channel.
    */
   sendShellMessage(msg_type: string, content: any, metadata = {}, buffers: string[] = []): IKernelFuture {
     if (!this.isConnected) {
@@ -476,12 +476,15 @@ class Kernel {
     return msg.header.msgId;
   }
 
+  /**
+   * Get the current kernel url.
+   */
   private get _kernelUrl(): string {
     return utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, this._id);
   }
 
   /**
-   * Create a Kernel Message given input attributes.
+   * Create a kernel message given input attributes.
    */
   private _createMsg(msg_type: string, content: any,
     metadata = {}, buffers: string[] = []): IKernelMsg {
@@ -733,7 +736,7 @@ class Kernel {
 
 
 /**
- * Bit flags for the Kernel future state.
+ * Bit flags for the kernel future state.
  */
 enum KernelFutureFlag {
   GotReply = 0x1,
@@ -744,7 +747,7 @@ enum KernelFutureFlag {
 
 
 /**
- * Implementation of a Kernel Future.
+ * Implementation of a kernel future.
  */
 class KernelFutureHandler extends Disposable implements IKernelFuture {
   /**
@@ -894,9 +897,9 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
 export
 function validateKernelId(info: IKernelId) : void {
    if (!info.hasOwnProperty('name') || !info.hasOwnProperty('id')) {
-     throw Error('Invalid Kernel Id');
+     throw Error('Invalid kernel id');
    }
    if ((typeof info.id !== 'string') || (typeof info.name !== 'string')) {
-     throw Error('Invalid Kernel Id');
+     throw Error('Invalid kernel id');
    }
 }
