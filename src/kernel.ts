@@ -261,11 +261,11 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status == 200) {
-        validateKernelId(success.data);
-        return success.data;
+      if (success.xhr.status !== 200) {
+        throw Error('Invalid Status: ' + success.xhr.status);
       }
-      throw Error('Invalid Status: ' + success.xhr.status);
+      validateKernelId(success.data);
+      return success.data;
     }, (error: IAjaxError) => {
       this._onError(error);
     });
@@ -306,10 +306,10 @@ class Kernel {
       method: "POST",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status == 200) {
-        this.start(success.data);
+      if (success.xhr.status !== 200) {
+        throw Error('Invalid Status: ' + success.xhr.status);
       }
-      throw Error('Invalid Status: ' + success.xhr.status);
+      this.start(success.data);
     }, (error: IAjaxError) => {
       this._onError(error);
     });
