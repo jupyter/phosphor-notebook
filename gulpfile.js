@@ -34,6 +34,7 @@ gulp.task('clean', function(cb) {
 gulp.task('src', function() {
     var project = gulpTypescript.createProject({
         typescript: typescript,
+        experimentalDecorators: true,
         declarationFiles: true,
         noImplicitAny: true,
         target: 'ES5',
