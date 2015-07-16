@@ -23,8 +23,9 @@
     "event-stream": "^3.3.1",
     "gulp-rename": "^1.2.2",
     "del": "^1.2.0",
-    "gulp-typescript": "^2.7.7",
-    "gulp-typedoc": "^1.1.0"
+    "gulp-typescript": "^2.7.8",
+    "gulp-typedoc": "^1.1.0",
+    "typescript": "Microsoft/TypeScript#release-1.5"
   },
   "bugs": {
     "url": "https://github.com/jupyter/jupyter_notebook/issues"
