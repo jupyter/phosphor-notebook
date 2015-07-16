@@ -52,9 +52,9 @@ interface ISessionOptions {
  * all other operations, the kernel object should be used.
  **/
 export 
-class Session {
+class NotebookSession {
 
-  static statusChanged = new Signal<Session, string>();
+  static statusChanged = new Signal<NotebookSession, string>();
 
   /**
    * GET /api/sessions
@@ -145,29 +145,6 @@ class Session {
   }
 
   /**
-   * PATCH /api/sessions/[:session_id]
-   *
-   * Rename or move a notebook. If the given name or path are
-   * undefined, then they will not be changed.
-   */
-  renameNotebook(path: string): Promise<void> {
-    if (path !== undefined) {
-      this._notebookPath = path;
-    }
-    return utils.ajaxRequest(this._sessionUrl, {
-      method: "PATCH",
-      dataType: "json",
-      contentType: 'application/json',
-      data: JSON.stringify(this._model)
-    }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status !== 200) {
-        throw Error('Invalid response');
-      }
-      validateSessionId(success.data);
-    });
-  }
-
-  /**
    * DELETE /api/sessions/[:session_id]
    *
    * Kill the kernel and shutdown the session.
@@ -219,7 +196,7 @@ class Session {
    * Handle a session status change.
    */
   private _handleStatus(status: string) {
-    emit(this, Session.statusChanged, status);
+    emit(this, NotebookSession.statusChanged, status);
     console.log('Session: ' + status + ' (' + this._id + ')');
   }
 
