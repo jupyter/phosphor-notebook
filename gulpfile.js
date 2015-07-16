@@ -1,15 +1,20 @@
 "use strict";
 var gulp = require("gulp");
-var typescript = require("gulp-typescript");
+var gulpTypescript = require("gulp-typescript");
 var concat = require('gulp-concat');
 var header = require('gulp-header');
 var stream = require('event-stream');
 var rename = require('gulp-rename');
 var del = require('del');
 var typedoc = require('gulp-typedoc');
+var typescript = require('typescript');
 
 
-var typings = ["./typings/tsd.d.ts", "./components/phosphor/dist/phosphor.d.ts"];
+var typings = [
+    "./typings/tsd.d.ts",
+    "./es6.d.ts",
+    "./components/phosphor/dist/phosphor.d.ts",
+];
 
 var tsSources = [
     "index",
@@ -31,7 +36,9 @@ gulp.task('clean', function(cb) {
 
 
 gulp.task('src', function() {
-    var project = typescript.createProject({
+    var project = gulpTypescript.createProject({
+        typescript: typescript,
+        experimentalDecorators: true,
         declarationFiles: true,
         noImplicitAny: true,
         target: 'ES5',
@@ -39,7 +46,7 @@ gulp.task('src', function() {
     });
 
   var src = gulp.src(typings.concat(tsSources))
-    .pipe(typescript(project));
+    .pipe(gulpTypescript(project));
 
   var dts = src.dts.pipe(concat('phosphor-notebook.d.ts'))
     .pipe(gulp.dest('./dist'));
@@ -57,7 +64,7 @@ gulp.task('build', ['src']);
 
 gulp.task('dist', ['build'], function() {
   return gulp.src('./dist/phosphor-notebook.js')
-       //.pipe(uglify())
+    //.pipe(uglify())
     .pipe(rename('phosphor-notebook.min.js'))
     .pipe(gulp.dest('./dist'));
 });

@@ -118,7 +118,7 @@ class NotebookSession {
         throw Error('Invalid response');
       }
       validateSessionId(success.data);
-      this._kernel.start(success.data.kernel);
+      this._kernel.connect(success.data.kernel);
       this._handleStatus('kernelCreated');
     }, (error: IAjaxError) => {
       this._handleStatus('kernelDead');
