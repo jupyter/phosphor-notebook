@@ -169,7 +169,7 @@ function ajaxRequest(url: string, settings: IAjaxSetttings): Promise<any> {
       resolve({data: response, statusText: req.statusText, xhr: req});
     }
     req.onerror = (err: ErrorEvent) => {
-      reject({xhr:req, statusText: req.statusText, erorr:err});
+      reject({xhr: req, statusText: req.statusText, error: err});
     }
     if (settings.data) {
       req.send(settings.data);

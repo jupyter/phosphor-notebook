@@ -11,6 +11,13 @@ import Disposable = phosphor.utility.Disposable;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
+
+/**
+ * The url for the kernel service.
+ */
+var KERNEL_SERVICE_URL = 'api/kernel';
+
+
 /**
  * Kernel message header content.
  */
@@ -41,7 +48,7 @@ interface IKernelMsg {
 
 
 /**
- * Settings for a Kernel Execute command.
+ * Settings for a kernel execute command.
  */
 export
 interface IKernelExecute {
@@ -53,7 +60,7 @@ interface IKernelExecute {
 
 
 /**
- * Kernel Identification specification.
+ * Kernel identification specification.
  */
 export 
 interface IKernelId {
@@ -63,7 +70,7 @@ interface IKernelId {
 
 
 /**
- * Kernel Information Specification.
+ * Kernel information specification.
  * http://ipython.org/ipython-doc/dev/development/messaging.html#kernel-info
  */
 export
@@ -78,7 +85,7 @@ interface IKernelInfo {
 
 
 /**
- * Kernel Language Information Specification.
+ * Kernel language information specification.
  */
 export
 interface IKernelLanguageInfo {
@@ -139,7 +146,7 @@ interface IKernelFuture extends IDisposable {
 
 
 /**
- * A Kernel class to communicate with the Python kernel. This
+ * A class to communicate with the Python kernel. This
  * should generally not be constructed directly, but be created
  * by the `Session` object. Once created, this object should be
  * used to communicate with the kernel.
@@ -154,7 +161,8 @@ class Kernel {
    *
    * Get the list of running kernels.
    */
-  static list(kernelServiceUrl: string): Promise<IKernelId[]> {
+  static list(baseUrl: string): Promise<IKernelId[]> {
+    var kernelServiceUrl = utils.urlJoinEncode(baseUrl, KERNEL_SERVICE_URL)
     return utils.ajaxRequest(kernelServiceUrl, {
       method: "GET",
       dataType: "json"
@@ -172,16 +180,18 @@ class Kernel {
     });
   }
 
-  constructor(kernelServiceUrl: string, wsUrl: string, name: string) {
-    this._name = name;
-    this._kernelServiceUrl = kernelServiceUrl;
+  /**
+   * Construct a new kernel.
+   */
+  constructor(baseUrl: string, wsUrl: string) {
+    this._baseUrl = baseUrl;
     this._wsUrl = wsUrl;
     if (!this._wsUrl) {
       // trailing 's' in https will become wss for secure web sockets
       this._wsUrl = location.protocol.replace('http', 'ws') + "//" + location.host;
     }
 
-    this._sessionId = utils.uuid();
+    this._staticId = utils.uuid();
     this._handlerMap = new Map<string, KernelFutureHandler>();
 
     if (typeof WebSocket === 'undefined') {
@@ -190,10 +200,17 @@ class Kernel {
   }
 
   /**
-   * Get the Url for the Kernel service.
+   * Get the name of the kernel.
    */
-  get kernelServiceUrl() : string {
-    return this._kernelServiceUrl;
+  get name() : string {
+    return this._name;
+  }
+
+  /**
+   * Set the name of the kernel.
+   */
+  set name(value: string) {
+    this._name = value;
   }
 
   /**
@@ -220,10 +237,10 @@ class Kernel {
   }
 
   /**
-   * Get the Info Reply Message from the Kernel.
+   * Get the Info Reply Message from the kernel.
    */
   get infoReply(): IKernelInfo {
-    return this._infoReply
+    return this._infoReply;
   }
 
   /**
@@ -231,6 +248,13 @@ class Kernel {
    */
   get status() : string {
     return this._status;
+  }
+
+  /**
+   * Get the current id of the kernel
+   */
+  get id(): string {
+    return this._id;
   }
 
   /**
@@ -243,11 +267,11 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status == 200) {
-        validateKernelId(success.data);
-        return success.data;
+      if (success.xhr.status !== 200) {
+        throw Error('Invalid Status: ' + success.xhr.status);
       }
-      throw Error('Invalid Status: ' + success.xhr.status);
+      validateKernelId(success.data);
+      return success.data;
     }, (error: IAjaxError) => {
       this._onError(error);
     });
@@ -281,31 +305,32 @@ class Kernel {
    */
   restart(): Promise<void> {
     this._handleStatus('restarting');
-    this._stopChannels();
+    this.disconnect();
 
     var url = utils.urlJoinEncode(this._kernelUrl, 'restart');
     return utils.ajaxRequest(url, {
       method: "POST",
       dataType: "json"
     }).then((success: IAjaxSuccess) => {
-      if (success.xhr.status == 200) {
-        this.start(success.data);
+      if (success.xhr.status !== 200) {
+        throw Error('Invalid Status: ' + success.xhr.status);
       }
-      throw Error('Invalid Status: ' + success.xhr.status);
+      this.connect(success.data);
     }, (error: IAjaxError) => {
       this._onError(error);
     });
   }
 
   /**
-   * Start the kernel connnection.
+   * Connect to the server-side the kernel.
    *
    * This should only be called by a session.
    */
-  start(id: IKernelId) : void {
+  connect(id: IKernelId) : void {
     this._id = id.id;
+    this._kernelUrl = utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, 
+                                          this._id);
     this._name = id.name;
-    this._kernelUrl = utils.urlJoinEncode(this._kernelServiceUrl, this._id);
     this._startChannels();
     this._handleStatus('created');
   }
@@ -325,7 +350,21 @@ class Kernel {
   }
 
   /**
-   * Send a message on the Kernel's shell channel.
+   * Disconnect the kernel.
+   */
+  disconnect(): void {
+    if (this._ws !== null) {
+      if (this._ws.readyState === WebSocket.OPEN) {
+        this._ws.onclose = () => { this._clearSocket(); };
+        this._ws.close();
+      } else {
+        this._clearSocket();
+      }
+    }
+  }
+
+  /**
+   * Send a message on the kernel's shell channel.
    */
   sendShellMessage(msg_type: string, content: any, metadata = {}, buffers: string[] = []): IKernelFuture {
     if (!this.isConnected) {
@@ -434,7 +473,7 @@ class Kernel {
   }
 
   /**
-   * Create a Kernel Message given input attributes.
+   * Create a kernel message given input attributes.
    */
   private _createMsg(msg_type: string, content: any,
     metadata = {}, buffers: string[] = []): IKernelMsg {
@@ -442,7 +481,7 @@ class Kernel {
       header: {
         msgId: utils.uuid(),
         username: this._username,
-        session: this._sessionId,
+        session: this._staticId,
         msgType: msg_type,
         version: "5.0"
       },
@@ -481,7 +520,7 @@ class Kernel {
    * Will stop and restart them if they already exist.
    */
   private _startChannels(): void {
-    this._stopChannels();
+    this.disconnect();
     var ws_host_url = this._wsUrl + this._kernelUrl;
 
     console.log("Starting WebSockets:", ws_host_url);
@@ -489,7 +528,7 @@ class Kernel {
     this._ws = new WebSocket([
       this._wsUrl,
       utils.urlJoinEncode(this._kernelUrl, 'channels'),
-      "?session_id=" + this._sessionId
+      "?session_id=" + this._staticId
     ].join('')
       );
 
@@ -548,24 +587,13 @@ class Kernel {
   }
 
   /**
-   * Close the Websocket.
+   * Clear the websocket if necessary.
    */
-  private _stopChannels(): void {
-    var close = () => {
-      if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
-        this._ws = null;
-      }
-    };
-    if (this._ws !== null) {
-      if (this._ws.readyState === WebSocket.OPEN) {
-        this._ws.onclose = close;
-        this._ws.close();
-      } else {
-        close();
-      }
+  private _clearSocket(): void {
+    if (this._ws && this._ws.readyState === WebSocket.CLOSED) {
+      this._ws = null;
     }
   }
-
 
   /**
    * Perform necessary tasks once the connection to the kernel has
@@ -590,7 +618,7 @@ class Kernel {
    */
   private _kernelDead(): void {
     this._handleStatus('dead');
-    this._stopChannels();
+    this.disconnect();
   }
 
   /**
@@ -612,7 +640,7 @@ class Kernel {
    * @param {bool} error - whether the connection was closed due to an error
    */
   private _wsClosed(ws_url: string, error: boolean): void {
-    this._stopChannels();
+    this.disconnect();
     this._handleStatus('disconnected');
     if (error) {
       console.log('WebSocket connection failed: ', ws_url);
@@ -690,11 +718,11 @@ class Kernel {
 
   private _id = 'unknown';
   private _name = 'unknown';
-  private _kernelServiceUrl = 'unknown';
+  private _baseUrl = 'unknown';
   private _kernelUrl = 'unknown';
   private _wsUrl = 'unknown';
   private _username = 'unknown';
-  private _sessionId = 'unknown';
+  private _staticId = 'unknown';
   private _ws: WebSocket = null;
   private _infoReply: IKernelInfo = null;
   private _reconnectLimit = 7;
@@ -707,7 +735,7 @@ class Kernel {
 
 
 /**
- * Bit flags for the Kernel future state.
+ * Bit flags for the kernel future state.
  */
 enum KernelFutureFlag {
   GotReply = 0x1,
@@ -718,7 +746,7 @@ enum KernelFutureFlag {
 
 
 /**
- * Implementation of a Kernel Future.
+ * Implementation of a kernel future.
  */
 class KernelFutureHandler extends Disposable implements IKernelFuture {
   /**
@@ -865,11 +893,12 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
 /**
  * Validate an object as being of IKernelID type
  */
+export
 function validateKernelId(info: IKernelId) : void {
    if (!info.hasOwnProperty('name') || !info.hasOwnProperty('id')) {
-     throw Error('Invalid Kernel Id');
+     throw Error('Invalid kernel id');
    }
    if ((typeof info.id !== 'string') || (typeof info.name !== 'string')) {
-     throw Error('Invalid Kernel Id');
+     throw Error('Invalid kernel id');
    }
 }
