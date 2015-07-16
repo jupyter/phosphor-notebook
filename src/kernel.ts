@@ -316,18 +316,18 @@ class Kernel {
       if (success.xhr.status !== 200) {
         throw Error('Invalid Status: ' + success.xhr.status);
       }
-      this.start(success.data);
+      this.connect(success.data);
     }, (error: IAjaxError) => {
       this._onError(error);
     });
   }
 
   /**
-   * Start the kernel connnection.
+   * Connect to the server-side the kernel.
    *
    * This should only be called by a session.
    */
-  start(id: IKernelId) : void {
+  connect(id: IKernelId) : void {
     this._id = id.id;
     this._kernelUrl = utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, 
                                           this._id);
