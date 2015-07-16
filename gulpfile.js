@@ -10,7 +10,11 @@ var typedoc = require('gulp-typedoc');
 var typescript = require('typescript');
 
 
-var typings = ["./typings/tsd.d.ts", "./components/phosphor/dist/phosphor.d.ts"];
+var typings = [
+    "./typings/tsd.d.ts",
+    "./es6.d.ts",
+    "./components/phosphor/dist/phosphor.d.ts",
+];
 
 var tsSources = [
     "index",
