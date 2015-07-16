@@ -64,7 +64,7 @@ gulp.task('build', ['src']);
 
 gulp.task('dist', ['build'], function() {
   return gulp.src('./dist/phosphor-notebook.js')
-       //.pipe(uglify())
+    //.pipe(uglify())
     .pipe(rename('phosphor-notebook.min.js'))
     .pipe(gulp.dest('./dist'));
 });
