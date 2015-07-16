@@ -89,8 +89,7 @@ class NotebookSession {
     this._notebookPath = options.notebookPath;
     this._baseUrl = options.baseUrl;
     this._wsUrl = options.wsUrl;
-    this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl,
-                                     options.kernelName);
+    this._kernel = new kernel.Kernel(this._baseUrl, this._wsUrl);
     this._sessionUrl = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL,
                                            this._id);
   }

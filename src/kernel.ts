@@ -183,8 +183,7 @@ class Kernel {
   /**
    * Construct a new kernel.
    */
-  constructor(baseUrl: string, wsUrl: string, name: string) {
-    this._name = name;
+  constructor(baseUrl: string, wsUrl: string) {
     this._baseUrl = baseUrl;
     this._wsUrl = wsUrl;
     if (!this._wsUrl) {
