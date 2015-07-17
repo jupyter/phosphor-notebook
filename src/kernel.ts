@@ -19,6 +19,12 @@ var KERNEL_SERVICE_URL = 'api/kernel';
 
 
 /**
+ * Get a logger kernel objects.
+ */
+var kernel_log = Logger.get('kernel');
+
+
+/**
  * Kernel message header content.
  */
 export
@@ -504,10 +510,12 @@ class Kernel {
   private _handleStatus(status: string) {
     this.statusChanged.emit(status);
     this._status = status;
+    var msg = 'Kernel: ' + status + ' (' + this._id + ')';
     if (status === 'idle' || status === 'busy') {
-      return;
+      kernel_log.debug(msg);
+    } else {
+      kernel_log.info(msg);
     }
-    console.log('Kernel: ' + status + ' (' + this._id + ')');
   }
 
   /**
@@ -516,7 +524,7 @@ class Kernel {
    */
   private _onError(error: IAjaxError): void {
     var msg = "API request failed (" + error.statusText + "): ";
-    console.log(msg);
+    kernel_log.error(msg);
     throw Error(error.statusText);
   }
 
@@ -528,7 +536,7 @@ class Kernel {
     this.disconnect();
     var ws_host_url = this._wsUrl + this._kernelUrl;
 
-    console.log("Starting WebSockets:", ws_host_url);
+    kernel_log.info("Starting WebSockets:", ws_host_url);
 
     this._ws = new WebSocket([
       this._wsUrl,
@@ -648,7 +656,7 @@ class Kernel {
     this.disconnect();
     this._handleStatus('disconnected');
     if (error) {
-      console.log('WebSocket connection failed: ', ws_url);
+      kernel_log.error('WebSocket connection failed: ', ws_url);
       this._handleStatus('connectionFailed');
     }
     this._scheduleReconnect();
@@ -661,11 +669,11 @@ class Kernel {
   private _scheduleReconnect(): void {
     if (this._reconnectAttempt < this._reconnectLimit) {
       var timeout = Math.pow(2, this._reconnectAttempt);
-      console.log("Connection lost, reconnecting in " + timeout + " seconds.");
+      kernel_log.error("Connection lost, reconnecting in " + timeout + " seconds.");
       setTimeout(() => { this.reconnect(); }, 1e3 * timeout);
     } else {
       this._handleStatus('connectionDead');
-      console.log("Failed to reconnect, giving up.");
+      kernel_log.error("Failed to reconnect, giving up.");
     }
   }
 
@@ -676,7 +684,7 @@ class Kernel {
     try {
       var msg = serialize.deserialize(e.data);
     } catch (error) {
-      console.log(error.message);
+      kernel_log.error(error.message);
       return;
     }
     if (msg.channel === 'iopub' && msg.msgType === 'status') {

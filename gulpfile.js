@@ -13,6 +13,7 @@ var typescript = require('typescript');
 var typings = [
     "./typings/tsd.d.ts",
     "./es6.d.ts",
+    "./logger.d.ts",
     "./components/phosphor/dist/phosphor.d.ts",
 ];
 

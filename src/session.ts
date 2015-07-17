@@ -16,6 +16,12 @@ var SESSION_SERVICE_URL = 'api/sessions';
 
 
 /**
+ * Get a logger session objects.
+ */
+var session_log = Logger.get('session');
+
+
+/**
  * Notebook Identification specification.
  */
 export
@@ -200,7 +206,7 @@ class NotebookSession {
    */
   private _handleStatus(status: string) {
     this.statusChanged.emit(status);
-    console.log('Session: ' + status + ' (' + this._id + ')');
+    session_log.error('Session: ' + status + ' (' + this._id + ')');
   }
 
   private _id = "unknown";
@@ -209,7 +215,6 @@ class NotebookSession {
   private _sessionUrl = "unknown";
   private _wsUrl = "unknown";
   private _kernel: kernel.Kernel = null;
-
 }
 
 
