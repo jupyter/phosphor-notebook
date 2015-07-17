@@ -8,20 +8,29 @@ interface ILogLevel {
 
 interface ILogContext {
     name: string;
-    level?: ILogLevel;
-    filterLevel?: ILogLevel;
+    level: ILogLevel;
+    filterLevel: ILogLevel;
 }
 
-interface Logger {
+
+interface ContextualLogger {
     setLevel(newLevel: string): void;
     enabledFor(lvl: ILogLevel): boolean;
     debug(...args: any[]): void;
     info(...args: any[]): void;
+    log(...args: any[]): void;
     warn(...args: any[]): void;
     error(...args: any[]): void;
     time(label: string): void;
     timeEnd(label: string): void;
     invoke(lvl: ILogLevel, ...args: any[]): void;
+    context: ILogContext;
+}
+
+
+interface Logger{
+    get(name: string): ContextualLogger;
+    setLevel(newLevel: string): void;
     useDefaults(lvl?: ILogLevel): void;
     setHandler(handler: (args: any[], 
                           context: ILogContext) => void): void;
@@ -31,13 +40,7 @@ interface Logger {
     ERROR: ILogLevel;
     TIME: ILogLevel;
     OFF: ILogLevel;
+    VERSION: string;
 }
 
-
-interface LoggerConstructor {
-    new(context?: ILogContext): Logger;
-    get(name: string): Logger;
-    prototype: Logger;
-}
-
-declare var Logger: LoggerConstructor;
+declare var Logger: Logger;

@@ -25,6 +25,6 @@
     "MathJax": "~2.5.3",
     "requirejs": "~2.1.18",
     "jquery": "~2.1.4",
-    "js-logger": "~1.1.1"
+    "js-logger": "~1.1.0"
   }
 }

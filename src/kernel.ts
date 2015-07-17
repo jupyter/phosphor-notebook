@@ -739,7 +739,7 @@ class Kernel {
   private _handlerMap: Map<string, KernelFutureHandler> = null;
   private _iopubHandlers: Map<string, (msg: IKernelMsg) => void> = null;
   private _status = 'unknown';
-  private _log: Logger = null;
+  private _log: ContextualLogger = null;
 }
 
 

@@ -211,7 +211,7 @@ class NotebookSession {
   private _sessionUrl = "unknown";
   private _wsUrl = "unknown";
   private _kernel: kernel.Kernel = null;
-  private _log: Logger = null;
+  private _log: ContextualLogger = null;
 }
 
 
