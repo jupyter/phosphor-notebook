@@ -4,8 +4,8 @@
 import serialize = require('./serialize');
 import utils = require('./utils');
 
-import Signal = phosphor.core.Signal;
-import emit = phosphor.core.emit;
+import ISignal = phosphor.core.ISignal;
+import signal = phosphor.core.signal;
 import IDisposable = phosphor.utility.IDisposable;
 import Disposable = phosphor.utility.Disposable;
 import IAjaxSuccess = utils.IAjaxSuccess;
@@ -154,7 +154,11 @@ interface IKernelFuture extends IDisposable {
 export
 class Kernel {
 
-  static statusChanged = new Signal<Kernel, string>();
+  /**
+   * A signal emitted when the kernel changes state.
+   */
+  @signal
+  statusChanged: ISignal<string>;
 
   /**
    * GET /api/kernels
@@ -498,7 +502,7 @@ class Kernel {
    * Handle a kernel status change message.
    */
   private _handleStatus(status: string) {
-    emit(this, Kernel.statusChanged, status);
+    this.statusChanged.emit(status);
     this._status = status;
     if (status === 'idle' || status === 'busy') {
       return;
