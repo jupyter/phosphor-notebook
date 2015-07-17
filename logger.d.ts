@@ -1,31 +1,24 @@
 // Type definitions for js-logger.js
 // Project: http://github.com/jonnyreeves/js-logger
 
-
-declare module "logger" {
-
-export
 interface ILogLevel {
     value: number;
     name: string;
 }
 
-export
 interface ILogContext {
     name: string;
-    level: ILogLevel;
-    filterLevel: ILogLevel;
+    level?: ILogLevel;
+    filterLevel?: ILogLevel;
 }
 
-export
 interface Logger {
     setLevel(newLevel: string): void;
     enabledFor(lvl: ILogLevel): boolean;
-    get(name: string): Logger;
-    debug(): void;
-    info(): void;
-    warn(): void;
-    error(): void;
+    debug(...args: any[]): void;
+    info(...args: any[]): void;
+    warn(...args: any[]): void;
+    error(...args: any[]): void;
     time(label: string): void;
     timeEnd(label: string): void;
     invoke(lvl: ILogLevel, ...args: any[]): void;
@@ -40,4 +33,11 @@ interface Logger {
     OFF: ILogLevel;
 }
 
-} // module logger
+
+interface LoggerConstructor {
+    new(context?: ILogContext): Logger;
+    get(name: string): Logger;
+    prototype: Logger;
+}
+
+declare var Logger: LoggerConstructor;

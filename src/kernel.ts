@@ -197,7 +197,7 @@ class Kernel {
 
     this._staticId = utils.uuid();
     this._handlerMap = new Map<string, KernelFutureHandler>();
-    this._log = Logger.get('Kernel');
+    this._log = Logger.get('kernel');
 
     if (typeof WebSocket === 'undefined') {
       alert('Your browser does not have WebSocket support, please try Chrome, Safari, or Firefox ≥ 11.');
