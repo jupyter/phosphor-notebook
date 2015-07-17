@@ -52,9 +52,9 @@ interface IKernelMsg {
  */
 export
 interface IKernelExecute {
-  silent?: boolean; 
-  user_expressions?: any; 
-  allow_stdin?: boolean; 
+  silent?: boolean;
+  user_expressions?: any;
+  allow_stdin?: boolean;
   store_history?: boolean;
 }
 
@@ -62,7 +62,7 @@ interface IKernelExecute {
 /**
  * Kernel identification specification.
  */
-export 
+export
 interface IKernelId {
     id: string;
     name: string;
@@ -119,7 +119,7 @@ interface IKernelFuture extends IDisposable {
   autoDispose: boolean;
 
   /**
-   * Set when the message is done.  
+   * Set when the message is done.
    */
   isDone: boolean;
 
@@ -328,7 +328,7 @@ class Kernel {
    */
   connect(id: IKernelId) : void {
     this._id = id.id;
-    this._kernelUrl = utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL, 
+    this._kernelUrl = utils.urlJoinEncode(this._baseUrl, KERNEL_SERVICE_URL,
                                           this._id);
     this._name = id.name;
     this._startChannels();
@@ -455,9 +455,10 @@ class Kernel {
    * Send an input reply message to the kernel.
    *
    * TODO: how to handle this?  Right now called by
-   * ./static/notebook/js/outputarea.js:827:        this.events.trigger('send_input_reply.Kernel', value);
+   * ./static/notebook/js/outputarea.js:827:
+   * this.events.trigger('send_input_reply.Kernel', value);
    *
-   * which has no referense to the session or the kernel
+   * which has no reference to the session or the kernel
    */
   sendInputReply(input: any): string {
     if (!this.isConnected) {
@@ -612,7 +613,7 @@ class Kernel {
   }
 
   /**
-   * Perform necessary tasks after the kernel has died. This closing
+   * Perform necessary tasks after the kernel has died. This closes
    * communication channels to the kernel if they are still somehow
    * open.
    */
@@ -750,7 +751,7 @@ enum KernelFutureFlag {
  */
 class KernelFutureHandler extends Disposable implements IKernelFuture {
   /**
-   * Get the current autoDispose status of the future..
+   * Get the current autoDispose status of the future.
    */
   get autoDispose(): boolean {
     return this._testFlag(KernelFutureFlag.AutoDispose);
@@ -828,7 +829,7 @@ class KernelFutureHandler extends Disposable implements IKernelFuture {
       if (this._testFlag(KernelFutureFlag.GotIdle)) {
         this._handleDone(msg);
       }
-    } else if (msg.channel == 'stdin') {
+    } else if (msg.channel === 'stdin') {
       var input = this._input;
       if (input) input(msg);
     }
