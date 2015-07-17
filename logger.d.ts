@@ -13,42 +13,37 @@ interface ILogContext {
 }
 
 
-interface ContextualLogger {
-    setLevel(newLevel: string): void;
-    enabledFor(lvl: ILogLevel): boolean;
-    debug(...args: any[]): void;
-    info(...args: any[]): void;
-    log(...args: any[]): void;
-    warn(...args: any[]): void;
-    error(...args: any[]): void;
-    time(label: string): void;
-    timeEnd(label: string): void;
-    invoke(lvl: ILogLevel, ...args: any[]): void;
-    context: ILogContext;
+interface ILogger {
+  setLevel(newLevel: string): void;
+  enabledFor(lvl: ILogLevel): boolean;
+  debug(...args: any[]): void;
+  info(...args: any[]): void;
+  log(...args: any[]): void;
+  warn(...args: any[]): void;
+  error(...args: any[]): void;
+  time(label: string): void;
+  timeEnd(label: string): void;
 }
 
 
-interface Logger{
-    get(name: string): ContextualLogger;
-    setLevel(newLevel: string): void;
-    enabledFor(lvl: ILogLevel): boolean;
-    debug(...args: any[]): void;
-    info(...args: any[]): void;
-    log(...args: any[]): void;
-    warn(...args: any[]): void;
-    error(...args: any[]): void;
-    time(label: string): void;
-    timeEnd(label: string): void;
-    useDefaults(lvl?: ILogLevel): void;
-    setHandler(handler: (args: any[], 
-                          context: ILogContext) => void): void;
-    DEBUG: ILogLevel;
-    INFO: ILogLevel;
-    WARN: ILogLevel;
-    ERROR: ILogLevel;
-    TIME: ILogLevel;
-    OFF: ILogLevel;
-    VERSION: string;
+interface ContextualLogger extends ILogger {
+  invoke(lvl: ILogLevel, ...args: any[]): void;
+  context: ILogContext;
+}
+
+
+interface Logger extends ILogger {
+  get(name: string): ContextualLogger;
+  useDefaults(lvl?: ILogLevel): void;
+  setHandler(handler: (args: any[], 
+                        context: ILogContext) => void): void;
+  DEBUG: ILogLevel;
+  INFO: ILogLevel;
+  WARN: ILogLevel;
+  ERROR: ILogLevel;
+  TIME: ILogLevel;
+  OFF: ILogLevel;
+  VERSION: string;
 }
 
 declare var Logger: Logger;
