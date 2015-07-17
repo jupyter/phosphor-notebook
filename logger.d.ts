@@ -35,8 +35,7 @@ interface ContextualLogger extends ILogger {
 interface Logger extends ILogger {
   get(name: string): ContextualLogger;
   useDefaults(level?: ILogLevel): void;
-  setHandler(handler: (args: any[], 
-                        context: ILogContext) => void): void;
+  setHandler(handler: (args: any[], context: ILogContext) => void): void;
   DEBUG: ILogLevel;
   INFO: ILogLevel;
   WARN: ILogLevel;
