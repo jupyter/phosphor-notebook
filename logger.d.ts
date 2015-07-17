@@ -14,8 +14,8 @@ interface ILogContext {
 
 
 interface ILogger {
-  setLevel(newLevel: string): void;
-  enabledFor(lvl: ILogLevel): boolean;
+  setLevel(newLevel: ILogLevel): void;
+  enabledFor(level: ILogLevel): boolean;
   debug(...args: any[]): void;
   info(...args: any[]): void;
   log(...args: any[]): void;
@@ -27,14 +27,14 @@ interface ILogger {
 
 
 interface ContextualLogger extends ILogger {
-  invoke(lvl: ILogLevel, ...args: any[]): void;
+  invoke(level: ILogLevel, ...args: any[]): void;
   context: ILogContext;
 }
 
 
 interface Logger extends ILogger {
   get(name: string): ContextualLogger;
-  useDefaults(lvl?: ILogLevel): void;
+  useDefaults(level?: ILogLevel): void;
   setHandler(handler: (args: any[], 
                         context: ILogContext) => void): void;
   DEBUG: ILogLevel;
