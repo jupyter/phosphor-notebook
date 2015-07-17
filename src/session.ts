@@ -18,7 +18,7 @@ var SESSION_SERVICE_URL = 'api/sessions';
 /**
  * Get a logger session objects.
  */
-var session_log = Logger.get('kernel');
+var session_log = Logger.get('session');
 
 
 /**
