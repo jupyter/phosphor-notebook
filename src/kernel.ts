@@ -4,7 +4,7 @@
 import serialize = require('./serialize');
 import utils = require('./utils');
 
-import Signal = phosphor.core.ISignal;
+import ISignal = phosphor.core.ISignal;
 import signal = phosphor.core.signal;
 import IDisposable = phosphor.utility.IDisposable;
 import Disposable = phosphor.utility.Disposable;
