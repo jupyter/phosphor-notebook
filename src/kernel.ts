@@ -171,7 +171,7 @@ class Kernel {
       method: "GET",
       dataType: "json"
     }).then((success: IAjaxSuccess): IKernelId[] => {
-      if (success.xhr.status == 200) {
+      if (success.xhr.status === 200) {
         if (!Array.isArray(success.data)) {
           throw Error('Invalid kernel list');
         }
