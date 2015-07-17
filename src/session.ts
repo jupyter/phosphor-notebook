@@ -4,8 +4,8 @@
 import utils = require('./utils')
 import kernel = require('./kernel')
 
-import Signal = phosphor.core.Signal;
-import emit = phosphor.core.emit;
+import ISignal = phosphor.core.ISignal;
+import signal = phosphor.core.signal;
 import IAjaxSuccess = utils.IAjaxSuccess;
 import IAjaxError = utils.IAjaxError;
 
@@ -54,7 +54,11 @@ interface ISessionOptions {
 export
 class NotebookSession {
 
-  static statusChanged = new Signal<NotebookSession, string>();
+  /**
+   * A signal emitted when the session changes state.
+   */
+  @signal
+  statusChanged: ISignal<string>;
 
   /**
    * GET /api/sessions
@@ -195,7 +199,7 @@ class NotebookSession {
    * Handle a session status change.
    */
   private _handleStatus(status: string) {
-    emit(this, NotebookSession.statusChanged, status);
+    this.statusChanged.emit(status);
     console.log('Session: ' + status + ' (' + this._id + ')');
   }
 
