@@ -31,6 +31,14 @@ interface ContextualLogger {
 interface Logger{
     get(name: string): ContextualLogger;
     setLevel(newLevel: string): void;
+    enabledFor(lvl: ILogLevel): boolean;
+    debug(...args: any[]): void;
+    info(...args: any[]): void;
+    log(...args: any[]): void;
+    warn(...args: any[]): void;
+    error(...args: any[]): void;
+    time(label: string): void;
+    timeEnd(label: string): void;
     useDefaults(lvl?: ILogLevel): void;
     setHandler(handler: (args: any[], 
                           context: ILogContext) => void): void;
