@@ -51,7 +51,7 @@ interface ISessionOptions {
  * should be used to start kernels and then shut them down -- for
  * all other operations, the kernel object should be used.
  **/
-export 
+export
 class NotebookSession {
 
   static statusChanged = new Signal<NotebookSession, string>();
@@ -77,7 +77,6 @@ class NotebookSession {
         validateSessionId(success.data[i]);
       }
       return success.data;
-      
     });
   }
 
@@ -104,7 +103,7 @@ class NotebookSession {
   /**
    * POST /api/sessions
    *
-   * Start a new session. This function can only successfully executed once.
+   * Start a new session. This function can only be successfully executed once.
    */
   start(): Promise<void> {
     var url = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL);
@@ -165,10 +164,11 @@ class NotebookSession {
   }
 
   /**
-   * Restart the session by deleting it and the starting it fresh.
+   * Restart the session by deleting it and then starting it fresh.
    */
   restart(options?: ISessionOptions): Promise<void> {
-    return this.delete().then(() => this.start()).catch(() => this.start()).then(() => {
+    return this.delete().then(() => this.start()).catch(
+        () => this.start()).then(() => {
       if (options && options.notebookPath) {
         this._notebookPath = options.notebookPath;
       }
