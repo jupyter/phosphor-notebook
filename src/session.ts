@@ -115,7 +115,7 @@ class NotebookSession {
    *
    * Start a new session. This function can only be successfully executed once.
    */
-  start(): Promise<void> {
+  start(): Promise<ISessionId> {
     var url = utils.urlJoinEncode(this._baseUrl, SESSION_SERVICE_URL);
     return utils.ajaxRequest(url, {
       method: "POST",
@@ -129,6 +129,7 @@ class NotebookSession {
       validateSessionId(success.data);
       this._kernel.connect(success.data.kernel);
       this._handleStatus('kernelCreated');
+      return success.data;
     }, (error: IAjaxError) => {
       this._handleStatus('kernelDead');
     });
@@ -170,6 +171,11 @@ class NotebookSession {
         throw Error('Invalid response');
       }
       validateSessionId(success.data);
+    }, (rejected: IAjaxError) => {
+        if (rejected.xhr.status === 410) {
+          throw Error('The kernel was deleted but the session was not');
+        }
+        throw Error(rejected.statusText);
     });
   }
 
@@ -186,6 +192,25 @@ class NotebookSession {
         this._kernel.name = options.kernelName;
       }
     })
+  }
+
+  /**
+   * Rename the notebook.
+   */ 
+  renameNotebook(path: string): Promise<ISessionId> {
+    this._notebookPath = path;
+    return utils.ajaxRequest(this._sessionUrl, {
+      method: "PATCH",
+      dataType: "json",
+      data: JSON.stringify(this._model),
+      contentType: 'application/json'
+    }).then((success: IAjaxSuccess): ISessionId => {
+      if (success.xhr.status !== 200) {
+        throw Error('Invalid response');
+      }
+      validateSessionId(success.data);
+      return success.data;
+    });
   }
 
   /**
